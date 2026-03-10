@@ -54,6 +54,9 @@ try:
             # Setup camera
             self.setup_camera()
 
+            # Set natural starting angle
+            #self.set_natural_starting_view()
+
             # Create GUI controls
             self.create_gui_controls()
             print("Application ready with manual controls")
@@ -366,10 +369,15 @@ try:
                 continent_np.setTwoSided(True)
 
         def setup_camera(self):
-            # Default position - more zoomed out
-            self.default_camera_pos = (0, -25, 8)  # Further back and higher
+            # Default position - adjusted for better zoom responsiveness
+            self.default_camera_pos = (0, -30, 10)  # Closer than 40 for better zoom effect
             self.camera.setPos(*self.default_camera_pos)
             self.camera.lookAt(0, 0, 0)
+
+            # Debug camera position
+            pos = self.camera.getPos()
+            distance = pos.length()
+            print(f"Camera setup: Position {pos}, Distance: {distance:.1f}")
 
         def create_gui_controls(self):
             """Create GUI buttons for manual control"""
@@ -422,14 +430,62 @@ try:
 
         # Control functions
         def zoom_in(self):
-            pos = self.camera.getPos()
-            new_pos = pos * 0.9
+            """Move camera closer to globe center"""
+            current_pos = self.camera.getPos()
+            current_distance = current_pos.length()
+
+            print(f"Zoom In - Current distance: {current_distance:.1f}")
+
+            # Prevent going too close
+            if current_distance <= 8:
+                print("Already at minimum zoom distance")
+                return
+
+            # Calculate new distance (20% closer)
+            new_distance = current_distance * 0.8
+
+            # Calculate direction vector (normalized)
+            if current_distance > 0.1:
+                direction = current_pos.normalized()
+            else:
+                # If somehow at origin, use default direction
+                direction = Vec3(0, -1, 0.3).normalized()
+
+            # Set new position at new distance
+            new_pos = direction * new_distance
             self.camera.setPos(new_pos)
+            self.camera.lookAt(0, 0, 0)
+
+            print(f"Zoomed in to distance: {new_distance:.1f}")
 
         def zoom_out(self):
-            pos = self.camera.getPos()
-            new_pos = pos * 1.1
+            """Move camera further from globe center"""
+            current_pos = self.camera.getPos()
+            current_distance = current_pos.length()
+
+            print(f"Zoom Out - Current distance: {current_distance:.1f}")
+
+            # Prevent going too far
+            if current_distance >= 100:
+                print("Already at maximum zoom distance")
+                return
+
+            # Calculate new distance (25% further)
+            new_distance = current_distance * 1.25
+
+            # Calculate direction vector (normalized)
+            if current_distance > 0.1:
+                direction = current_pos.normalized()
+            else:
+                # If somehow at origin, use default direction
+                direction = Vec3(0, -1, 0.3).normalized()
+
+            # Set new position at new distance
+            new_pos = direction * new_distance
             self.camera.setPos(new_pos)
+            self.camera.lookAt(0, 0, 0)
+
+            print(f"Zoomed out to distance: {new_distance:.1f}")
 
         def reset_view(self):
             """Reset camera position and globe rotation to default"""
