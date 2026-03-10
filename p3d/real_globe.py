@@ -436,26 +436,29 @@ try:
 
             print(f"Zoom In - Current distance: {current_distance:.1f}")
 
+            # If camera is at origin (0,0,0), reset to default position first
+            if current_distance < 0.1:
+                print("Camera at origin, resetting to default position")
+                self.camera.setPos(*self.default_camera_pos)
+                self.camera.lookAt(0, 0, 0)
+                current_pos = self.camera.getPos()
+                current_distance = current_pos.length()
+                print(f"Reset to distance: {current_distance:.1f}")
+
             # Prevent going too close
-            if current_distance <= 8:
+            if current_distance <= 10:
                 print("Already at minimum zoom distance")
                 return
 
-            # Calculate new distance (20% closer)
-            new_distance = current_distance * 0.8
+            # Simple approach: move camera 80% of current distance
+            new_x = current_pos.x * 0.8
+            new_y = current_pos.y * 0.8
+            new_z = current_pos.z * 0.8
 
-            # Calculate direction vector (normalized)
-            if current_distance > 0.1:
-                direction = current_pos.normalized()
-            else:
-                # If somehow at origin, use default direction
-                direction = Vec3(0, -1, 0.3).normalized()
-
-            # Set new position at new distance
-            new_pos = direction * new_distance
-            self.camera.setPos(new_pos)
+            self.camera.setPos(new_x, new_y, new_z)
             self.camera.lookAt(0, 0, 0)
 
+            new_distance = self.camera.getPos().length()
             print(f"Zoomed in to distance: {new_distance:.1f}")
 
         def zoom_out(self):
@@ -465,26 +468,29 @@ try:
 
             print(f"Zoom Out - Current distance: {current_distance:.1f}")
 
+            # If camera is at origin (0,0,0), reset to default position first
+            if current_distance < 0.1:
+                print("Camera at origin, resetting to default position")
+                self.camera.setPos(*self.default_camera_pos)
+                self.camera.lookAt(0, 0, 0)
+                current_pos = self.camera.getPos()
+                current_distance = current_pos.length()
+                print(f"Reset to distance: {current_distance:.1f}")
+
             # Prevent going too far
-            if current_distance >= 100:
+            if current_distance >= 80:
                 print("Already at maximum zoom distance")
                 return
 
-            # Calculate new distance (25% further)
-            new_distance = current_distance * 1.25
+            # Simple approach: move camera 125% of current distance
+            new_x = current_pos.x * 1.25
+            new_y = current_pos.y * 1.25
+            new_z = current_pos.z * 1.25
 
-            # Calculate direction vector (normalized)
-            if current_distance > 0.1:
-                direction = current_pos.normalized()
-            else:
-                # If somehow at origin, use default direction
-                direction = Vec3(0, -1, 0.3).normalized()
-
-            # Set new position at new distance
-            new_pos = direction * new_distance
-            self.camera.setPos(new_pos)
+            self.camera.setPos(new_x, new_y, new_z)
             self.camera.lookAt(0, 0, 0)
 
+            new_distance = self.camera.getPos().length()
             print(f"Zoomed out to distance: {new_distance:.1f}")
 
         def reset_view(self):
@@ -499,7 +505,10 @@ try:
             self.globe_rotation_z = 0
             self.globe.setHpr(0, 0, 0)
 
-            print("View reset to default position and rotation")
+            # Verify reset
+            pos = self.camera.getPos()
+            distance = pos.length()
+            print(f"View reset - Position: {pos}, Distance: {distance:.1f}")
 
         def random_view(self):
             """Set the globe to a random interesting angle"""
