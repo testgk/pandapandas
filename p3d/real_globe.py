@@ -16,6 +16,7 @@ try:
     import os
     import requests
     import tempfile
+    import random
 
     print("All imports successful")
 
@@ -32,6 +33,16 @@ try:
             self.globe_rotation_x = 0
             self.globe_rotation_y = 0
             self.globe_rotation_z = 0
+
+            # Define interesting natural views
+            self.preset_views = [
+                {"name": "Europe/Africa View", "rotation": (0, -15, 0), "description": "Shows Europe and Mediterranean"},
+                {"name": "Americas View", "rotation": (0, 0, 90), "description": "North and South America centered"},
+                {"name": "Asia/Pacific View", "rotation": (0, 15, -120), "description": "Asia and Pacific region"},
+                {"name": "Africa/Middle East", "rotation": (0, -30, -30), "description": "Africa and Middle East focus"},
+                {"name": "Atlantic View", "rotation": (0, 10, 45), "description": "Atlantic Ocean perspective"},
+                {"name": "Indian Ocean View", "rotation": (0, -20, -90), "description": "Indian Ocean and surrounding continents"}
+            ]
 
             # Load REAL world data
             self.continents = self.load_real_world_data()
@@ -377,6 +388,10 @@ try:
             DirectButton(text="Reset View", pos=(0, 0, 0.8), scale=0.05,
                         command=self.reset_view, text_scale=1.0)
 
+            # Random View button
+            DirectButton(text="Random View", pos=(0.5, 0, 0.8), scale=0.05,
+                        command=self.random_view, text_scale=1.0)
+
             # Rotation buttons in cross pattern
             DirectButton(text="Up", pos=(0, 0, 0.6), scale=0.05,
                         command=self.rotate_up, text_scale=1.0)
@@ -386,6 +401,21 @@ try:
                         command=self.rotate_left, text_scale=1.0)
             DirectButton(text="Right", pos=(0.15, 0, 0.5), scale=0.05,
                         command=self.rotate_right, text_scale=1.0)
+
+            # Preset view buttons
+            DirectButton(text="Europe", pos=(-0.6, 0, 0.3), scale=0.04,
+                        command=lambda: self.set_preset_view(0), text_scale=1.0)
+            DirectButton(text="Americas", pos=(-0.6, 0, 0.2), scale=0.04,
+                        command=lambda: self.set_preset_view(1), text_scale=1.0)
+            DirectButton(text="Asia", pos=(-0.6, 0, 0.1), scale=0.04,
+                        command=lambda: self.set_preset_view(2), text_scale=1.0)
+
+            DirectButton(text="Africa", pos=(0.6, 0, 0.3), scale=0.04,
+                        command=lambda: self.set_preset_view(3), text_scale=1.0)
+            DirectButton(text="Atlantic", pos=(0.6, 0, 0.2), scale=0.04,
+                        command=lambda: self.set_preset_view(4), text_scale=1.0)
+            DirectButton(text="Pacific", pos=(0.6, 0, 0.1), scale=0.04,
+                        command=lambda: self.set_preset_view(5), text_scale=1.0)
 
             OnscreenText(text="Real world data • Manual controls only",
                         pos=(0, -0.9), scale=0.05, fg=(0.8, 0.8, 0.8, 1))
@@ -414,6 +444,21 @@ try:
             self.globe.setHpr(0, 0, 0)
 
             print("View reset to default position and rotation")
+
+        def random_view(self):
+            """Set the globe to a random interesting angle"""
+            chosen_view = random.choice(self.preset_views)
+            self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y = chosen_view["rotation"]
+            self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
+            print(f"Random view: {chosen_view['name']} - {chosen_view['description']}")
+
+        def set_preset_view(self, index):
+            """Set the globe to a specific preset view"""
+            if 0 <= index < len(self.preset_views):
+                chosen_view = self.preset_views[index]
+                self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y = chosen_view["rotation"]
+                self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
+                print(f"Set view: {chosen_view['name']} - {chosen_view['description']}")
 
         def rotate_up(self):
             self.globe_rotation_x += 15
