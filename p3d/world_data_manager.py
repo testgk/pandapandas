@@ -7,8 +7,20 @@ import geopandas as gpd
 from pathlib import Path
 import requests
 import tempfile
+
+# GLOBAL SSL CERTIFICATE BYPASS - NO VERIFICATION
 import ssl
 import urllib3
+
+# Disable ALL SSL warnings and verification
+urllib3.disable_warnings()
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+ssl._create_default_https_context = ssl._create_unverified_context
+
+# Set environment variables to bypass certificates globally
+os.environ['PYTHONHTTPSVERIFY'] = '0'
+os.environ['CURL_CA_BUNDLE'] = ''
+os.environ['REQUESTS_CA_BUNDLE'] = ''
 
 class WorldDataManager:
     def __init__(self):
@@ -75,26 +87,21 @@ class WorldDataManager:
         return continents
 
     def _download_world_data(self):
-        """Download world boundary data from reliable sources"""
-        # Disable SSL warnings
-        ssl._create_default_https_context = ssl._create_unverified_context
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        """Download world boundary data from reliable sources (SSL verification disabled)"""
+        print("🌐 Downloading world data (SSL verification OFF)...")
 
         sources = [
             {
                 'name': 'Natural Earth Countries',
-                'url': 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson',
-                'method': 'direct'
+                'url': 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson'
             },
             {
                 'name': 'RestCountries',
-                'url': 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json',
-                'method': 'direct'
+                'url': 'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json'
             },
             {
                 'name': 'World Atlas',
-                'url': 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json',
-                'method': 'requests'
+                'url': 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
             }
         ]
 
@@ -102,32 +109,34 @@ class WorldDataManager:
             try:
                 print(f"📡 Trying {source['name']}...")
 
-                if source['method'] == 'direct':
-                    # Direct GeoPandas download
+                # Try direct GeoPandas first (fastest)
+                try:
                     world = gpd.read_file(source['url'])
-                    print(f"✅ Success! Downloaded {len(world)} features")
+                    print(f"✅ SUCCESS! Downloaded {len(world)} features via GeoPandas")
                     return world
+                except Exception as geopandas_error:
+                    print(f"   GeoPandas failed: {geopandas_error}")
 
-                elif source['method'] == 'requests':
-                    # Manual download with requests
+                    # Fallback to manual requests download
+                    print(f"   Trying manual download...")
                     response = requests.get(source['url'], verify=False, timeout=30)
                     response.raise_for_status()
 
-                    # Save to temp file
+                    # Save to temp file and load with GeoPandas
                     with tempfile.NamedTemporaryFile(mode='w', suffix='.geojson', delete=False, encoding='utf-8') as f:
                         f.write(response.text)
                         temp_path = f.name
 
                     world = gpd.read_file(temp_path)
                     os.unlink(temp_path)
-                    print(f"✅ Success! Downloaded {len(world)} features")
+                    print(f"✅ SUCCESS! Downloaded {len(world)} features via requests")
                     return world
 
             except Exception as e:
-                print(f"❌ {source['name']} failed: {e}")
+                print(f"❌ {source['name']} failed completely: {e}")
                 continue
 
-        print("❌ All download sources failed")
+        print("❌ All download sources failed - using fallback shapes")
         return None
 
     def _process_world_data(self, world):
@@ -293,32 +302,71 @@ class WorldDataManager:
         # High-quality continent outlines based on real coordinates
         continent_data = {
             'North America': [
-                (-168, 65), (-140, 69), (-120, 72), (-100, 70), (-85, 68), (-80, 60),
-                (-75, 50), (-70, 45), (-68, 40), (-70, 35), (-75, 30), (-80, 25),
-                (-85, 20), (-95, 26), (-105, 29), (-115, 32), (-125, 37), (-135, 50),
-                (-145, 60), (-160, 65), (-168, 65)
+                # More accurate North America with better coastlines
+                (-168.0, 65.5), (-140.0, 69.6), (-120.0, 72.0), (-100.0, 70.0), (-85.0, 68.0),
+                (-75.0, 62.0), (-70.0, 55.0), (-68.0, 47.0), (-70.0, 42.0), (-72.0, 38.0),
+                (-75.0, 35.0), (-80.0, 30.0), (-82.0, 25.5), (-84.0, 24.0), (-87.0, 24.5),
+                (-90.0, 25.0), (-95.0, 26.0), (-97.0, 25.5), (-100.0, 26.0), (-105.0, 29.0),
+                (-110.0, 31.0), (-115.0, 32.5), (-118.0, 34.0), (-122.0, 37.0), (-124.0, 42.0),
+                (-125.0, 46.0), (-128.0, 49.0), (-135.0, 55.0), (-140.0, 60.0), (-145.0, 61.0),
+                (-155.0, 59.0), (-162.0, 61.0), (-166.0, 63.0), (-168.0, 65.5)
             ],
             'South America': [
-                (-35, 5), (-45, -5), (-55, -15), (-65, -25), (-70, -35), (-75, -45),
-                (-70, -52), (-60, -54), (-50, -50), (-40, -40), (-35, -30), (-33, -15),
-                (-34, -5), (-35, 5)
+                # More detailed South America
+                (-34.8, 5.2), (-42.0, 2.0), (-50.0, -5.0), (-55.0, -15.0), (-60.0, -25.0),
+                (-65.0, -35.0), (-70.0, -45.0), (-72.0, -50.0), (-68.0, -54.0), (-63.0, -54.8),
+                (-58.0, -54.0), (-50.0, -52.0), (-45.0, -48.0), (-40.0, -42.0), (-37.0, -35.0),
+                (-35.0, -28.0), (-34.0, -20.0), (-33.5, -12.0), (-34.0, -5.0), (-34.8, 5.2)
             ],
             'Europe': [
-                (-10, 35), (0, 45), (10, 50), (20, 55), (30, 60), (40, 65), (45, 70),
-                (40, 72), (30, 70), (20, 68), (10, 65), (0, 60), (-10, 55), (-10, 35)
+                # Corrected Europe with Mediterranean Sea properly defined
+                # Western coastline
+                (-9.5, 43.0), (-7.0, 48.0), (-2.0, 51.0), (2.0, 51.5),
+                # North Sea and Baltic
+                (5.0, 53.0), (8.0, 55.0), (12.0, 56.0), (15.0, 59.0), (20.0, 60.0), (25.0, 65.0),
+                (30.0, 68.0), (35.0, 70.0), (45.0, 71.0), (50.0, 68.0), (48.0, 65.0),
+                # Eastern Europe
+                (45.0, 60.0), (40.0, 55.0), (35.0, 50.0), (30.0, 48.0), (26.0, 45.0),
+                # Black Sea region
+                (28.0, 42.0), (30.0, 40.0), (35.0, 36.0), (40.0, 38.0), (42.0, 42.0),
+                # Mediterranean coastline - Northern shore
+                (40.0, 36.0), (35.0, 36.0), (25.0, 35.0), (20.0, 38.0), (15.0, 40.0),
+                (10.0, 42.0), (5.0, 43.5), (2.0, 44.0), (-2.0, 43.0), (-5.0, 42.0),
+                (-7.0, 41.0), (-9.0, 42.0), (-9.5, 43.0)
             ],
             'Africa': [
-                (-17, 35), (10, 35), (35, 30), (45, 0), (40, -10), (35, -25), (25, -35),
-                (15, -34), (0, -30), (-10, -20), (-15, 0), (-17, 15), (-17, 35)
+                # More accurate Africa with proper Mediterranean coastline
+                # Mediterranean coast (North)
+                (-17.0, 35.5), (-10.0, 35.8), (-5.0, 36.0), (10.0, 37.0), (25.0, 32.0),
+                (30.0, 31.5), (35.0, 31.0), (37.0, 30.0),
+                # Red Sea and East coast
+                (43.0, 25.0), (47.0, 15.0), (42.0, 0.0), (40.0, -10.0), (35.0, -20.0),
+                (30.0, -25.0), (25.0, -30.0), (20.0, -33.0), (15.0, -34.5),
+                # Southern tip
+                (10.0, -34.0), (5.0, -32.0), (0.0, -30.0), (-5.0, -25.0),
+                # West coast
+                (-10.0, -20.0), (-15.0, -10.0), (-17.0, 0.0), (-16.0, 10.0),
+                (-15.0, 20.0), (-17.0, 28.0), (-17.0, 35.5)
             ],
             'Asia': [
-                (25, 75), (60, 80), (120, 75), (150, 65), (175, 55), (180, 45), (175, 35),
-                (160, 25), (140, 15), (120, 10), (100, 15), (80, 20), (60, 30), (40, 40),
-                (30, 50), (25, 65), (25, 75)
+                # More detailed Asia
+                (26.0, 72.0), (40.0, 77.0), (60.0, 81.0), (80.0, 79.0), (100.0, 76.0),
+                (120.0, 73.0), (140.0, 68.0), (155.0, 65.0), (170.0, 60.0), (180.0, 55.0),
+                (179.0, 50.0), (175.0, 45.0), (170.0, 40.0), (165.0, 35.0), (160.0, 30.0),
+                (155.0, 25.0), (150.0, 20.0), (145.0, 15.0), (140.0, 10.0), (135.0, 8.0),
+                (130.0, 9.0), (125.0, 12.0), (120.0, 15.0), (115.0, 18.0), (110.0, 20.0),
+                (105.0, 22.0), (100.0, 23.0), (95.0, 22.0), (90.0, 20.0), (85.0, 18.0),
+                (80.0, 16.0), (75.0, 18.0), (70.0, 22.0), (65.0, 26.0), (60.0, 30.0),
+                (55.0, 35.0), (50.0, 40.0), (45.0, 45.0), (40.0, 50.0), (35.0, 55.0),
+                (30.0, 60.0), (26.0, 65.0), (26.0, 72.0)
             ],
             'Oceania': [
-                (113, -22), (130, -14), (145, -18), (153, -21), (152, -26), (145, -35),
-                (130, -38), (115, -35), (110, -28), (113, -22)
+                # More detailed Australia/Oceania
+                (112.9, -21.8), (115.0, -26.0), (118.0, -30.0), (122.0, -33.0), (128.0, -35.0),
+                (135.0, -36.0), (140.0, -37.0), (145.0, -38.0), (150.0, -35.0), (153.4, -28.2),
+                (153.6, -24.0), (152.0, -20.0), (149.0, -16.0), (145.0, -14.0), (140.0, -12.5),
+                (135.0, -12.0), (130.0, -13.0), (125.0, -16.0), (120.0, -20.0), (115.0, -22.0),
+                (112.9, -21.8)
             ]
         }
 

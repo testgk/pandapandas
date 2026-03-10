@@ -29,16 +29,14 @@ class ProperGlobe(ShowBase):
         self.render.setLight(self.render.attachNewNode(sun))
 
     def load_continent_data(self):
-        """Load continent data using robust WorldDataManager"""
-        from world_data_manager import get_world_continents
+        """Load continent data using simple reliable shapes (no SSL issues)"""
+        from simple_world_data import get_world_continents
 
-        print("🌍 Loading world continent data...")
+        print("🌍 Loading continent data...")
         self.continents = get_world_continents()
 
         if self.continents:
-            print(f"✅ Successfully loaded {len(self.continents)} continents:")
-            for name in self.continents.keys():
-                print(f"   - {name}")
+            print(f"✅ Successfully loaded {len(self.continents)} continents")
         else:
             print("❌ Failed to load continent data")
             self.continents = {}
@@ -126,12 +124,13 @@ class ProperGlobe(ShowBase):
 
         # Add continent shapes as flat polygons on sphere surface
         colors = {
-            'North America': (0.2, 0.7, 0.2, 1),
-            'South America': (0.8, 0.7, 0.2, 1),
-            'Europe': (0.7, 0.2, 0.2, 1),
-            'Africa': (0.8, 0.5, 0.2, 1),
-            'Asia': (0.6, 0.2, 0.7, 1),
-            'Australia': (0.2, 0.7, 0.7, 1)
+            'North America': (0.2, 0.8, 0.3, 1),    # Bright green
+            'South America': (0.9, 0.7, 0.1, 1),    # Golden yellow
+            'Europe': (0.8, 0.2, 0.2, 1),           # Bright red - highlighted for verification
+            'Africa': (0.9, 0.5, 0.1, 1),           # Orange
+            'Asia': (0.6, 0.3, 0.8, 1),             # Purple
+            'Oceania': (0.2, 0.7, 0.9, 1),          # Light blue
+            'Australia': (0.2, 0.7, 0.9, 1)         # Light blue (fallback)
         }
 
         for name, geometry in self.continents.items():
@@ -293,7 +292,8 @@ class ProperGlobe(ShowBase):
         self.disableMouse()
         # Position camera to ensure South Pole is at bottom
         # Camera looks from the side with proper up vector
-        self.camera.setPos(15, -10, 3)  # Side view with slight elevation
+        # Start with a view focused on Europe/Mediterranean to verify the fix
+        self.camera.setPos(20, -15, 8)  # Elevated side view to see Mediterranean
         self.camera.lookAt(0, 0, 0)
 
         # Ensure proper up vector so South Pole (-Y) appears at bottom
