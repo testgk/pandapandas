@@ -193,8 +193,8 @@ class GlobeGuiController:
                 pos=position,
                 scale=presetScale,
                 command=lambda i=index: self.__onSetPresetView(i),
-                frameColor=self.__settings.getButtonColor("control", "background"),
-                text_fg=self.__settings.getButtonColor("control", "text"),
+                frameColor=self.__settings.getButtonColor("preset", "background"),
+                text_fg=self.__settings.getButtonColor("preset", "text"),
                 pressEffect=1, relief=2
             )
             self.__allButtons.append(btn)

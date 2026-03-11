@@ -305,10 +305,10 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         currentPos = self.camera.getPos()
         currentDistance = currentPos.length()
 
-        self.__guiController.addLogMessage(f"ZOOM IN - Distance: {currentDistance:.1f}")
+        self.__guiController.addDebugMessage(f"ZOOM IN - Distance: {currentDistance:.1f}")
 
         if currentDistance < 0.1:
-            self.__guiController.addLogMessage("Camera reset to default position")
+            self.__guiController.addDebugMessage("Camera reset to default position")
             self.camera.setPos(*self.__defaultCameraPos)
             self.camera.lookAt(0, 0, 0)
             return
@@ -316,7 +316,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         targetDistance = max(currentDistance * ZOOM_IN_FACTOR, MIN_ZOOM_DISTANCE)
 
         if targetDistance >= currentDistance - 0.1:
-            self.__guiController.addLogMessage("Already at minimum zoom distance")
+            self.__guiController.addDebugMessage("Already at minimum zoom distance")
             return
 
         directionX = currentPos.x / currentDistance
@@ -333,17 +333,17 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.camera.lookAt(0, 0, 0)
 
         verifyDistance = self.camera.getPos().length()
-        self.__guiController.addLogMessage(f"Zoomed in to distance: {verifyDistance:.1f}")
+        self.__guiController.addDebugMessage(f"Zoomed in to distance: {verifyDistance:.1f}")
 
     def zoomOut(self) -> None:
         """Move camera further from globe center"""
         currentPos = self.camera.getPos()
         currentDistance = currentPos.length()
 
-        self.__guiController.addLogMessage(f"ZOOM OUT - Distance: {currentDistance:.1f}")
+        self.__guiController.addDebugMessage(f"ZOOM OUT - Distance: {currentDistance:.1f}")
 
         if currentDistance < 0.1:
-            self.__guiController.addLogMessage("Camera reset to default position")
+            self.__guiController.addDebugMessage("Camera reset to default position")
             self.camera.setPos(*self.__defaultCameraPos)
             self.camera.lookAt(0, 0, 0)
             return
@@ -351,7 +351,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         targetDistance = min(currentDistance * ZOOM_OUT_FACTOR, MAX_ZOOM_DISTANCE)
 
         if targetDistance <= currentDistance + 0.1:
-            self.__guiController.addLogMessage("Already at maximum zoom distance")
+            self.__guiController.addDebugMessage("Already at maximum zoom distance")
             return
 
         directionX = currentPos.x / currentDistance
@@ -368,7 +368,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.camera.lookAt(0, 0, 0)
 
         verifyDistance = self.camera.getPos().length()
-        self.__guiController.addLogMessage(f"Zoomed out to distance: {verifyDistance:.1f}")
+        self.__guiController.addDebugMessage(f"Zoomed out to distance: {verifyDistance:.1f}")
 
     def resetView(self) -> None:
         """Reset camera position and globe rotation to default"""
@@ -382,51 +382,47 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
 
         pos = self.camera.getPos()
         distance = pos.length()
-        self.__guiController.addLogMessage(f"RESET: Distance {distance:.1f} | Rotation X={DEFAULT_ROTATION_X}° Y={DEFAULT_ROTATION_Y}° Z={DEFAULT_ROTATION_Z}°")
+        self.__guiController.addDebugMessage(f"RESET: Distance {distance:.1f} | Rotation X={DEFAULT_ROTATION_X}° Y={DEFAULT_ROTATION_Y}° Z={DEFAULT_ROTATION_Z}°")
 
     def rotateUp(self) -> None:
         """Rotate globe up by increment amount"""
         self.__globeRotationX += self.__rotationIncrement
         self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-        self.__guiController.addLogMessage(f"UP: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+        self.__guiController.addDebugMessage(f"UP: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
 
     def rotateDown(self) -> None:
         """Rotate globe down by increment amount"""
         self.__globeRotationX -= self.__rotationIncrement
         self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-        self.__guiController.addLogMessage(f"DOWN: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}��")
+        self.__guiController.addDebugMessage(f"DOWN: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
 
     def rotateLeft(self) -> None:
         """Rotate globe left by increment amount"""
         self.__globeRotationZ -= self.__rotationIncrement
         self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-        self.__guiController.addLogMessage(f"LEFT: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+        self.__guiController.addDebugMessage(f"LEFT: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
 
     def rotateRight(self) -> None:
         """Rotate globe right by increment amount"""
         self.__globeRotationZ += self.__rotationIncrement
         self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-        self.__guiController.addLogMessage(f"RIGHT: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+        self.__guiController.addDebugMessage(f"RIGHT: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
 
     def increaseRotationIncrement(self) -> None:
         """Increase rotation increment by 1 degree (max 30)"""
         if self.__rotationIncrement < MAX_ROTATION_INCREMENT:
             self.__rotationIncrement += 1
-            print(f"Rotation increment: {self.__rotationIncrement}°")
-            self.__guiController.addLogMessage(f"Rotation increment increased to {self.__rotationIncrement}°")
+            self.__guiController.addDebugMessage(f"Rotation increment increased to {self.__rotationIncrement}°")
         else:
-            print(f"Rotation increment: {self.__rotationIncrement}° (MAX)")
-            self.__guiController.addLogMessage(f"Maximum rotation increment reached ({MAX_ROTATION_INCREMENT}°)")
+            self.__guiController.addDebugMessage(f"Maximum rotation increment reached ({MAX_ROTATION_INCREMENT}°)")
 
     def decreaseRotationIncrement(self) -> None:
         """Decrease rotation increment by 1 degree (min 1)"""
         if self.__rotationIncrement > MIN_ROTATION_INCREMENT:
             self.__rotationIncrement -= 1
-            print(f"Rotation increment: {self.__rotationIncrement}°")
-            self.__guiController.addLogMessage(f"Rotation increment decreased to {self.__rotationIncrement}°")
+            self.__guiController.addDebugMessage(f"Rotation increment decreased to {self.__rotationIncrement}°")
         else:
-            print(f"Rotation increment: {self.__rotationIncrement}° (MIN)")
-            self.__guiController.addLogMessage(f"Minimum rotation increment reached ({MIN_ROTATION_INCREMENT}°)")
+            self.__guiController.addDebugMessage(f"Minimum rotation increment reached ({MIN_ROTATION_INCREMENT}°)")
 
     def setPresetView(self, index: int) -> None:
         """Set the globe to a specific preset view"""
@@ -434,7 +430,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             chosenView = self.__presetViews[index]
             self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY = chosenView["rotation"]
             self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-            self.__guiController.addLogMessage(f"{chosenView['name']}: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+            self.__guiController.addDebugMessage(f"{chosenView['name']}: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
 
     # GeoChallenge Game Methods - Professional GeoPandas/Pandas Showcase
     def startGeoChallenge(self) -> None:
