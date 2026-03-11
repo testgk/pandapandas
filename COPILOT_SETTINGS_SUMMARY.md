@@ -25,12 +25,20 @@
 - **Magic Numbers**: Eliminated and replaced with constants or settings
 - **Code Formatting**: Spaces after opening brackets ( [ { and before closing brackets ) ] }
 - **Assignment Spacing**: Spaces before and after equals sign (variable = value)
+- **Import Ordering**: Order imports from shortest to longest line
+- **Import Grouping**: Standard library → Third-party → Local imports with blank line separation
+- **Attribute Access**: Avoid getattr()/hasattr(), use direct access or try/except instead
+- **Pyramid of Doom**: Avoid deep nesting (max 2 levels), use early returns and guard clauses
+- **Exception Handling**: Use try-except with custom exception classes, avoid generic Exception catching
+- **Code Structure**: Prefer early returns, flat conditional structure, guard clauses at function start
 
 ### Workflow Preferences
 - **Branch Management**: Always work on side branches, never directly on master
 - **Feature Branches**: Auto-create feature branches for new development
 - **Branch Naming**: Use descriptive names with prefixes (feature/, bugfix/, refactor/)
-- **Commit Strategy**: Frequent commits with descriptive messages
+- **Commit Strategy**: Frequent commits with descriptive messages, one commit per working subject
+- **Merge Process**: Never merge without permission, always get approval first
+- **Post-Merge**: Update master and create new branch immediately after merge
 - **Testing**: Always test before merging to master
 - **History Management**: Maintain clean git history
 
@@ -73,10 +81,12 @@ p3d/
 - **Main Branch**: master (protected, no direct commits)
 - **Development Branch**: Always use feature branches from master
 - **Branch Naming**: feature/{description}, bugfix/{description}, refactor/{description}
-- **Commit Style**: Detailed commits with clear feature descriptions
-- **Merge Strategy**: Feature branches merged to master when complete and tested
+- **Commit Style**: Detailed commits with clear feature descriptions, one per working subject
+- **Merge Strategy**: Feature branches merged to master ONLY with permission
+- **Merge Workflow**: Get permission → Test → Merge → Update master → Create new branch
 - **Safety Rule**: Never work directly on master branch
 - **Auto-Creation**: Automatically create feature branches for new development
+- **Post-Merge Process**: Always update master and create new branch after successful merge
 
 ### Testing Approach
 - **Test Files**: Preserved in tests/ directory
@@ -105,6 +115,8 @@ p3d/
 - **Content**: Configurable text labels and messages
 - **Code Formatting**: Configurable spacing preferences for brackets and operators
 - **Workflow Preferences**: Git branch management and development workflow settings
+- **Code Style Rules**: Import ordering, attribute access patterns, violation detection
+- **Git Ignore**: Comprehensive .gitignore for Python, Panda3D, and project files
 
 ### Known Issues and Solutions
 - **SSL Certificates**: Bypassed using ssl._create_unverified_context
@@ -118,7 +130,7 @@ p3d/
 3. Use settings manager for configurable values
 4. Implement interfaces for new major components
 5. Test changes after each refactoring step
-6. Commit frequently with descriptive messages
+6. Commit frequently with descriptive messages, one commit per working subject
 7. Separate concerns into appropriate packages
 8. Use camelCase for all new method names (except tests)
 9. Format code with spaces: function( param ), array[ index ], variable = value
@@ -127,9 +139,19 @@ p3d/
 12. Create feature branches with descriptive names (feature/add-new-feature)
 13. Test all changes before merging to master branch
 14. Maintain clean git history with meaningful commit messages
+15. **NEVER merge without explicit permission**
+16. After merge: update master and create new branch immediately
+17. Order imports from shortest to longest, group by type
+18. Avoid getattr()/hasattr() - use direct access or try/except instead
+19. **Avoid pyramid of doom** - max 2 nested if levels, use early returns
+20. **Use custom exceptions** - create specific exception classes, avoid generic Exception catching
+21. **Prefer early returns** - validate inputs early and return, avoid deep nesting
+22. **Use guard clauses** - check preconditions at function start
 
 ## Future Development Guidelines
 - **CRITICAL**: Always work on side branches, never directly on master
+- **PERMISSION REQUIRED**: Never merge without explicit permission
+- **POST-MERGE WORKFLOW**: Update master and create new branch after every merge
 - Continue using established architecture patterns
 - Add new settings to JSON configuration files
 - Maintain type safety in all new code
@@ -141,3 +163,9 @@ p3d/
 - Create feature branches with descriptive names before starting work
 - Test all changes thoroughly before merging
 - Use workflow settings manager to check branch recommendations
+- Commit each working subject separately with descriptive messages
+- Order imports from shortest to longest with proper grouping
+- Avoid getattr()/hasattr() patterns in favor of direct access or try/except
+- **Avoid pyramid of doom**: Keep nesting to max 2 levels, use early returns
+- **Use custom exceptions**: Create specific exception classes for different error types
+- **Prefer flat code structure**: Use guard clauses and early returns over deep nesting

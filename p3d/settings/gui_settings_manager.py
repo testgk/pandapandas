@@ -302,6 +302,34 @@ class GuiSettingsManager:
         except KeyError:
             return True
 
+    def shouldAvoidPyramidOfDoom(self) -> bool:
+        """Check if pyramid of doom (deep nesting) should be avoided"""
+        try:
+            return self.__settings["workflow_preferences"]["development"]["avoid_pyramid_of_doom"]
+        except KeyError:
+            return True
+
+    def shouldUseTryExceptWithCustomExceptions(self) -> bool:
+        """Check if try-except with custom exceptions is preferred"""
+        try:
+            return self.__settings["workflow_preferences"]["development"]["use_try_except_with_custom_exceptions"]
+        except KeyError:
+            return True
+
+    def getMaxNestedIfLevels(self) -> int:
+        """Get maximum allowed nested if levels"""
+        try:
+            return self.__settings["workflow_preferences"]["development"]["max_nested_if_levels"]
+        except KeyError:
+            return 2
+
+    def shouldPreferEarlyReturn(self) -> bool:
+        """Check if early return pattern is preferred"""
+        try:
+            return self.__settings["workflow_preferences"]["development"]["prefer_early_return"]
+        except KeyError:
+            return True
+
     def getMergeWorkflowSteps(self) -> List[str]:
         """Get the steps for proper merge workflow"""
         try:
@@ -379,5 +407,99 @@ class GuiSettingsManager:
             if 'hasattr(' in code:
                 violations.append("⚠️ Avoid using hasattr() - use try/except or isinstance() instead")
 
+        if self.shouldAvoidPyramidOfDoom():
+            # Count nested if levels
+            lines = code.split('\n')
+            current_nesting = 0
+            max_nesting = 0
+
+            for line in lines:
+                stripped = line.lstrip()
+                indent_level = len(line) - len(stripped)
+
+                if stripped.startswith('if '):
+                    current_nesting = (indent_level // 4) + 1
+                    max_nesting = max(max_nesting, current_nesting)
+
+            if max_nesting > self.getMaxNestedIfLevels():
+                violations.append(f"⚠️ Pyramid of doom detected: {max_nesting} nested if levels (max: {self.getMaxNestedIfLevels()}). Use early returns or guard clauses.")
+
+        if self.shouldUseTryExceptWithCustomExceptions():
+            # Check for generic exception handling
+            if 'except:' in code or 'except Exception:' in code:
+                violations.append("⚠️ Use specific custom exceptions instead of generic Exception catching")
+
+            # Check for missing custom exceptions in try blocks
+            if 'try:' in code and 'except ' in code:
+                if not any(word in code for word in ['Error', 'Exception']) or 'Exception:' in code:
+                    violations.append("ℹ️ Consider using custom exception classes for better error handling")
+
         return violations
+
+    def generateBetterCodeExample(self, badCode: str) -> str:
+        """Generate a better version of problematic code"""
+        improvements = []
+
+        # Example of fixing pyramid of doom
+        if self.shouldAvoidPyramidOfDoom() and 'if ' in badCode and '    if ' in badCode:
+            improvements.append("""
+# BAD - Pyramid of doom:
+if condition1:
+    if condition2:
+        if condition3:
+            do_something()
+
+# BETTER - Early returns:
+if not condition1:
+    return
+
+if not condition2:
+    return
+
+if not condition3:
+    return
+
+do_something()
+""")
+
+        # Example of better exception handling
+        if self.shouldUseTryExceptWithCustomExceptions() and 'except:' in badCode:
+            improvements.append("""
+# BAD - Generic exception:
+try:
+    risky_operation()
+except:
+    handle_error()
+
+# BETTER - Custom exceptions:
+class DataLoadError(Exception):
+    pass
+
+class ValidationError(Exception):
+    pass
+
+try:
+    risky_operation()
+except DataLoadError as e:
+    handle_data_error(e)
+except ValidationError as e:
+    handle_validation_error(e)
+""")
+
+        return "\n".join(improvements) if improvements else "No improvements suggested."
+
+    def getCodeQualityPatterns(self) -> Dict[str, str]:
+        """Get code quality patterns and examples"""
+        try:
+            patterns = {}
+            patterns.update(self.__settings["workflow_preferences"]["code_quality"]["exception_patterns"])
+            patterns.update(self.__settings["workflow_preferences"]["code_quality"]["structure_patterns"])
+            return patterns
+        except KeyError:
+            return {
+                "custom_exceptions": "class CustomError(Exception): pass",
+                "try_except_preferred": "try: action() except CustomError as e: handle(e)",
+                "early_return": "if not condition: return early_result",
+                "guard_clauses": "Validate inputs at function start with early returns"
+            }
 

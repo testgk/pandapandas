@@ -44,6 +44,10 @@ def testWorkflowSettings():
     print(f"Maintain clean history: {settings.shouldMaintainCleanHistory()}")
     print(f"Order imports short to long: {settings.shouldOrderImportsShortToLong()}")
     print(f"Avoid getattr/hasattr: {settings.shouldAvoidGetAttrHasAttr()}")
+    print(f"Avoid pyramid of doom: {settings.shouldAvoidPyramidOfDoom()}")
+    print(f"Use try-except with custom exceptions: {settings.shouldUseTryExceptWithCustomExceptions()}")
+    print(f"Max nested if levels: {settings.getMaxNestedIfLevels()}")
+    print(f"Prefer early return: {settings.shouldPreferEarlyReturn()}")
 
     print("\nBranch Name Generation:")
     print(f"Feature branch: {settings.generateBranchName('feature', 'add new component')}")
@@ -89,15 +93,59 @@ def testCodeStyleChecks():
             print(f"  {imp}")
 
     # Test code style violations
-    bad_code = """
+    print("\n=== Code Style Violation Tests ===")
+
+    # Test pyramid of doom
+    pyramid_code = """
+    if condition1:
+        if condition2:
+            if condition3:
+                if condition4:
+                    do_something()
+    """
+
+    print("Testing pyramid of doom:")
+    print("Code:", pyramid_code.strip())
+    violations = settings.getCodeStyleViolations(pyramid_code)
+    for violation in violations:
+        print(f"  {violation}")
+
+    # Test generic exception handling
+    bad_exception_code = """
+    try:
+        risky_operation()
+    except:
+        handle_error()
+    """
+
+    print("\nTesting generic exception handling:")
+    print("Code:", bad_exception_code.strip())
+    violations = settings.getCodeStyleViolations(bad_exception_code)
+    for violation in violations:
+        print(f"  {violation}")
+
+    # Test getattr/hasattr usage
+    bad_attr_code = """
     if hasattr(obj, 'method'):
         value = getattr(obj, 'attribute', default)
     """
 
-    violations = settings.getCodeStyleViolations(bad_code)
-    print("\nCode style violations found:")
+    print("\nTesting getattr/hasattr usage:")
+    print("Code:", bad_attr_code.strip())
+    violations = settings.getCodeStyleViolations(bad_attr_code)
     for violation in violations:
         print(f"  {violation}")
+
+    # Show code quality patterns
+    print("\n=== Code Quality Patterns ===")
+    patterns = settings.getCodeQualityPatterns()
+    for pattern_name, pattern_example in patterns.items():
+        print(f"{pattern_name}: {pattern_example}")
+
+    # Generate better code examples
+    print("\n=== Code Improvement Suggestions ===")
+    improvements = settings.generateBetterCodeExample(pyramid_code + bad_exception_code)
+    print(improvements)
 
     # Test merge workflow generation
     print("\nGenerated Merge Workflow:")
