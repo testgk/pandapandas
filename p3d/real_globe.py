@@ -407,8 +407,8 @@ try:
                         fg=(0, 1, 0, 1))  # Green hacker text
 
             # Rotation Step controls (top-left corner, vertical layout)
-            # Label at the very top - fix visibility
-            OnscreenText(text="ROTATION INCREMENT", pos=(-0.75, 0, 0.85), scale=0.035,
+            # Label beside the + button (to the left)
+            OnscreenText(text="ROT+", pos=(-0.9, 0, 0.8), scale=0.035,
                         fg=(1, 1, 1, 1))  # White text for visibility
 
             # + button (bigger, properly centered text)
@@ -423,11 +423,17 @@ try:
                 relief=2
             )
 
-            # Value display - fix visibility
+            # Value display - with label beside it
+            OnscreenText(text="VAL", pos=(-0.9, 0, 0.75), scale=0.035,
+                        fg=(1, 1, 1, 1))  # Label beside value
             self.increment_display = OnscreenText(
                 text=f"{self.ROTATION_INCREMENT}°",
                 pos=(-0.75, 0, 0.75), scale=0.04,
                 fg=(1, 1, 1, 1))  # White text for visibility
+
+            # Label beside the - button
+            OnscreenText(text="ROT-", pos=(-0.9, 0, 0.7), scale=0.035,
+                        fg=(1, 1, 1, 1))  # White text for visibility
 
             # - button (bigger, properly centered text)
             self.increment_minus_btn = DirectButton(
@@ -441,9 +447,9 @@ try:
                 relief=2
             )
 
-            # Zoom buttons with new layout: "Zoom: IN OUT"
-            OnscreenText(text="ZOOM:", pos=(-0.2, 0, 0.8), scale=0.05,
-                        fg=(0, 1, 0, 1))  # Green label
+            # Zoom buttons with label beside them
+            OnscreenText(text="ZOOM", pos=(-0.05, 0, 0.8), scale=0.04,
+                        fg=(1, 1, 1, 1))  # White label beside zoom buttons
 
             self.zoom_in_btn = DirectButton(text="IN", pos=(0.1, 0, 0.8), scale=0.05,
                         command=self.zoom_in_with_effect, text_scale=1.2,
