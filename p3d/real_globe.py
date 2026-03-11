@@ -30,7 +30,7 @@ try:
             self.setup_lighting()
 
             # Manual rotation variables - NO auto-rotation
-            self.globe_rotation_x = 0
+            self.globe_rotation_x = 105
             self.globe_rotation_y = 0
             self.globe_rotation_z = 0
 
@@ -60,6 +60,9 @@ try:
             # Create GUI controls
             self.create_gui_controls()
             print("Application ready with manual controls")
+
+            # Print initial rotation status
+            print(f"INITIAL STATUS - Globe rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
         def setup_lighting(self):
             # Add ambient light
@@ -264,6 +267,9 @@ try:
             self.globe.setScale(3, 3, 3)
             print(f"Globe created with {continent_count} continents")
 
+            # Apply initial rotation: X=105°, Y=0°, Z=0°
+            self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
+
         def create_sphere(self, radius, color):
             # Create proper 3D sphere
             format = GeomVertexFormat.getV3n3()
@@ -369,8 +375,14 @@ try:
                 continent_np.setTwoSided(True)
 
         def setup_camera(self):
-            # Default position - adjusted for better zoom responsiveness
-            self.default_camera_pos = (0, -30, 10)  # Closer than 40 for better zoom effect
+            # COMPLETELY disable mouse control to prevent interference
+            self.disableMouse()
+
+            # Set camera position to achieve distance 15
+            # Using proportional scaling from existing position (15, -30, 10) with distance ~35.6
+            scale_factor = 15.0 / 35.6
+            self.default_camera_pos = (15 * scale_factor, -30 * scale_factor, 10 * scale_factor)
+            # This gives approximately (6.3, -12.6, 4.2) for distance 15
             self.camera.setPos(*self.default_camera_pos)
             self.camera.lookAt(0, 0, 0)
 
@@ -378,6 +390,7 @@ try:
             pos = self.camera.getPos()
             distance = pos.length()
             print(f"Camera setup: Position {pos}, Distance: {distance:.1f}")
+            print("Mouse controls disabled to prevent camera interference")
 
         def create_gui_controls(self):
             """Create GUI buttons for manual control"""
@@ -430,68 +443,84 @@ try:
 
         # Control functions
         def zoom_in(self):
-            """Move camera closer to globe center"""
+            """Move camera closer to globe center using absolute positioning"""
             current_pos = self.camera.getPos()
             current_distance = current_pos.length()
 
             print(f"Zoom In - Current distance: {current_distance:.1f}")
 
-            # If camera is at origin (0,0,0), reset to default position first
+            # If camera is at origin, reset to default and don't zoom this time
             if current_distance < 0.1:
                 print("Camera at origin, resetting to default position")
                 self.camera.setPos(*self.default_camera_pos)
                 self.camera.lookAt(0, 0, 0)
-                current_pos = self.camera.getPos()
-                current_distance = current_pos.length()
-                print(f"Reset to distance: {current_distance:.1f}")
+                print("Reset complete - try zoom again")
+                return
 
-            # Prevent going too close
-            if current_distance <= 10:
+            # Calculate target distance (80% of current)
+            target_distance = max(current_distance * 0.8, 8.0)  # Don't go closer than 8
+
+            if target_distance >= current_distance - 0.1:  # Already at minimum
                 print("Already at minimum zoom distance")
                 return
 
-            # Simple approach: move camera 80% of current distance
-            new_x = current_pos.x * 0.8
-            new_y = current_pos.y * 0.8
-            new_z = current_pos.z * 0.8
+            # Calculate direction vector
+            direction_x = current_pos.x / current_distance
+            direction_y = current_pos.y / current_distance
+            direction_z = current_pos.z / current_distance
 
-            self.camera.setPos(new_x, new_y, new_z)
+            # Set new absolute position
+            new_pos = (
+                direction_x * target_distance,
+                direction_y * target_distance,
+                direction_z * target_distance
+            )
+
+            self.camera.setPos(*new_pos)
             self.camera.lookAt(0, 0, 0)
 
-            new_distance = self.camera.getPos().length()
-            print(f"Zoomed in to distance: {new_distance:.1f}")
+            verify_distance = self.camera.getPos().length()
+            print(f"Zoomed in to distance: {verify_distance:.1f}")
 
         def zoom_out(self):
-            """Move camera further from globe center"""
+            """Move camera further from globe center using absolute positioning"""
             current_pos = self.camera.getPos()
             current_distance = current_pos.length()
 
             print(f"Zoom Out - Current distance: {current_distance:.1f}")
 
-            # If camera is at origin (0,0,0), reset to default position first
+            # If camera is at origin, reset to default and don't zoom this time
             if current_distance < 0.1:
                 print("Camera at origin, resetting to default position")
                 self.camera.setPos(*self.default_camera_pos)
                 self.camera.lookAt(0, 0, 0)
-                current_pos = self.camera.getPos()
-                current_distance = current_pos.length()
-                print(f"Reset to distance: {current_distance:.1f}")
+                print("Reset complete - try zoom again")
+                return
 
-            # Prevent going too far
-            if current_distance >= 80:
+            # Calculate target distance (125% of current)
+            target_distance = min(current_distance * 1.25, 80.0)  # Don't go further than 80
+
+            if target_distance <= current_distance + 0.1:  # Already at maximum
                 print("Already at maximum zoom distance")
                 return
 
-            # Simple approach: move camera 125% of current distance
-            new_x = current_pos.x * 1.25
-            new_y = current_pos.y * 1.25
-            new_z = current_pos.z * 1.25
+            # Calculate direction vector
+            direction_x = current_pos.x / current_distance
+            direction_y = current_pos.y / current_distance
+            direction_z = current_pos.z / current_distance
 
-            self.camera.setPos(new_x, new_y, new_z)
+            # Set new absolute position
+            new_pos = (
+                direction_x * target_distance,
+                direction_y * target_distance,
+                direction_z * target_distance
+            )
+
+            self.camera.setPos(*new_pos)
             self.camera.lookAt(0, 0, 0)
 
-            new_distance = self.camera.getPos().length()
-            print(f"Zoomed out to distance: {new_distance:.1f}")
+            verify_distance = self.camera.getPos().length()
+            print(f"Zoomed out to distance: {verify_distance:.1f}")
 
         def reset_view(self):
             """Reset camera position and globe rotation to default"""
@@ -499,23 +528,25 @@ try:
             self.camera.setPos(*self.default_camera_pos)
             self.camera.lookAt(0, 0, 0)
 
-            # Reset globe rotation to default (no rotation)
-            self.globe_rotation_x = 0
+            # Reset globe rotation to default (X=105°, Y=0°, Z=0°)
+            self.globe_rotation_x = 105
             self.globe_rotation_y = 0
             self.globe_rotation_z = 0
-            self.globe.setHpr(0, 0, 0)
+            self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
 
             # Verify reset
             pos = self.camera.getPos()
             distance = pos.length()
-            print(f"View reset - Position: {pos}, Distance: {distance:.1f}")
+            print(f"RESET VIEW - Position: {pos}, Distance: {distance:.1f}")
+            print(f"RESET VIEW - Rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
         def random_view(self):
             """Set the globe to a random interesting angle"""
             chosen_view = random.choice(self.preset_views)
             self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y = chosen_view["rotation"]
             self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
-            print(f"Random view: {chosen_view['name']} - {chosen_view['description']}")
+            print(f"RANDOM VIEW: {chosen_view['name']} - {chosen_view['description']}")
+            print(f"RANDOM VIEW - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
         def set_preset_view(self, index):
             """Set the globe to a specific preset view"""
@@ -523,23 +554,28 @@ try:
                 chosen_view = self.preset_views[index]
                 self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y = chosen_view["rotation"]
                 self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
-                print(f"Set view: {chosen_view['name']} - {chosen_view['description']}")
+                print(f"PRESET VIEW: {chosen_view['name']} - {chosen_view['description']}")
+                print(f"PRESET VIEW - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
         def rotate_up(self):
             self.globe_rotation_x += 15
             self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
+            print(f"Rotate UP - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
         def rotate_down(self):
             self.globe_rotation_x -= 15
             self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
+            print(f"Rotate DOWN - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
         def rotate_left(self):
             self.globe_rotation_z -= 15
             self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
+            print(f"Rotate LEFT - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
         def rotate_right(self):
             self.globe_rotation_z += 15
             self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
+            print(f"Rotate RIGHT - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
     print("Creating Real Globe application...")
     app = RealGlobe()
