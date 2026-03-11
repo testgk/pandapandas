@@ -732,6 +732,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
 
             self.__guiController.clearLogMessage()
             self.__guiController.disableNextChallenge()
+            self._hint_count = 0
 
             # Display new challenge
             challenge_info = (
@@ -763,18 +764,18 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         if not self.__gameMode or not self.__currentChallenge:
             self.__guiController.addLogMessage("❌ No active challenge for hints")
             return
-        
+
         try:
             # Get progressive hints
             hint_count = getattr(self, '_hint_count', 0)
             hint = self.__geoGame.get_hint(hint_count)
-            
+
             hint_message = (
                 f"💡 HINT #{hint_count + 1}:\n"
                 f"{hint}\n"
                 f"🎯 Still looking for: {self.__currentChallenge.location_name}"
             )
-            
+
             self.__guiController.addLogMessage(hint_message)
             self._hint_count = hint_count + 1
             
