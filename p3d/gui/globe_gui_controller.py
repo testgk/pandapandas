@@ -2,7 +2,7 @@
 Globe GUI Controller - Handles all GUI elements and user interactions
 """
 from direct.gui.OnscreenText import OnscreenText
-from direct.gui.DirectGui import DirectButton
+from direct.gui.DirectGui import DirectButton, DGG
 from panda3d.core import *
 from typing import List, Tuple, Callable, Optional, Any
 from interfaces.i_globe_application import IGlobeApplication
@@ -18,6 +18,8 @@ class GlobeGuiController:
         self.__allButtons: List[DirectButton] = []
         self.__settings: GuiSettingsManager = GuiSettingsManager()
         self.__logDisplay: Optional[OnscreenText] = None
+        self.__challengeDisplay: Optional[OnscreenText] = None
+        self.__debugDisplay: Optional[OnscreenText] = None
 
         # Button references for effects
         self.__incrementPlusBtn: Optional[DirectButton] = None
@@ -157,22 +159,26 @@ class GlobeGuiController:
             self.__rotateLeftBtn, self.__rotateRightBtn
         ]
 
-        # Log display near game buttons (right side), below stats button
-        self.__logDisplay = OnscreenText(
-            text=self.__settings.getTextContent("system_ready"),
-            pos=(0.6, 0.3),  # Right side, below the game buttons
-            scale=0.032,  # Smaller font
-            fg=(1.0, 1.0, 1.0, 1.0),  # White text
-            wordwrap=22,
+        # Challenge label — bottom-left, pale yellow
+        challengeSettings = self.__settings.getChallengeTextSettings()
+        self.__challengeDisplay = OnscreenText(
+            text="",
+            pos=challengeSettings[ "pos" ],
+            scale=challengeSettings[ "scale" ],
+            fg=self.__settings.getTextColor( "challenge" ),
+            wordwrap=challengeSettings[ "wordwrap" ],
             align=TextNode.ALeft
         )
 
-        # Bottom status text
-        OnscreenText(
-            text=self.__settings.getTextContent("status_message"),
-            pos=self.__settings.getTextPosition("status_position"),
-            scale=self.__settings.getTextScale("status_scale"),
-            fg=self.__settings.getTextColor("status")
+        # Debug label — bottom-right, gray
+        debugSettings = self.__settings.getDebugTextSettings()
+        self.__debugDisplay = OnscreenText(
+            text="",
+            pos=debugSettings[ "pos" ],
+            scale=debugSettings[ "scale" ],
+            fg=self.__settings.getTextColor( "debug" ),
+            wordwrap=debugSettings[ "wordwrap" ],
+            align=TextNode.ALeft
         )
 
     def __createPresetButtons(self) -> None:
@@ -206,7 +212,7 @@ class GlobeGuiController:
             pressEffect=1, relief=2
         )
 
-        # Next Challenge button
+        # Next Challenge button - disabled until question is answered
         self.__nextChallengeBtn = DirectButton(
             text=self.__settings.getTextContent("next_challenge"),
             pos=self.__settings.getButtonPosition("game", "next_position"),
@@ -214,7 +220,8 @@ class GlobeGuiController:
             command=self.__onNextChallenge,
             frameColor=self.__settings.getButtonColor("control", "background"),
             text_fg=self.__settings.getButtonColor("control", "text"),
-            pressEffect=1, relief=2
+            pressEffect=1, relief=2,
+            state=DGG.DISABLED
         )
 
         # Get Hint button
@@ -258,22 +265,29 @@ class GlobeGuiController:
         self.__globeApp.taskManager.doMethodLater(effectDuration, resetColor, f"reset_button_{id(button)}")
 
     def clearLogMessage( self ) -> None:
-        """Clear the log display"""
-        self.__logMessages = []
-        if self.__logDisplay:
-            self.__logDisplay.setText( "" )
+        """Clear the challenge display"""
+        if self.__challengeDisplay:
+            self.__challengeDisplay.setText( "" )
 
-    def addLogMessage(self, message: str) -> None:
-        """Add message to log display"""
-        self.__logMessages.append(message)
-        maxMessages = self.__settings.getMaxLogMessages()
+    def addLogMessage( self, message: str ) -> None:
+        """Replace challenge display with a single message"""
+        if self.__challengeDisplay:
+            self.__challengeDisplay.setText( message )
 
-        if len(self.__logMessages) > maxMessages:
-            self.__logMessages.pop(0)
+    def addDebugMessage( self, message: str ) -> None:
+        """Replace debug display with a single message"""
+        if self.__debugDisplay:
+            self.__debugDisplay.setText( message )
 
-        logText = " | ".join(self.__logMessages)
-        if self.__logDisplay:
-            self.__logDisplay.setText(logText)
+    def enableNextChallenge( self ) -> None:
+        """Enable the Next Challenge button after question is answered"""
+        if self.__nextChallengeBtn:
+            self.__nextChallengeBtn[ 'state' ] = DGG.NORMAL
+
+    def disableNextChallenge( self ) -> None:
+        """Disable the Next Challenge button until question is answered"""
+        if self.__nextChallengeBtn:
+            self.__nextChallengeBtn[ 'state' ] = DGG.DISABLED
 
     # Event handlers - delegate to globe app
     def __onZoomIn(self) -> None:

@@ -27,7 +27,9 @@
     "text": {
       "log": [1.0, 1.0, 1.0, 1.0],
       "status": [0, 1.0, 0, 1.0],
-      "system": [1.0, 1.0, 1.0, 1.0]
+      "system": [1.0, 1.0, 1.0, 1.0],
+      "challenge": [1.0, 1.0, 0.6, 1.0],
+      "debug": [0.55, 0.55, 0.55, 1.0]
     }
   },
   "layout": {
@@ -66,19 +68,20 @@
         "scale": 0.04
       },
       "game": {
-        "start_position": [0.9, 0, 0.85],
-        "next_position": [0.9, 0, 0.72],
-        "hint_position": [0.9, 0, 0.59],
-        "stats_position": [0.9, 0, 0.46],
-        "scale": 0.037
+        "start_position": [1.05, 0, 0.85],
+        "next_position": [1.05, 0, 0.73],
+        "hint_position": [1.05, 0, 0.61],
+        "stats_position": [1.05, 0, 0.49],
+        "scale": 0.033
       }
     },
     "text": {
-      "log_position": [0, -0.75],
-      "log_scale": 0.04,
-      "log_wordwrap": 80,
-      "status_position": [0, -0.85],
-      "status_scale": 0.04
+      "challenge_position": [-1.3, -0.75],
+      "challenge_scale": 0.038,
+      "challenge_wordwrap": 28,
+      "debug_position": [0.5, -0.75],
+      "debug_scale": 0.030,
+      "debug_wordwrap": 40
     }
   },
   "effects": {
@@ -86,7 +89,6 @@
     "max_log_messages": 3
   },
   "text_content": {
-    "status_message": "REAL WORLD DATA • MANUAL CONTROLS ONLY",
     "system_ready": "SYSTEM READY",
     "zoom_label": "ZOOM",
     "presets": [

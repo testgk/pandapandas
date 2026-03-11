@@ -453,6 +453,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             self.__currentChallenge = self.__geoGame.get_challenge_by_difficulty()
             
             self.__guiController.clearLogMessage()
+            self.__guiController.disableNextChallenge()
 
             # Display challenge information prominently
             challenge_info = (
@@ -588,7 +589,8 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
                 result_analysis += "🗺️ Keep practicing! Geography takes time to master."
             
             self.__guiController.addLogMessage(result_analysis)
-            
+            self.__guiController.enableNextChallenge()
+
             # End current challenge and prepare for next
             self.__currentChallenge = None
             self.__gameMode = False
@@ -733,6 +735,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             self.__gameMode = True
 
             self.__guiController.clearLogMessage()
+            self.__guiController.disableNextChallenge()
 
             # Display new challenge
             challenge_info = (

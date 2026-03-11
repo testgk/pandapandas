@@ -80,6 +80,24 @@ class GuiSettingsManager:
         except KeyError:
             return 0.04
 
+    def getChallengeTextSettings( self ) -> Dict[ str, Any ]:
+        """Get challenge label position, scale and wordwrap"""
+        text = self.__settings.get( "layout", {} ).get( "text", {} )
+        return {
+            "pos": tuple( text.get( "challenge_position", [ -1.3, -0.75 ] ) ),
+            "scale": text.get( "challenge_scale", 0.038 ),
+            "wordwrap": text.get( "challenge_wordwrap", 28 ),
+        }
+
+    def getDebugTextSettings( self ) -> Dict[ str, Any ]:
+        """Get debug label position, scale and wordwrap"""
+        text = self.__settings.get( "layout", {} ).get( "text", {} )
+        return {
+            "pos": tuple( text.get( "debug_position", [ 0.5, -0.75 ] ) ),
+            "scale": text.get( "debug_scale", 0.030 ),
+            "wordwrap": text.get( "debug_wordwrap", 40 ),
+        }
+
     def getPresetPositions(self) -> list[tuple[Any]] | list[tuple[float, int, float]]:
         """Get all preset button positions"""
         try:
