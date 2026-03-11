@@ -422,6 +422,37 @@ try:
             DirectButton(text="Right", pos=(0.15, 0, 0.5), scale=0.05,
                         command=self.rotate_right, text_scale=1.0)
 
+            # Rotation increment adjustment buttons with colorful styling
+            OnscreenText(text="Rotation Step:", pos=(-0.45, 0, 0.65), scale=0.04,
+                        fg=(1, 1, 1, 1))
+
+            self.increment_minus_btn = DirectButton(
+                text="-", pos=(-0.45, 0, 0.6), scale=0.03,
+                command=self.decrease_rotation_increment, text_scale=1.5,
+                frameColor=(0.2, 0.8, 0.2, 1),  # Green background
+                text_fg=(0, 0, 0, 1),  # Black text
+                frameSize=(-0.8, 0.8, -0.4, 0.4),
+                pressEffect=1,
+                relief=2
+            )
+
+            # Display current rotation increment value
+            self.increment_display = OnscreenText(
+                text=f"{self.ROTATION_INCREMENT}°",
+                pos=(-0.45, 0, 0.55), scale=0.04,
+                fg=(0.2, 0.8, 0.2, 1)  # Green text
+            )
+
+            self.increment_plus_btn = DirectButton(
+                text="+", pos=(-0.45, 0, 0.5), scale=0.03,
+                command=self.increase_rotation_increment, text_scale=1.5,
+                frameColor=(0.2, 0.8, 0.2, 1),  # Green background
+                text_fg=(0, 0, 0, 1),  # Black text
+                frameSize=(-0.8, 0.8, -0.4, 0.4),
+                pressEffect=1,
+                relief=2
+            )
+
             # Preset view buttons
             DirectButton(text="Europe", pos=(-0.6, 0, 0.3), scale=0.04,
                         command=lambda: self.set_preset_view(0), text_scale=1.0)
@@ -560,7 +591,7 @@ try:
             print(f"Rotate DOWN - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
         def rotate_left(self):
-increase            self.globe_rotation_z -= self.ROTATION_INCREMENT
+            self.globe_rotation_z -= self.ROTATION_INCREMENT
             self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
             print(f"Rotate LEFT - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
@@ -568,6 +599,46 @@ increase            self.globe_rotation_z -= self.ROTATION_INCREMENT
             self.globe_rotation_z += self.ROTATION_INCREMENT
             self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
             print(f"Rotate RIGHT - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
+
+        def increase_rotation_increment(self):
+            """Increase rotation increment by 1 degree (max 30)"""
+            if self.ROTATION_INCREMENT < 30:
+                self.ROTATION_INCREMENT += 1
+                self.update_increment_display()
+                print(f"Rotation increment increased to {self.ROTATION_INCREMENT}°")
+
+                # Visual feedback - temporarily change button color to dark gray
+                self.increment_plus_btn['frameColor'] = (0.3, 0.3, 0.3, 1)  # Dark gray
+                self.taskMgr.doMethodLater(0.1, self.reset_plus_button_color, "reset_plus_color")
+            else:
+                print("Maximum rotation increment reached (30°)")
+
+        def decrease_rotation_increment(self):
+            """Decrease rotation increment by 1 degree (min 1)"""
+            if self.ROTATION_INCREMENT > 1:
+                self.ROTATION_INCREMENT -= 1
+                self.update_increment_display()
+                print(f"Rotation increment decreased to {self.ROTATION_INCREMENT}°")
+
+                # Visual feedback - temporarily change button color to dark gray
+                self.increment_minus_btn['frameColor'] = (0.3, 0.3, 0.3, 1)  # Dark gray
+                self.taskMgr.doMethodLater(0.1, self.reset_minus_button_color, "reset_minus_color")
+            else:
+                print("Minimum rotation increment reached (1°)")
+
+        def update_increment_display(self):
+            """Update the rotation increment display text"""
+            self.increment_display.setText(f"{self.ROTATION_INCREMENT}°")
+
+        def reset_plus_button_color(self, task):
+            """Reset plus button color back to green"""
+            self.increment_plus_btn['frameColor'] = (0.2, 0.8, 0.2, 1)  # Back to green
+            return task.done
+
+        def reset_minus_button_color(self, task):
+            """Reset minus button color back to green"""
+            self.increment_minus_btn['frameColor'] = (0.2, 0.8, 0.2, 1)  # Back to green
+            return task.done
 
     print("Creating Real Globe application...")
     app = RealGlobe()
