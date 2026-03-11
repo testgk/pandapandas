@@ -1,0 +1,25 @@
+# GeoPandas Globe PyInstaller Requirements - Simplified
+# Core dependencies for building standalone executables
+
+# PyInstaller
+pyinstaller>=5.0
+
+# Core application dependencies
+panda3d>=1.10.0
+pandas>=1.5.0
+matplotlib>=3.5.0
+requests>=2.28.0
+numpy>=1.21.0
+pillow>=9.0.0
+
+# Shapely without GDAL dependencies initially
+shapely>=2.0.0
+
+# Additional PyInstaller hooks and utilities
+altgraph>=0.17
+pefile>=2022.5.30;sys_platform=="win32"
+macholib>=1.16;sys_platform=="darwin"
+
+# Optional but recommended for better performance
+psutil>=5.9.0
+
