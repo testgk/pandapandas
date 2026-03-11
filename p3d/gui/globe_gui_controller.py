@@ -47,15 +47,24 @@ class GlobeGuiController:
 
     def __createGuiControls(self) -> None:
         """Create all GUI buttons and controls"""
-        # Rotation Step controls (top-left corner, vertical layout)
+        # Rotation Step controls (top-left corner) — label + +/- buttons
+        DirectButton(
+            text="STEP",
+            pos=self.__settings.getButtonPosition( "increment", "label_position" ),
+            scale=self.__settings.getButtonScale( "increment" ),
+            frameColor=self.__settings.getButtonColor( "label", "background" ),
+            text_fg=self.__settings.getButtonColor( "label", "text" ),
+            relief=0
+        )
+
         self.__incrementPlusBtn = DirectButton(
             text="+",
             pos=self.__settings.getButtonPosition("increment", "plus_position"),
             scale=self.__settings.getButtonScale("increment"),
             command=self.__onIncreaseRotationIncrement,
-            frameColor=self.__settings.getButtonColor("increment", "background"),
-            text_fg=self.__settings.getButtonColor("increment", "text"),
-            relief=2
+            frameColor=self.__settings.getButtonColor("control", "background"),
+            text_fg=self.__settings.getButtonColor("control", "text"),
+            pressEffect=1, relief=2
         )
 
         self.__incrementMinusBtn = DirectButton(
@@ -63,9 +72,9 @@ class GlobeGuiController:
             pos=self.__settings.getButtonPosition("increment", "minus_position"),
             scale=self.__settings.getButtonScale("increment"),
             command=self.__onDecreaseRotationIncrement,
-            frameColor=self.__settings.getButtonColor("increment", "background"),
-            text_fg=self.__settings.getButtonColor("increment", "text"),
-            relief=2
+            frameColor=self.__settings.getButtonColor("control", "background"),
+            text_fg=self.__settings.getButtonColor("control", "text"),
+            pressEffect=1, relief=2
         )
 
         # Zoom controls label
@@ -261,9 +270,9 @@ class GlobeGuiController:
         ])
 
     def __createRadiusControls( self ) -> None:
-        """Create buttons and value display for continent radius adjustment"""
+        """Create buttons and value display for continent radius adjustment (hidden)"""
         # Label
-        DirectButton(
+        radiusLabel = DirectButton(
             text="RADIUS",
             pos=( -0.75, 0, 0.58 ),
             scale=0.04,
@@ -271,6 +280,7 @@ class GlobeGuiController:
             text_fg=self.__settings.getButtonColor( "label", "text" ),
             relief=0
         )
+        radiusLabel.hide()
 
         self.__radiusPlusBtn = DirectButton(
             text="+",
@@ -281,6 +291,7 @@ class GlobeGuiController:
             text_fg=self.__settings.getButtonColor( "increment", "text" ),
             pressEffect=1, relief=2
         )
+        self.__radiusPlusBtn.hide()
 
         self.__radiusMinusBtn = DirectButton(
             text="-",
@@ -291,6 +302,7 @@ class GlobeGuiController:
             text_fg=self.__settings.getButtonColor( "increment", "text" ),
             pressEffect=1, relief=2
         )
+        self.__radiusMinusBtn.hide()
 
         self.__radiusDisplay = OnscreenText(
             text=f"{self.__globeApp.continentRadius:.2f}",
@@ -299,6 +311,7 @@ class GlobeGuiController:
             fg=( 1.0, 1.0, 1.0, 1.0 ),
             align=TextNode.ACenter
         )
+        self.__radiusDisplay.hide()
 
         self.__allButtons.extend( [ self.__radiusPlusBtn, self.__radiusMinusBtn ] )
 

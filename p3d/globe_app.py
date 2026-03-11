@@ -318,8 +318,66 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.__globe.setScale(GLOBE_SCALE, GLOBE_SCALE, GLOBE_SCALE)
         print(f"Globe created with {continentCount} continents")
 
+        # Draw latitude / longitude grid lines
+        self.__createGraticule()
+
         # Apply initial rotation
         self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
+
+    def __createGraticule( self ) -> None:
+        """Draw latitude and longitude grid lines on the globe surface"""
+        GRID_RADIUS = self.__continentRadius + 0.005   # just above continents
+        GRID_STEP   = 15          # degrees between lines
+        GRID_SEGMENTS = 120       # smoothness of each circle
+        LINE_COLOR  = ( 0.55, 0.75, 0.95, 0.45 )   # pale blue, semi-transparent
+        EQUATOR_COLOR  = ( 0.9, 0.9, 0.4, 0.7 )    # yellow equator / prime meridian
+        THICK_NORMAL   = 1.0
+        THICK_MAJOR    = 2.0
+
+        lines = LineSegs()
+        lines.setThickness( THICK_NORMAL )
+
+        # --- Latitude lines (parallels) ---
+        for latDeg in range( -90, 91, GRID_STEP ):
+            isMajor = ( latDeg == 0 )
+            lines.setThickness( THICK_MAJOR if isMajor else THICK_NORMAL )
+            lines.setColor( *( EQUATOR_COLOR if isMajor else LINE_COLOR ) )
+            latRad = math.radians( latDeg )
+            ringR  = math.cos( latRad ) * GRID_RADIUS
+            y      = math.sin( latRad ) * GRID_RADIUS
+            first  = True
+            for s in range( GRID_SEGMENTS + 1 ):
+                lonRad = ( s / GRID_SEGMENTS ) * 2 * pi
+                x = ringR * math.sin( lonRad )
+                z = ringR * math.cos( lonRad )
+                if first:
+                    lines.moveTo( x, y, z )
+                    first = False
+                else:
+                    lines.drawTo( x, y, z )
+
+        # --- Longitude lines (meridians) ---
+        for lonDeg in range( 0, 360, GRID_STEP ):
+            isMajor = ( lonDeg == 0 )
+            lines.setThickness( THICK_MAJOR if isMajor else THICK_NORMAL )
+            lines.setColor( *( EQUATOR_COLOR if isMajor else LINE_COLOR ) )
+            lonRad = math.radians( lonDeg )
+            first  = True
+            for s in range( GRID_SEGMENTS + 1 ):
+                latRad = ( s / GRID_SEGMENTS ) * pi - pi / 2
+                x = math.cos( latRad ) * math.sin( lonRad ) * GRID_RADIUS
+                y = math.sin( latRad ) * GRID_RADIUS
+                z = math.cos( latRad ) * math.cos( lonRad ) * GRID_RADIUS
+                if first:
+                    lines.moveTo( x, y, z )
+                    first = False
+                else:
+                    lines.drawTo( x, y, z )
+
+        graticuleNode = lines.create()
+        graticulePath = self.__globe.attachNewNode( graticuleNode )
+        graticulePath.setTransparency( TransparencyAttrib.MAlpha )
+        graticulePath.setDepthOffset( 1 )
 
     def __addContinentGeometry(self, geometry, color: Tuple[float, float, float, float], name: str, radius: float = CONTINENT_RADIUS) -> None:
         """Add continent geometry to the globe"""
@@ -541,12 +599,13 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
 
     def __rebuildContinents( self ) -> None:
         """Remove and rebuild all continent geometry at the current radius"""
-        # Remove existing continent nodes (keep ocean sphere and collision node)
+        # Remove existing continent nodes and graticule
         for child in self.__globe.getChildren():
-            if child.getName().startswith( "continent_" ):
+            nodeName = child.getName()
+            if nodeName.startswith( "continent_" ) or nodeName == "line_segs":
                 child.removeNode()
 
-        # Rebuild with new radius
+        # Rebuild continents with new radius
         for name, geometry in self.__continents.items():
             color = self.__continentColors.get( name, ( 0.7, 0.7, 0.7, 1 ) )
             self.__addContinentGeometry( geometry, color, name, self.__continentRadius )
@@ -558,6 +617,9 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         collisionNode.addSolid( collisionSphere )
         self.__collisionNP = self.__globe.attachNewNode( collisionNode )
         self.__collisionNP.setCollideMask( BitMask32.bit( 1 ) )
+
+        # Rebuild graticule above new continent surface
+        self.__createGraticule()
 
     def increaseContinentRadius( self ) -> None:
         """Increase continent radius by 0.01"""

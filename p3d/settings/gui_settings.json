@@ -35,8 +35,9 @@
   "layout": {
     "buttons": {
       "increment": {
-        "plus_position": [-0.75, 0, 0.8],
-        "minus_position": [-0.75, 0, 0.7],
+        "label_position": [-0.75, 0, 0.9],
+        "plus_position": [-0.57, 0, 0.8],
+        "minus_position": [-0.93, 0, 0.8],
         "scale": 0.04
       },
       "zoom": {
