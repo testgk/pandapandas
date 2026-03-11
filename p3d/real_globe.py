@@ -33,6 +33,9 @@ try:
             self.globe_rotation_y = 0
             self.globe_rotation_z = 0
 
+            # Rotation increment parameter
+            self.ROTATION_INCREMENT = 8  # degrees per button press
+
             # Define interesting natural views
             self.preset_views = [
                 {"name": "Europe/Africa View", "rotation": (0, -15, 0), "description": "Shows Europe and Mediterranean"},
@@ -547,22 +550,22 @@ try:
                 print(f"PRESET VIEW - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
         def rotate_up(self):
-            self.globe_rotation_x += 15
+            self.globe_rotation_x += self.ROTATION_INCREMENT
             self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
             print(f"Rotate UP - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
         def rotate_down(self):
-            self.globe_rotation_x -= 15
+            self.globe_rotation_x -= self.ROTATION_INCREMENT
             self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
             print(f"Rotate DOWN - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
         def rotate_left(self):
-            self.globe_rotation_z -= 15
+increase            self.globe_rotation_z -= self.ROTATION_INCREMENT
             self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
             print(f"Rotate LEFT - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
         def rotate_right(self):
-            self.globe_rotation_z += 15
+            self.globe_rotation_z += self.ROTATION_INCREMENT
             self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
             print(f"Rotate RIGHT - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
