@@ -127,3 +127,136 @@ class GuiSettingsManager:
             return self.__settings["layout"]["text"]["log_wordwrap"]
         except KeyError:
             return 80
+
+    def getCodeFormattingSpacing(self, spacingType: str) -> bool:
+        """Get code formatting spacing preference"""
+        try:
+            return self.__settings["code_formatting"]["spacing"][spacingType]
+        except KeyError:
+            # Default spacing preferences
+            defaults = {
+                "after_opening_brackets": True,
+                "before_closing_brackets": True,
+                "before_equals": True,
+                "after_equals": True
+            }
+            return defaults.get(spacingType, True)
+
+    def shouldSpaceAfterOpeningBrackets(self) -> bool:
+        """Check if spaces should be added after opening brackets ( [ {"""
+        return self.getCodeFormattingSpacing("after_opening_brackets")
+
+    def shouldSpaceBeforeClosingBrackets(self) -> bool:
+        """Check if spaces should be added before closing brackets ) ] }"""
+        return self.getCodeFormattingSpacing("before_closing_brackets")
+
+    def shouldSpaceBeforeEquals(self) -> bool:
+        """Check if spaces should be added before equals sign"""
+        return self.getCodeFormattingSpacing("before_equals")
+
+    def shouldSpaceAfterEquals(self) -> bool:
+        """Check if spaces should be added after equals sign"""
+        return self.getCodeFormattingSpacing("after_equals")
+
+    def formatAssignment(self, variable: str, value: str) -> str:
+        """Format assignment statement with proper spacing"""
+        beforeSpace = " " if self.shouldSpaceBeforeEquals() else ""
+        afterSpace = " " if self.shouldSpaceAfterEquals() else ""
+        return f"{variable}{beforeSpace}={afterSpace}{value}"
+
+    def formatFunctionCall(self, functionName: str, parameters: str) -> str:
+        """Format function call with proper bracket spacing"""
+        afterOpen = " " if self.shouldSpaceAfterOpeningBrackets() else ""
+        beforeClose = " " if self.shouldSpaceBeforeClosingBrackets() else ""
+        return f"{functionName}({afterOpen}{parameters}{beforeClose})"
+
+    def formatArrayAccess(self, arrayName: str, index: str) -> str:
+        """Format array access with proper bracket spacing"""
+        afterOpen = " " if self.shouldSpaceAfterOpeningBrackets() else ""
+        beforeClose = " " if self.shouldSpaceBeforeClosingBrackets() else ""
+        return f"{arrayName}[{afterOpen}{index}{beforeClose}]"
+
+    def formatDictLiteral(self, content: str) -> str:
+        """Format dictionary literal with proper brace spacing"""
+        afterOpen = " " if self.shouldSpaceAfterOpeningBrackets() else ""
+        beforeClose = " " if self.shouldSpaceBeforeClosingBrackets() else ""
+        return f"{{{afterOpen}{content}{beforeClose}}}"
+
+    def shouldAlwaysUseSideBranch(self) -> bool:
+        """Check if development should always happen on side branches"""
+        try:
+            return self.__settings["workflow_preferences"]["git"]["always_use_side_branch"]
+        except KeyError:
+            return True  # Default to safe practice
+
+    def shouldNeverWorkDirectlyOnMaster(self) -> bool:
+        """Check if direct work on master branch should be avoided"""
+        try:
+            return self.__settings["workflow_preferences"]["git"]["never_work_directly_on_master"]
+        except KeyError:
+            return True  # Default to safe practice
+
+    def shouldAutoCreateFeatureBranch(self) -> bool:
+        """Check if feature branches should be created automatically"""
+        try:
+            return self.__settings["workflow_preferences"]["git"]["auto_create_feature_branch"]
+        except KeyError:
+            return True
+
+    def getBranchNamingPattern(self) -> str:
+        """Get the preferred branch naming pattern"""
+        try:
+            return self.__settings["workflow_preferences"]["git"]["branch_naming_pattern"]
+        except KeyError:
+            return "feature/{description}"
+
+    def shouldCommitFrequently(self) -> bool:
+        """Check if frequent commits are preferred"""
+        try:
+            return self.__settings["workflow_preferences"]["development"]["commit_frequently"]
+        except KeyError:
+            return True
+
+    def shouldUseDescriptiveCommitMessages(self) -> bool:
+        """Check if descriptive commit messages are required"""
+        try:
+            return self.__settings["workflow_preferences"]["development"]["descriptive_commit_messages"]
+        except KeyError:
+            return True
+
+    def shouldTestBeforeMerge(self) -> bool:
+        """Check if testing before merge is required"""
+        try:
+            return self.__settings["workflow_preferences"]["development"]["test_before_merge"]
+        except KeyError:
+            return True
+
+    def shouldMaintainCleanHistory(self) -> bool:
+        """Check if clean git history should be maintained"""
+        try:
+            return self.__settings["workflow_preferences"]["development"]["maintain_clean_history"]
+        except KeyError:
+            return True
+
+    def generateBranchName(self, branchType: str, description: str) -> str:
+        """Generate a branch name following the established pattern"""
+        pattern = self.getBranchNamingPattern()
+
+        # Replace placeholder with actual description
+        branchName = pattern.replace("{description}", description.lower().replace(" ", "-"))
+
+        # Handle different branch types
+        if branchType.lower() != "feature":
+            branchName = branchName.replace("feature/", f"{branchType.lower()}/")
+
+        return branchName
+
+    def getWorkflowRecommendation(self, currentBranch: str) -> str:
+        """Get workflow recommendation based on current branch"""
+        if currentBranch == "master" and self.shouldNeverWorkDirectlyOnMaster():
+            return "⚠️ WARNING: Working directly on master branch is not recommended. Create a feature branch instead."
+        elif currentBranch.startswith(("feature/", "bugfix/", "refactor/", "experimental/")):
+            return "✅ Good practice: Working on a dedicated branch."
+        else:
+            return "ℹ️ Consider using a descriptive branch name with prefix (feature/, bugfix/, etc.)"
+

@@ -84,5 +84,41 @@
       "ATLANTIC",
       "PACIFIC"
     ]
+  },
+  "code_formatting": {
+    "spacing": {
+      "after_opening_brackets": true,
+      "before_closing_brackets": true,
+      "before_equals": true,
+      "after_equals": true,
+      "description": "Formatting preferences for code generation"
+    },
+    "bracket_spacing_examples": {
+      "parentheses": "function( param1, param2 )",
+      "square_brackets": "array[ index ]",
+      "curly_braces": "dict{ key: value }",
+      "assignment": "variable = value"
+    }
+  },
+  "workflow_preferences": {
+    "git": {
+      "always_use_side_branch": true,
+      "never_work_directly_on_master": true,
+      "auto_create_feature_branch": true,
+      "branch_naming_pattern": "feature/{description}",
+      "description": "Git workflow and branch management preferences"
+    },
+    "development": {
+      "commit_frequently": true,
+      "descriptive_commit_messages": true,
+      "test_before_merge": true,
+      "maintain_clean_history": true
+    },
+    "branch_examples": {
+      "feature_branch": "feature/add-new-component",
+      "bugfix_branch": "bugfix/fix-camera-positioning",
+      "refactor_branch": "refactor/improve-performance",
+      "experimental_branch": "experimental/try-new-approach"
+    }
   }
 }
