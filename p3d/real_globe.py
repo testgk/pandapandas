@@ -402,28 +402,15 @@ try:
             # Initialize log messages list for bottom display
             self.log_messages = []
 
-            # Title with 80s hacker font style
-            OnscreenText(text="REAL GLOBE MANUAL CONTROLS", pos=(0, 0.9), scale=0.07,
-                        fg=(0, 1, 0, 1))  # Green hacker text
-
             # Rotation Step controls (top-left corner, vertical layout)
-            # Label beside + button
-            DirectButton(text="ROT+", pos=(-0.85, 0, 0.8), scale=0.03, frameColor=(0, 0, 0, 0), text_fg=(1, 1, 1, 1), relief=0)
             # + button
             self.increment_plus_btn = DirectButton(text="+", pos=(-0.75, 0, 0.8), scale=0.04, command=self.increase_rotation_increment, frameColor=(0.2, 0.8, 0.2, 1), text_fg=(0, 0, 0, 1), relief=2)
 
-            # Label beside value
-            DirectButton(text="VAL", pos=(-0.85, 0, 0.75), scale=0.03, frameColor=(0, 0, 0, 0), text_fg=(1, 1, 1, 1), relief=0)
-            # Value display
-            self.increment_display = OnscreenText(text=f"{self.ROTATION_INCREMENT}°", pos=(-0.75, 0, 0.75), scale=0.04, fg=(1, 1, 1, 1))
-
-            # Label beside - button
-            DirectButton(text="ROT-", pos=(-0.85, 0, 0.7), scale=0.03, frameColor=(0, 0, 0, 0), text_fg=(1, 1, 1, 1), relief=0)
             # - button
             self.increment_minus_btn = DirectButton(text="-", pos=(-0.75, 0, 0.7), scale=0.04, command=self.decrease_rotation_increment, frameColor=(0.2, 0.8, 0.2, 1), text_fg=(0, 0, 0, 1), relief=2)
 
-            # Label beside zoom buttons
-            DirectButton(text="ZOOM", pos=(0.02, 0, 0.8), scale=0.03, frameColor=(0, 0, 0, 0), text_fg=(1, 1, 1, 1), relief=0)
+            # Label beside zoom buttons - bigger and further left
+            DirectButton(text="ZOOM", pos=(-0.1, 0, 0.8), scale=0.05, frameColor=(0, 0, 0, 0), text_fg=(1, 1, 1, 1), relief=0)
 
             self.zoom_in_btn = DirectButton(text="IN", pos=(0.1, 0, 0.8), scale=0.05,
                         command=self.zoom_in_with_effect, text_scale=1.2,
@@ -444,23 +431,23 @@ try:
                         text_fg=(0, 1, 0, 1),  # Green text
                         pressEffect=1, relief=2)
 
-            # Rotation buttons in cross pattern with 80s styling
-            self.rotate_up_btn = DirectButton(text="UP", pos=(0, 0, 0.5), scale=0.05,
+            # Rotation buttons positioned further at screen edges
+            self.rotate_up_btn = DirectButton(text="UP", pos=(0, 0, 0.9), scale=0.05,
                         command=self.rotate_up_with_effect, text_scale=1.0,
                         frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
                         pressEffect=1, relief=2)
 
-            self.rotate_down_btn = DirectButton(text="DOWN", pos=(0, 0, 0.3), scale=0.05,
+            self.rotate_down_btn = DirectButton(text="DOWN", pos=(0, 0, -0.8), scale=0.05,
                         command=self.rotate_down_with_effect, text_scale=1.0,
                         frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
                         pressEffect=1, relief=2)
 
-            self.rotate_left_btn = DirectButton(text="LEFT", pos=(-0.15, 0, 0.4), scale=0.05,
+            self.rotate_left_btn = DirectButton(text="LEFT", pos=(-0.95, 0, 0), scale=0.05,
                         command=self.rotate_left_with_effect, text_scale=1.0,
                         frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
                         pressEffect=1, relief=2)
 
-            self.rotate_right_btn = DirectButton(text="RIGHT", pos=(0.15, 0, 0.4), scale=0.05,
+            self.rotate_right_btn = DirectButton(text="RIGHT", pos=(0.95, 0, 0), scale=0.05,
                         command=self.rotate_right_with_effect, text_scale=1.0,
                         frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
                         pressEffect=1, relief=2)
@@ -701,29 +688,28 @@ try:
             """Increase rotation increment by 1 degree (max 30)"""
             if self.ROTATION_INCREMENT < 30:
                 self.ROTATION_INCREMENT += 1
-                self.update_increment_display()
+                print(f"Rotation increment: {self.ROTATION_INCREMENT}°")
                 self.add_log_message(f"Rotation increment increased to {self.ROTATION_INCREMENT}°")
 
                 # Apply dark gray effect
                 self.apply_button_effect(self.increment_plus_btn)
             else:
+                print(f"Rotation increment: {self.ROTATION_INCREMENT}° (MAX)")
                 self.add_log_message("Maximum rotation increment reached (30°)")
 
         def decrease_rotation_increment(self):
             """Decrease rotation increment by 1 degree (min 1)"""
             if self.ROTATION_INCREMENT > 1:
                 self.ROTATION_INCREMENT -= 1
-                self.update_increment_display()
+                print(f"Rotation increment: {self.ROTATION_INCREMENT}°")
                 self.add_log_message(f"Rotation increment decreased to {self.ROTATION_INCREMENT}°")
 
                 # Apply dark gray effect
                 self.apply_button_effect(self.increment_minus_btn)
             else:
+                print(f"Rotation increment: {self.ROTATION_INCREMENT}° (MIN)")
                 self.add_log_message("Minimum rotation increment reached (1°)")
 
-        def update_increment_display(self):
-            """Update the rotation increment display text"""
-            self.increment_display.setText(f"{self.ROTATION_INCREMENT}°")
 
 
     print("Creating Real Globe application...")
