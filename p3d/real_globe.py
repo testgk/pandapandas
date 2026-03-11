@@ -16,7 +16,6 @@ try:
     import os
     import requests
     import tempfile
-    import random
 
     print("All imports successful")
 
@@ -409,9 +408,6 @@ try:
             DirectButton(text="Reset View", pos=(0, 0, 0.8), scale=0.05,
                         command=self.reset_view, text_scale=1.0)
 
-            # Random View button
-            DirectButton(text="Random View", pos=(0.5, 0, 0.8), scale=0.05,
-                        command=self.random_view, text_scale=1.0)
 
             # Rotation buttons in cross pattern
             DirectButton(text="Up", pos=(0, 0, 0.6), scale=0.05,
@@ -540,13 +536,6 @@ try:
             print(f"RESET VIEW - Position: {pos}, Distance: {distance:.1f}")
             print(f"RESET VIEW - Rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
-        def random_view(self):
-            """Set the globe to a random interesting angle"""
-            chosen_view = random.choice(self.preset_views)
-            self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y = chosen_view["rotation"]
-            self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
-            print(f"RANDOM VIEW: {chosen_view['name']} - {chosen_view['description']}")
-            print(f"RANDOM VIEW - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
 
         def set_preset_view(self, index):
             """Set the globe to a specific preset view"""
