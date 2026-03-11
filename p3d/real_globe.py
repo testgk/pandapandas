@@ -10,7 +10,7 @@ try:
     from direct.showbase.ShowBase import ShowBase
     from panda3d.core import *
     from direct.gui.OnscreenText import OnscreenText
-    from direct.gui.DirectGui import DirectButton
+    from direct.gui.DirectGui import DirectButton, DGG
     from math import sin, cos, pi
     import warnings
     import ssl
@@ -407,49 +407,23 @@ try:
                         fg=(0, 1, 0, 1))  # Green hacker text
 
             # Rotation Step controls (top-left corner, vertical layout)
-            # Label beside the + button (to the left)
-            OnscreenText(text="ROT+", pos=(-0.9, 0, 0.8), scale=0.035,
-                        fg=(1, 1, 1, 1))  # White text for visibility
+            # Label beside + button
+            DirectButton(text="ROT+", pos=(-0.85, 0, 0.8), scale=0.03, frameColor=(0, 0, 0, 0), text_fg=(1, 1, 1, 1), relief=0)
+            # + button
+            self.increment_plus_btn = DirectButton(text="+", pos=(-0.75, 0, 0.8), scale=0.04, command=self.increase_rotation_increment, frameColor=(0.2, 0.8, 0.2, 1), text_fg=(0, 0, 0, 1), relief=2)
 
-            # + button (bigger, properly centered text)
-            self.increment_plus_btn = DirectButton(
-                text="+", pos=(-0.75, 0, 0.8), scale=0.04,
-                command=self.increase_rotation_increment, text_scale=1.0,
-                frameColor=(0.2, 0.8, 0.2, 1),  # Green background
-                text_fg=(0, 0, 0, 1),  # Black text
-                frameSize=(-1.0, 1.0, -0.5, 0.5),  # Proper centering
-                textMayChange=0,
-                pressEffect=1,
-                relief=2
-            )
+            # Label beside value
+            DirectButton(text="VAL", pos=(-0.85, 0, 0.75), scale=0.03, frameColor=(0, 0, 0, 0), text_fg=(1, 1, 1, 1), relief=0)
+            # Value display
+            self.increment_display = OnscreenText(text=f"{self.ROTATION_INCREMENT}°", pos=(-0.75, 0, 0.75), scale=0.04, fg=(1, 1, 1, 1))
 
-            # Value display - with label beside it
-            OnscreenText(text="VAL", pos=(-0.9, 0, 0.75), scale=0.035,
-                        fg=(1, 1, 1, 1))  # Label beside value
-            self.increment_display = OnscreenText(
-                text=f"{self.ROTATION_INCREMENT}°",
-                pos=(-0.75, 0, 0.75), scale=0.04,
-                fg=(1, 1, 1, 1))  # White text for visibility
+            # Label beside - button
+            DirectButton(text="ROT-", pos=(-0.85, 0, 0.7), scale=0.03, frameColor=(0, 0, 0, 0), text_fg=(1, 1, 1, 1), relief=0)
+            # - button
+            self.increment_minus_btn = DirectButton(text="-", pos=(-0.75, 0, 0.7), scale=0.04, command=self.decrease_rotation_increment, frameColor=(0.2, 0.8, 0.2, 1), text_fg=(0, 0, 0, 1), relief=2)
 
-            # Label beside the - button
-            OnscreenText(text="ROT-", pos=(-0.9, 0, 0.7), scale=0.035,
-                        fg=(1, 1, 1, 1))  # White text for visibility
-
-            # - button (bigger, properly centered text)
-            self.increment_minus_btn = DirectButton(
-                text="-", pos=(-0.75, 0, 0.7), scale=0.04,
-                command=self.decrease_rotation_increment, text_scale=1.0,
-                frameColor=(0.2, 0.8, 0.2, 1),  # Green background
-                text_fg=(0, 0, 0, 1),  # Black text
-                frameSize=(-1.0, 1.0, -0.5, 0.5),  # Proper centering
-                textMayChange=0,
-                pressEffect=1,
-                relief=2
-            )
-
-            # Zoom buttons with label beside them
-            OnscreenText(text="ZOOM", pos=(-0.05, 0, 0.8), scale=0.04,
-                        fg=(1, 1, 1, 1))  # White label beside zoom buttons
+            # Label beside zoom buttons
+            DirectButton(text="ZOOM", pos=(0.02, 0, 0.8), scale=0.03, frameColor=(0, 0, 0, 0), text_fg=(1, 1, 1, 1), relief=0)
 
             self.zoom_in_btn = DirectButton(text="IN", pos=(0.1, 0, 0.8), scale=0.05,
                         command=self.zoom_in_with_effect, text_scale=1.2,
