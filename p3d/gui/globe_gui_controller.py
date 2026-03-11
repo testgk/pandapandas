@@ -10,26 +10,26 @@ from interfaces.i_globe_application import IGlobeApplication
 class GlobeGuiController:
     """Controls all GUI elements for the globe application"""
 
-    def __init__(self, globe_app: IGlobeApplication):
-        self.__globe_app = globe_app
-        self.__log_messages = []
-        self.__all_buttons = []
-        self.__create_gui_controls()
+    def __init__(self, globeApp: IGlobeApplication):
+        self.__globeApp = globeApp
+        self.__logMessages = []
+        self.__allButtons = []
+        self.__createGuiControls()
 
-    def __create_gui_controls(self):
+    def __createGuiControls(self):
         """Create all GUI buttons and controls"""
         # Rotation Step controls (top-left corner, vertical layout)
         # + button
-        self.__increment_plus_btn = DirectButton(
+        self.__incrementPlusBtn = DirectButton(
             text="+", pos=(-0.75, 0, 0.8), scale=0.04,
-            command=self.__on_increase_rotation_increment,
+            command=self.__onIncreaseRotationIncrement,
             frameColor=(0.2, 0.8, 0.2, 1), text_fg=(0, 0, 0, 1), relief=2
         )
 
         # - button
-        self.__increment_minus_btn = DirectButton(
+        self.__incrementMinusBtn = DirectButton(
             text="-", pos=(-0.75, 0, 0.7), scale=0.04,
-            command=self.__on_decrease_rotation_increment,
+            command=self.__onDecreaseRotationIncrement,
             frameColor=(0.2, 0.8, 0.2, 1), text_fg=(0, 0, 0, 1), relief=2
         )
 
@@ -39,70 +39,70 @@ class GlobeGuiController:
             frameColor=(0, 0, 0, 0), text_fg=(1, 1, 1, 1), relief=0
         )
 
-        self.__zoom_in_btn = DirectButton(
+        self.__zoomInBtn = DirectButton(
             text="IN", pos=(0.1, 0, 0.8), scale=0.05,
-            command=self.__on_zoom_in,
+            command=self.__onZoomIn,
             frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
             pressEffect=1, relief=2
         )
 
-        self.__zoom_out_btn = DirectButton(
+        self.__zoomOutBtn = DirectButton(
             text="OUT", pos=(0.3, 0, 0.8), scale=0.05,
-            command=self.__on_zoom_out,
+            command=self.__onZoomOut,
             frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
             pressEffect=1, relief=2
         )
 
         # Reset View button
-        self.__reset_btn = DirectButton(
+        self.__resetBtn = DirectButton(
             text="RESET VIEW", pos=(0, 0, 0.65), scale=0.05,
-            command=self.__on_reset_view,
+            command=self.__onResetView,
             frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
             pressEffect=1, relief=2
         )
 
         # Directional rotation buttons at screen edges
-        self.__rotate_up_btn = DirectButton(
+        self.__rotateUpBtn = DirectButton(
             text="UP", pos=(0, 0, 0.9), scale=0.05,
-            command=self.__on_rotate_up,
+            command=self.__onRotateUp,
             frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
             pressEffect=1, relief=2
         )
 
-        self.__rotate_down_btn = DirectButton(
+        self.__rotateDownBtn = DirectButton(
             text="DOWN", pos=(0, 0, -0.8), scale=0.05,
-            command=self.__on_rotate_down,
+            command=self.__onRotateDown,
             frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
             pressEffect=1, relief=2
         )
 
-        self.__rotate_left_btn = DirectButton(
+        self.__rotateLeftBtn = DirectButton(
             text="LEFT", pos=(-0.95, 0, 0), scale=0.05,
-            command=self.__on_rotate_left,
+            command=self.__onRotateLeft,
             frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
             pressEffect=1, relief=2
         )
 
-        self.__rotate_right_btn = DirectButton(
+        self.__rotateRightBtn = DirectButton(
             text="RIGHT", pos=(0.95, 0, 0), scale=0.05,
-            command=self.__on_rotate_right,
+            command=self.__onRotateRight,
             frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
             pressEffect=1, relief=2
         )
 
         # Preset view buttons
-        self.__create_preset_buttons()
+        self.__createPresetButtons()
 
         # Store all buttons for dark gray click effect
-        self.__all_buttons = [
-            self.__increment_minus_btn, self.__increment_plus_btn,
-            self.__zoom_in_btn, self.__zoom_out_btn, self.__reset_btn,
-            self.__rotate_up_btn, self.__rotate_down_btn,
-            self.__rotate_left_btn, self.__rotate_right_btn
+        self.__allButtons = [
+            self.__incrementMinusBtn, self.__incrementPlusBtn,
+            self.__zoomInBtn, self.__zoomOutBtn, self.__resetBtn,
+            self.__rotateUpBtn, self.__rotateDownBtn,
+            self.__rotateLeftBtn, self.__rotateRightBtn
         ]
 
         # Log display at bottom
-        self.__log_display = OnscreenText(
+        self.__logDisplay = OnscreenText(
             text="SYSTEM READY",
             pos=(0, -0.75), scale=0.04,
             fg=(1, 1, 1, 1), wordwrap=80
@@ -114,7 +114,7 @@ class GlobeGuiController:
             pos=(0, -0.85), scale=0.04, fg=(0, 1, 0, 1)
         )
 
-    def __create_preset_buttons(self):
+    def __createPresetButtons(self):
         """Create preset view buttons for different regions"""
         presets = [
             ("EUROPE", 0, (-0.6, 0, 0.2)),
@@ -128,70 +128,70 @@ class GlobeGuiController:
         for name, index, pos in presets:
             btn = DirectButton(
                 text=name, pos=pos, scale=0.04,
-                command=lambda i=index: self.__on_set_preset_view(i),
+                command=lambda i=index: self.__onSetPresetView(i),
                 frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
                 pressEffect=1, relief=2
             )
-            self.__all_buttons.append(btn)
+            self.__allButtons.append(btn)
 
-    def __apply_button_effect(self, button):
+    def __applyButtonEffect(self, button):
         """Apply dark gray effect to button when clicked"""
-        original_color = button['frameColor']
+        originalColor = button['frameColor']
         button['frameColor'] = (0.3, 0.3, 0.3, 1)  # Dark gray
 
-        def reset_color(task):
-            button['frameColor'] = original_color
+        def resetColor(task):
+            button['frameColor'] = originalColor
             return task.done
 
-        self.__globe_app.taskManager.doMethodLater(0.1, reset_color, f"reset_button_{id(button)}")
+        self.__globeApp.taskManager.doMethodLater(0.1, resetColor, f"reset_button_{id(button)}")
 
-    def add_log_message(self, message):
+    def addLogMessage(self, message):
         """Add message to log display"""
-        self.__log_messages.append(message)
-        if len(self.__log_messages) > 3:
-            self.__log_messages.pop(0)
-        log_text = " | ".join(self.__log_messages)
-        self.__log_display.setText(log_text)
+        self.__logMessages.append(message)
+        if len(self.__logMessages) > 3:
+            self.__logMessages.pop(0)
+        logText = " | ".join(self.__logMessages)
+        self.__logDisplay.setText(logText)
 
     # Event handlers - delegate to globe app
-    def __on_zoom_in(self):
-        self.__apply_button_effect(self.__zoom_in_btn)
-        self.__globe_app.zoomIn()
+    def __onZoomIn(self):
+        self.__applyButtonEffect(self.__zoomInBtn)
+        self.__globeApp.zoomIn()
 
-    def __on_zoom_out(self):
-        self.__apply_button_effect(self.__zoom_out_btn)
-        self.__globe_app.zoomOut()
+    def __onZoomOut(self):
+        self.__applyButtonEffect(self.__zoomOutBtn)
+        self.__globeApp.zoomOut()
 
-    def __on_reset_view(self):
-        self.__apply_button_effect(self.__reset_btn)
-        self.__globe_app.resetView()
+    def __onResetView(self):
+        self.__applyButtonEffect(self.__resetBtn)
+        self.__globeApp.resetView()
 
-    def __on_rotate_up(self):
-        self.__apply_button_effect(self.__rotate_up_btn)
-        self.__globe_app.rotateUp()
+    def __onRotateUp(self):
+        self.__applyButtonEffect(self.__rotateUpBtn)
+        self.__globeApp.rotateUp()
 
-    def __on_rotate_down(self):
-        self.__apply_button_effect(self.__rotate_down_btn)
-        self.__globe_app.rotateDown()
+    def __onRotateDown(self):
+        self.__applyButtonEffect(self.__rotateDownBtn)
+        self.__globeApp.rotateDown()
 
-    def __on_rotate_left(self):
-        self.__apply_button_effect(self.__rotate_left_btn)
-        self.__globe_app.rotateLeft()
+    def __onRotateLeft(self):
+        self.__applyButtonEffect(self.__rotateLeftBtn)
+        self.__globeApp.rotateLeft()
 
-    def __on_rotate_right(self):
-        self.__apply_button_effect(self.__rotate_right_btn)
-        self.__globe_app.rotateRight()
+    def __onRotateRight(self):
+        self.__applyButtonEffect(self.__rotateRightBtn)
+        self.__globeApp.rotateRight()
 
-    def __on_increase_rotation_increment(self):
-        self.__apply_button_effect(self.__increment_plus_btn)
-        self.__globe_app.increaseRotationIncrement()
+    def __onIncreaseRotationIncrement(self):
+        self.__applyButtonEffect(self.__incrementPlusBtn)
+        self.__globeApp.increaseRotationIncrement()
 
-    def __on_decrease_rotation_increment(self):
-        self.__apply_button_effect(self.__increment_minus_btn)
-        self.__globe_app.decreaseRotationIncrement()
+    def __onDecreaseRotationIncrement(self):
+        self.__applyButtonEffect(self.__incrementMinusBtn)
+        self.__globeApp.decreaseRotationIncrement()
 
-    def __on_set_preset_view(self, index):
-        buttons = self.__all_buttons[-6:]  # Last 6 are preset buttons
+    def __onSetPresetView(self, index):
+        buttons = self.__allButtons[-6:]  # Last 6 are preset buttons
         if 0 <= index < len(buttons):
-            self.__apply_button_effect(buttons[index])
-        self.__globe_app.setPresetView(index)
+            self.__applyButtonEffect(buttons[index])
+        self.__globeApp.setPresetView(index)
