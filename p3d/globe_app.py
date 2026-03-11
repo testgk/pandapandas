@@ -89,6 +89,45 @@ def createDisk(
     return diskPath
 
 
+def createXMark(
+    normal: Tuple[ float, float, float ],
+    color: Tuple[ float, float, float, float ],
+    size: float = 0.07,
+    thickness: float = 4.0
+) -> NodePath:
+    """Create an X mark aligned to the globe surface at the given surface normal"""
+    nx, ny, nz = normal
+
+    # Build two tangent vectors perpendicular to the normal
+    up = ( 0.0, 1.0, 0.0 ) if abs( ny ) < 0.9 else ( 1.0, 0.0, 0.0 )
+    tx = ny * up[ 2 ] - nz * up[ 1 ]
+    ty = nz * up[ 0 ] - nx * up[ 2 ]
+    tz = nx * up[ 1 ] - ny * up[ 0 ]
+    tLen = ( tx * tx + ty * ty + tz * tz ) ** 0.5
+    tx, ty, tz = tx / tLen, ty / tLen, tz / tLen
+
+    bx = ny * tz - nz * ty
+    by = nz * tx - nx * tz
+    bz = nx * ty - ny * tx
+
+    lines = LineSegs()
+    lines.setThickness( thickness )
+    lines.setColor( *color )
+
+    # First diagonal: (-t-b) to (+t+b)
+    lines.moveTo( ( -tx - bx ) * size, ( -ty - by ) * size, ( -tz - bz ) * size )
+    lines.drawTo( (  tx + bx ) * size, (  ty + by ) * size, (  tz + bz ) * size )
+
+    # Second diagonal: (+t-b) to (-t+b)
+    lines.moveTo( (  tx - bx ) * size, (  ty - by ) * size, (  tz - bz ) * size )
+    lines.drawTo( ( -tx + bx ) * size, ( -ty + by ) * size, ( -tz + bz ) * size )
+
+    xNode = lines.create()
+    xPath = NodePath( xNode )
+    xPath.setTwoSided( True )
+    return xPath
+
+
 def createSphere(radius: float, color: Tuple[float, float, float, float]) -> NodePath:
     """Create a 3D sphere geometry with specified radius and color"""
     format = GeomVertexFormat.getV3n3()
@@ -153,6 +192,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.__geoGame: Optional[GeoChallengeGame] = None
         self.__gameMode: bool = False
         self.__currentChallenge = None
+        self.__gameMarkers: List[NodePath] = []
 
         # Define preset views with proper typing
         self.__presetViews: List[Dict] = [
@@ -504,7 +544,8 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             
             self.__gameMode = True
             self.__currentChallenge = self.__geoGame.get_challenge_by_difficulty()
-            
+
+            self.__clearGameMarkers()
             self.__guiController.clearLogMessage()
             self.__guiController.disableNextChallenge()
 
@@ -535,43 +576,39 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
     def __handleGameClick(self) -> None:
         """
         Handle mouse clicks during game mode - Convert 3D click to geographic coordinates
-        Shows red dot where clicked and automatically derives coordinates
+        Shows red disk where clicked and automatically derives coordinates
         """
         if not self.__gameMode or not self.__currentChallenge:
             return
-        
-        # Clear any previous click marker
-        if hasattr(self, '_clickMarker') and self._clickMarker:
-            self._clickMarker.removeNode()
-        
+
         # Get mouse position and convert to 3D world coordinates
         if self.mouseWatcherNode.hasMouse():
             mpos = self.mouseWatcherNode.getMouse()
-            
+
             # Create picker ray from camera through mouse position
             pickerRay = CollisionRay()
-            pickerRay.setFromLens(self.camNode, mpos.getX(), mpos.getY())
-            
+            pickerRay.setFromLens( self.camNode, mpos.getX(), mpos.getY() )
+
             # Create collision traverser and handler
             picker = CollisionTraverser()
             pq = CollisionHandlerQueue()
-            
+
             # Create collision node for the globe
-            pickerNode = CollisionNode('mouseRay')
-            pickerNP = self.camera.attachNewNode(pickerNode)
-            pickerNode.addSolid(pickerRay)
-            picker.addCollider(pickerNP, pq)
-            
+            pickerNode = CollisionNode( 'mouseRay' )
+            pickerNP = self.camera.attachNewNode( pickerNode )
+            pickerNode.addSolid( pickerRay )
+            picker.addCollider( pickerNP, pq )
+
             # Enable collision detection on the globe
-            self.__globe.setCollideMask(BitMask32.bit(1))
-            
+            self.__globe.setCollideMask( BitMask32.bit( 1 ) )
+
             # Traverse and find collision
-            picker.traverse(self.__globe)
-            
+            picker.traverse( self.__globe )
+
             if pq.getNumEntries() > 0:
                 # Get the closest intersection point
                 pq.sortEntries()
-                entry = pq.getEntry(0)
+                entry = pq.getEntry( 0 )
 
                 # Get hit point in globe LOCAL space (accounts for rotation + scale)
                 localHit = entry.getSurfacePoint( self.__globe )
@@ -591,10 +628,11 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
                     sz + surfaceNormal[ 2 ] * DISK_OFFSET,
                 )
 
-                # Create red opaque disk marker conforming to the globe curvature
-                self._clickMarker = createDisk( surfaceNormal, ( 1.0, 0.0, 0.0, 0.85 ) )
-                self._clickMarker.reparentTo( self.__globe )
-                self._clickMarker.setPos( *diskPos )
+                # Create fully opaque red disk marker conforming to the globe curvature
+                clickDisk = createDisk( surfaceNormal, ( 1.0, 0.0, 0.0, 1.0 ) )
+                clickDisk.reparentTo( self.__globe )
+                clickDisk.setPos( *diskPos )
+                self.__gameMarkers.append( clickDisk )
 
                 # Convert local-space position to geographic coordinates
                 # Normalise to unit sphere to get direction vector
@@ -603,15 +641,15 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
                 z = sz / sLen
 
                 # Calculate latitude and longitude from 3D coordinates
-                lat = math.degrees(math.asin(max(-1, min(1, y))))
-                lon = math.degrees(math.atan2(x, z))
-                
+                lat = math.degrees( math.asin( max( -1, min( 1, y ) ) ) )
+                lon = math.degrees( math.atan2( x, z ) )
+
                 # Display click coordinates immediately
-                self.__guiController.addLogMessage(f"🔴 You clicked: {lat:.2f}°, {lon:.2f}°")
-                
+                self.__guiController.addLogMessage( f"🔴 You clicked: {lat:.2f}°, {lon:.2f}°" )
+
                 # Process the game attempt
-                self.__processGameAttempt((lat, lon))
-            
+                self.__processGameAttempt( ( lat, lon ) )
+
             # Clean up collision nodes
             pickerNP.removeNode()
 
@@ -679,55 +717,45 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         Demonstrates GeoPandas-style spatial visualization techniques
         """
         try:
-            # Create visual markers for the attempt
-            lat, lon = clicked_coords
             actual_lat, actual_lon = self.__currentChallenge.actual_coordinates
-            
-            # Convert geographic coordinates to 3D globe positions
-            def geo_to_3d(latitude, longitude):
-                lat_rad = math.radians(latitude)
-                lon_rad = math.radians(longitude)
-                radius = CONTINENT_RADIUS * 1.1  # Slightly above surface
-                x = math.cos(lat_rad) * math.sin(lon_rad) * radius * GLOBE_SCALE
-                y = math.sin(lat_rad) * radius * GLOBE_SCALE
-                z = math.cos(lat_rad) * math.cos(lon_rad) * radius * GLOBE_SCALE
-                return (x, y, z)
-            
-            # Create marker for player's guess (red sphere)
-            guess_pos = geo_to_3d(lat, lon)
-            guess_marker = createSphere(0.05, (1.0, 0.0, 0.0, 0.8))  # Red
-            guess_marker.reparentTo(self.__globe)
-            guess_marker.setPos(*guess_pos)
-            
-            # Create marker for actual location (green sphere)
-            actual_pos = geo_to_3d(actual_lat, actual_lon)
-            actual_marker = createSphere(0.05, (0.0, 1.0, 0.0, 0.8))  # Green
-            actual_marker.reparentTo(self.__globe)
-            actual_marker.setPos(*actual_pos)
-            
-            # Create line connecting the two points (distance visualization)
-            # This demonstrates GeoPandas-style spatial relationship visualization
-            line_geom = LineSegs()
-            line_geom.setThickness(3)
-            line_geom.setColor(1, 1, 0, 0.7)  # Yellow line
-            line_geom.moveTo(*guess_pos)
-            line_geom.drawTo(*actual_pos)
-            line_node = line_geom.create()
-            line_path = NodePath(line_node)
-            line_path.reparentTo(self.__globe)
-            
-            # Auto-remove markers after 5 seconds
-            self.taskMgr.doMethodLater(5.0, self.__removeGameMarkers, "removeMarkers", 
-                                     extraArgs=[guess_marker, actual_marker, line_path])
-            
-        except Exception as e:
-            print(f"Error creating game visualization: {e}")
 
-    def __removeGameMarkers(self, *markers) -> None:
-        """Remove game visualization markers from the globe"""
-        for marker in markers:
-            if marker:
+            # Convert geographic coordinates to globe LOCAL space (unit sphere * CONTINENT_RADIUS)
+            def geo_to_local( latitude: float, longitude: float ) -> Tuple[ float, float, float ]:
+                latRad = math.radians( latitude )
+                lonRad = math.radians( longitude )
+                r = CONTINENT_RADIUS * 1.05
+                x = math.cos( latRad ) * math.sin( lonRad ) * r
+                y = math.sin( latRad ) * r
+                z = math.cos( latRad ) * math.cos( lonRad ) * r
+                return ( x, y, z )
+
+            # X mark for the correct location (green)
+            actualLocal = geo_to_local( actual_lat, actual_lon )
+            ax, ay, az = actualLocal
+            aLen = ( ax * ax + ay * ay + az * az ) ** 0.5
+            actualNormal = ( ax / aLen, ay / aLen, az / aLen )
+
+            OFFSET = 0.04
+            xPos = (
+                ax + actualNormal[ 0 ] * OFFSET,
+                ay + actualNormal[ 1 ] * OFFSET,
+                az + actualNormal[ 2 ] * OFFSET,
+            )
+
+            xMark = createXMark( actualNormal, ( 0.0, 1.0, 0.0, 1.0 ) )
+            xMark.reparentTo( self.__globe )
+            xMark.setPos( *xPos )
+            self.__gameMarkers.append( xMark )
+
+        except Exception as e:
+            print( f"Error creating game visualization: {e}" )
+
+    def __clearGameMarkers( self ) -> None:
+        """Remove all game visualization markers from the globe"""
+        for marker in self.__gameMarkers:
+            if marker and not marker.isEmpty():
                 marker.removeNode()
+        self.__gameMarkers = []
 
     def getGameStatistics(self) -> str:
         """
@@ -805,6 +833,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             self.__currentChallenge = self.__geoGame.get_challenge_by_difficulty(selected_difficulty)
             self.__gameMode = True
 
+            self.__clearGameMarkers()
             self.__guiController.clearLogMessage()
             self.__guiController.disableNextChallenge()
             self._hint_count = 0
