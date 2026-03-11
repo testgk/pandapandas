@@ -24,20 +24,20 @@ os.environ['REQUESTS_CA_BUNDLE'] = ''
 
 class WorldDataManager:
     def __init__(self):
-        self.__dataDir = Path(__file__).parent / "world_data"
-        self.__dataDir.mkdir(exist_ok=True)
-        self.__cacheFile = self.__dataDir / "world_continents.pkl"
-        self.__rawFile = self.__dataDir / "countries.geojson"
+        self.data_dir = Path(__file__).parent / "world_data"
+        self.data_dir.mkdir(exist_ok=True)
+        self.cache_file = self.data_dir / "world_continents.pkl"
+        self.raw_file = self.data_dir / "countries.geojson"
 
-    def getContinents(self):
+    def get_continents(self):
         """Get continent data - from cache, download, or create"""
         print("🌍 WorldDataManager: Getting continent data...")
 
         # Try cache first
-        if self.__cacheFile.exists():
+        if self.cache_file.exists():
             try:
                 print("📁 Loading from cache...")
-                with open(self.__cacheFile, 'rb') as f:
+                with open(self.cache_file, 'rb') as f:
                     continents = pickle.load(f)
                 print(f"✅ Loaded {len(continents)} continents from cache")
                 return continents
@@ -45,7 +45,7 @@ class WorldDataManager:
                 print(f"❌ Cache corrupted: {e}")
 
         # Try to load from saved raw file
-        if self.__rawFile.exists():
+        if self.raw_file.exists():
             try:
                 print("📄 Loading from saved file...")
                 world = gpd.read_file(self.raw_file)
