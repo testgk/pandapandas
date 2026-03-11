@@ -17,8 +17,8 @@ from geo_challenge_game import GeoChallengeGame, DifficultyLevel
 # Constants for magic numbers
 SPHERE_SEGMENTS = 32
 SPHERE_RINGS = 16
-CONTINENT_RADIUS = 1.05
-GLOBE_SCALE = 3
+CONTINENT_RADIUS = 1.0
+GLOBE_SCALE = 5
 DEFAULT_ROTATION_X = 105
 DEFAULT_ROTATION_Y = 0
 DEFAULT_ROTATION_Z = 0
@@ -29,7 +29,7 @@ MIN_ZOOM_DISTANCE = 8.0
 MAX_ZOOM_DISTANCE = 80.0
 ZOOM_IN_FACTOR = 0.8
 ZOOM_OUT_FACTOR = 1.25
-CAMERA_SCALE_FACTOR = 15.0 / 35.6
+CAMERA_SCALE_FACTOR = 15.0 / 21.0
 
 
 DISK_SEGMENTS = 24
@@ -620,8 +620,8 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
                 sLen = ( sx * sx + sy * sy + sz * sz ) ** 0.5
                 surfaceNormal = ( sx / sLen, sy / sLen, sz / sLen )
 
-                # Place disk slightly above the surface to avoid z-fighting
-                DISK_OFFSET = 0.04
+                # Place disk just above the surface to avoid z-fighting
+                DISK_OFFSET = 0.01
                 diskPos = (
                     sx + surfaceNormal[ 0 ] * DISK_OFFSET,
                     sy + surfaceNormal[ 1 ] * DISK_OFFSET,
@@ -719,11 +719,11 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         try:
             actual_lat, actual_lon = self.__currentChallenge.actual_coordinates
 
-            # Convert geographic coordinates to globe LOCAL space (unit sphere * CONTINENT_RADIUS)
+            # Convert geographic coordinates to globe LOCAL space (unit sphere)
             def geo_to_local( latitude: float, longitude: float ) -> Tuple[ float, float, float ]:
                 latRad = math.radians( latitude )
                 lonRad = math.radians( longitude )
-                r = CONTINENT_RADIUS * 1.05
+                r = CONTINENT_RADIUS
                 x = math.cos( latRad ) * math.sin( lonRad ) * r
                 y = math.sin( latRad ) * r
                 z = math.cos( latRad ) * math.cos( lonRad ) * r
@@ -735,7 +735,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             aLen = ( ax * ax + ay * ay + az * az ) ** 0.5
             actualNormal = ( ax / aLen, ay / aLen, az / aLen )
 
-            OFFSET = 0.04
+            OFFSET = 0.01
             xPos = (
                 ax + actualNormal[ 0 ] * OFFSET,
                 ay + actualNormal[ 1 ] * OFFSET,
