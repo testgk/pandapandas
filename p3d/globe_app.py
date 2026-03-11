@@ -17,7 +17,7 @@ from geo_challenge_game import GeoChallengeGame, DifficultyLevel
 # Constants for magic numbers
 SPHERE_SEGMENTS = 32
 SPHERE_RINGS = 16
-CONTINENT_RADIUS = 1.0
+CONTINENT_RADIUS = 1.01
 GLOBE_SCALE = 5
 DEFAULT_ROTATION_X = 105
 DEFAULT_ROTATION_Y = 0
@@ -169,6 +169,7 @@ def createSphere(radius: float, color: Tuple[float, float, float, float]) -> Nod
     node.addGeom(geom)
     sphereNodePath = NodePath(node)
     sphereNodePath.setColor(*color)
+    sphereNodePath.setAttrib( CullFaceAttrib.make( CullFaceAttrib.MCullClockwise ) )
     return sphereNodePath
 
 
@@ -193,6 +194,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.__gameMode: bool = False
         self.__currentChallenge = None
         self.__gameMarkers: List[NodePath] = []
+        self.__continentRadius: float = CONTINENT_RADIUS
 
         # Define preset views with proper typing
         self.__presetViews: List[Dict] = [
@@ -282,18 +284,17 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         """Create the 3D globe with continents"""
         self.__globe = self.render.attachNewNode("globe")
 
-        # Create transparent ocean sphere
-        oceanSphere = createSphere(1.0, (0.2, 0.4, 0.8, 0.4))
-        oceanSphere.reparentTo(self.__globe)
-        oceanSphere.setTransparency(TransparencyAttrib.MAlpha)
-        print("Ocean sphere created")
+        # Create opaque ocean sphere
+        oceanSphere = createSphere( 1.0, ( 0.1, 0.3, 0.65, 1.0 ) )
+        oceanSphere.reparentTo( self.__globe )
+        print( "Ocean sphere created" )
 
         # Add collision sphere for click detection
-        collisionSphere = CollisionSphere(0, 0, 0, 1.0)
-        collisionNode = CollisionNode('globe-collision')
-        collisionNode.addSolid(collisionSphere)
-        collisionNP = self.__globe.attachNewNode(collisionNode)
-        collisionNP.setCollideMask(BitMask32.bit(1))
+        collisionSphere = CollisionSphere( 0, 0, 0, self.__continentRadius )
+        collisionNode = CollisionNode( 'globe-collision' )
+        collisionNode.addSolid( collisionSphere )
+        self.__collisionNP = self.__globe.attachNewNode( collisionNode )
+        self.__collisionNP.setCollideMask( BitMask32.bit( 1 ) )
 
         # Add continents with colors
         continentColors = {
@@ -304,11 +305,13 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             'Asia': (0.6, 0.2, 0.7, 1),         # Purple
             'Oceania': (0.2, 0.7, 0.9, 1)       # Light Blue
         }
+        self.__continentColors = continentColors
 
         continentCount = 0
         for name, geometry in self.__continents.items():
-            color = continentColors.get(name, (0.7, 0.7, 0.7, 1))
-            self.__addContinentGeometry(geometry, color, name)
+            color = self.__continentColors.get(name, (0.7, 0.7, 0.7, 1))
+            radius = self.__continentRadius
+            self.__addContinentGeometry(geometry, color, name, radius)
             continentCount += 1
             print(f"Added continent: {name}")
 
@@ -318,9 +321,10 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         # Apply initial rotation
         self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
 
-    def __addContinentGeometry(self, geometry, color: Tuple[float, float, float, float], name: str) -> None:
+    def __addContinentGeometry(self, geometry, color: Tuple[float, float, float, float], name: str, radius: float = CONTINENT_RADIUS) -> None:
         """Add continent geometry to the globe"""
         from shapely.geometry import Polygon, MultiPolygon
+        from shapely.ops import triangulate
 
         polygons = []
         if isinstance(geometry, MultiPolygon):
@@ -334,47 +338,48 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             if not polygon.is_valid or polygon.is_empty:
                 continue
 
-            coords = list(polygon.exterior.coords)[:-1]
-            if len(coords) < 3:
+            # Proper Delaunay triangulation — only keep triangles whose centroid
+            # lies inside the original polygon (filters out outside triangles)
+            triangles = [
+                t for t in triangulate( polygon )
+                if polygon.contains( t.centroid )
+            ]
+
+            if not triangles:
                 continue
 
-            vertices3d = []
-
-            for lon, lat in coords:
-                latRad = lat * pi / 180.0
-                lonRad = lon * pi / 180.0
-                x = cos(latRad) * sin(lonRad) * CONTINENT_RADIUS
-                y = sin(latRad) * CONTINENT_RADIUS
-                z = cos(latRad) * cos(lonRad) * CONTINENT_RADIUS
-                vertices3d.append((x, y, z))
-
-            # Create geometry
             partName = f"{name}_part_{i}" if len(polygons) > 1 else name
-            format = GeomVertexFormat.getV3n3()
-            vdata = GeomVertexData(partName, format, Geom.UHStatic)
-            vdata.setNumRows(len(vertices3d))
-            vertex = GeomVertexWriter(vdata, "vertex")
-            normal = GeomVertexWriter(vdata, "normal")
+            fmt = GeomVertexFormat.getV3n3()
+            vdata = GeomVertexData( partName, fmt, Geom.UHStatic )
+            vertexWriter = GeomVertexWriter( vdata, "vertex" )
+            normalWriter = GeomVertexWriter( vdata, "normal" )
 
-            for x, y, z in vertices3d:
-                vertex.addData3f(x, y, z)
-                length = (x*x + y*y + z*z) ** 0.5
-                normal.addData3f(x/length, y/length, z/length)
+            vertexIndex = 0
+            triIndices = GeomTriangles( Geom.UHStatic )
 
-            geom = Geom(vdata)
-            triangles = GeomTriangles(Geom.UHStatic)
+            for tri in triangles:
+                triCoords = list( tri.exterior.coords )[ :3 ]
+                for lon, lat in triCoords:
+                    latRad = lat * pi / 180.0
+                    lonRad = lon * pi / 180.0
+                    x = cos( latRad ) * sin( lonRad ) * radius
+                    y = sin( latRad ) * radius
+                    z = cos( latRad ) * cos( lonRad ) * radius
+                    length = ( x*x + y*y + z*z ) ** 0.5
+                    vertexWriter.addData3f( x, y, z )
+                    normalWriter.addData3f( x / length, y / length, z / length )
 
-            for j in range(1, len(vertices3d) - 1):
-                triangles.addVertices(0, j, j + 1)
-                triangles.closePrimitive()
+                triIndices.addVertices( vertexIndex, vertexIndex + 1, vertexIndex + 2 )
+                triIndices.closePrimitive()
+                vertexIndex += 3
 
-            geom.addPrimitive(triangles)
+            geom = Geom( vdata )
+            geom.addPrimitive( triIndices )
 
-            continentNode = GeomNode(f"continent_{partName}")
-            continentNode.addGeom(geom)
-            continentNodePath = self.__globe.attachNewNode(continentNode)
-            continentNodePath.setColor(*color)
-            continentNodePath.setTwoSided(True)
+            continentNode = GeomNode( f"continent_{partName}" )
+            continentNode.addGeom( geom )
+            continentNodePath = self.__globe.attachNewNode( continentNode )
+            continentNodePath.setColor( *color )
 
     def __setupCamera(self) -> None:
         """Setup camera position and controls"""
@@ -528,6 +533,43 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY = chosenView["rotation"]
             self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
             self.__guiController.addDebugMessage(f"{chosenView['name']}: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+
+    @property
+    def continentRadius( self ) -> float:
+        """Get current continent radius"""
+        return self.__continentRadius
+
+    def __rebuildContinents( self ) -> None:
+        """Remove and rebuild all continent geometry at the current radius"""
+        # Remove existing continent nodes (keep ocean sphere and collision node)
+        for child in self.__globe.getChildren():
+            if child.getName().startswith( "continent_" ):
+                child.removeNode()
+
+        # Rebuild with new radius
+        for name, geometry in self.__continents.items():
+            color = self.__continentColors.get( name, ( 0.7, 0.7, 0.7, 1 ) )
+            self.__addContinentGeometry( geometry, color, name, self.__continentRadius )
+
+        # Update collision sphere to match new radius
+        self.__collisionNP.removeNode()
+        collisionSphere = CollisionSphere( 0, 0, 0, self.__continentRadius )
+        collisionNode = CollisionNode( 'globe-collision' )
+        collisionNode.addSolid( collisionSphere )
+        self.__collisionNP = self.__globe.attachNewNode( collisionNode )
+        self.__collisionNP.setCollideMask( BitMask32.bit( 1 ) )
+
+    def increaseContinentRadius( self ) -> None:
+        """Increase continent radius by 0.01"""
+        self.__continentRadius = self.__continentRadius + 0.001
+        self.__rebuildContinents()
+        self.__guiController.updateContinentRadiusDisplay( self.__continentRadius )
+
+    def decreaseContinentRadius( self ) -> None:
+        """Decrease continent radius by 0.01"""
+        self.__continentRadius = self.__continentRadius - 0.001
+        self.__rebuildContinents()
+        self.__guiController.updateContinentRadiusDisplay( self.__continentRadius )
 
     # GeoChallenge Game Methods - Professional GeoPandas/Pandas Showcase
     def startGeoChallenge(self) -> None:

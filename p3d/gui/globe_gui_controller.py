@@ -38,6 +38,11 @@ class GlobeGuiController:
         self.__getHintBtn: Optional[DirectButton] = None
         self.__gameStatsBtn: Optional[DirectButton] = None
 
+        # Continent radius controls
+        self.__radiusPlusBtn: Optional[DirectButton] = None
+        self.__radiusMinusBtn: Optional[DirectButton] = None
+        self.__radiusDisplay: Optional[OnscreenText] = None
+
         self.__createGuiControls()
 
     def __createGuiControls(self) -> None:
@@ -151,6 +156,9 @@ class GlobeGuiController:
         # GeoChallenge Game buttons (right side of screen)
         self.__createGameControls()
 
+        # Continent radius controls
+        self.__createRadiusControls()
+
         # Store all buttons for dark gray click effect
         self.__allButtons = [
             self.__incrementMinusBtn, self.__incrementPlusBtn,
@@ -252,6 +260,48 @@ class GlobeGuiController:
             self.__getHintBtn, self.__gameStatsBtn
         ])
 
+    def __createRadiusControls( self ) -> None:
+        """Create buttons and value display for continent radius adjustment"""
+        # Label
+        DirectButton(
+            text="RADIUS",
+            pos=( -0.75, 0, 0.58 ),
+            scale=0.04,
+            frameColor=self.__settings.getButtonColor( "label", "background" ),
+            text_fg=self.__settings.getButtonColor( "label", "text" ),
+            relief=0
+        )
+
+        self.__radiusPlusBtn = DirectButton(
+            text="+",
+            pos=( -0.57, 0, 0.58 ),
+            scale=0.04,
+            command=self.__onIncreaseRadius,
+            frameColor=self.__settings.getButtonColor( "increment", "background" ),
+            text_fg=self.__settings.getButtonColor( "increment", "text" ),
+            pressEffect=1, relief=2
+        )
+
+        self.__radiusMinusBtn = DirectButton(
+            text="-",
+            pos=( -0.90, 0, 0.58 ),
+            scale=0.04,
+            command=self.__onDecreaseRadius,
+            frameColor=self.__settings.getButtonColor( "increment", "background" ),
+            text_fg=self.__settings.getButtonColor( "increment", "text" ),
+            pressEffect=1, relief=2
+        )
+
+        self.__radiusDisplay = OnscreenText(
+            text=f"{self.__globeApp.continentRadius:.2f}",
+            pos=( -0.75, 0.50 ),
+            scale=0.04,
+            fg=( 1.0, 1.0, 1.0, 1.0 ),
+            align=TextNode.ACenter
+        )
+
+        self.__allButtons.extend( [ self.__radiusPlusBtn, self.__radiusMinusBtn ] )
+
     def __applyButtonEffect(self, button: DirectButton) -> None:
         """Apply dark gray effect to button when clicked"""
         originalColor = button['frameColor']
@@ -279,6 +329,11 @@ class GlobeGuiController:
         """Replace debug display with a single message"""
         if self.__debugDisplay:
             self.__debugDisplay.setText( message )
+
+    def updateContinentRadiusDisplay( self, value: float ) -> None:
+        """Update the continent radius value display"""
+        if self.__radiusDisplay:
+            self.__radiusDisplay.setText( f"{value:.3f}" )
 
     def enableNextChallenge( self ) -> None:
         """Enable the Next Challenge button after question is answered"""
@@ -348,3 +403,12 @@ class GlobeGuiController:
     def __onGameStats(self) -> None:
         self.__applyButtonEffect(self.__gameStatsBtn)
         self.__globeApp.showGameStats()
+
+    def __onIncreaseRadius( self ) -> None:
+        self.__applyButtonEffect( self.__radiusPlusBtn )
+        self.__globeApp.increaseContinentRadius()
+
+    def __onDecreaseRadius( self ) -> None:
+        self.__applyButtonEffect( self.__radiusMinusBtn )
+        self.__globeApp.decreaseContinentRadius()
+

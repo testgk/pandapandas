@@ -79,6 +79,22 @@ class IGlobeApplication(ABC):
         """Show comprehensive game statistics"""
         pass
 
+    @abstractmethod
+    def increaseContinentRadius( self ) -> None:
+        """Increase continent radius by 0.01"""
+        pass
+
+    @abstractmethod
+    def decreaseContinentRadius( self ) -> None:
+        """Decrease continent radius by 0.01"""
+        pass
+
+    @property
+    @abstractmethod
+    def continentRadius( self ) -> float:
+        """Get current continent radius"""
+        pass
+
     @property
     @abstractmethod
     def rotationIncrement(self) -> int:
