@@ -16,6 +16,12 @@
       "label": {
         "background": [0, 0, 0, 0],
         "text": [1.0, 1.0, 1.0, 1.0]
+      },
+      "game": {
+        "background": [0.2, 0.2, 0.8, 1.0],
+        "text": [1.0, 1.0, 1.0, 1.0],
+        "hover": [0.3, 0.3, 0.9, 1.0],
+        "pressed": [0.1, 0.1, 0.4, 1.0]
       }
     },
     "text": {
@@ -58,6 +64,13 @@
           [0.6, 0, 0.0]
         ],
         "scale": 0.04
+      },
+      "game": {
+        "start_position": [0.75, 0, 0.7],
+        "next_position": [0.75, 0, 0.5],
+        "hint_position": [0.75, 0, 0.3],
+        "stats_position": [0.75, 0, 0.1],
+        "scale": 0.045
       }
     },
     "text": {
@@ -83,7 +96,11 @@
       "AFRICA",
       "ATLANTIC",
       "PACIFIC"
-    ]
+    ],
+    "start_game": "🎯 START GAME",
+    "next_challenge": "🌍 NEXT",
+    "get_hint": "💡 HINT",
+    "game_stats": "📊 STATS"
   },
   "code_formatting": {
     "spacing": {

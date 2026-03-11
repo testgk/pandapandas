@@ -58,6 +58,26 @@ class IGlobeApplication(ABC):
     def setPresetView(self, index: int) -> None:
         """Set the globe to a specific preset view"""
         pass
+    
+    @abstractmethod
+    def startGame(self) -> None:
+        """Start the GeoChallenge game mode"""
+        pass
+    
+    @abstractmethod
+    def nextChallenge(self) -> None:
+        """Start the next GeoChallenge"""
+        pass
+    
+    @abstractmethod
+    def getHint(self) -> None:
+        """Get a hint for the current challenge"""
+        pass
+    
+    @abstractmethod
+    def showGameStats(self) -> str:
+        """Show comprehensive game statistics"""
+        pass
 
     @property
     @abstractmethod

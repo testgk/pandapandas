@@ -4,12 +4,14 @@ Loads real GeoPandas world data with GUI controls for zoom and rotation
 """
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import *
+import math
 from math import sin, cos, pi
 from typing import Dict, Tuple, List, Optional
 
 from world_data_manager import WorldDataManager
 from gui.globe_gui_controller import GlobeGuiController
 from interfaces.i_globe_application import IGlobeApplication
+from geo_challenge_game import GeoChallengeGame, DifficultyLevel
 
 
 # Constants for magic numbers
@@ -90,6 +92,11 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.__rotationIncrement: int = DEFAULT_ROTATION_INCREMENT
         self.__defaultCameraPos: Tuple[float, float, float] = (6.320225, -12.64045, 4.2134833)
 
+        # Initialize GeoChallenge Game
+        self.__geoGame: Optional[GeoChallengeGame] = None
+        self.__gameMode: bool = False
+        self.__currentChallenge = None
+
         # Define preset views with proper typing
         self.__presetViews: List[Dict] = [
             {"name": "Europe/Africa View", "rotation": (0, -15, 0), "description": "Shows Europe and Mediterranean"},
@@ -111,7 +118,11 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.__guiController = GlobeGuiController(self)
 
         print("Application ready with manual controls")
-        print(f"INITIAL STATUS - Globe rotation: X={self.__globeRotationX}°, Y={self.__globeRotationY}°, Z={self.__globeRotationZ}°")
+        print(f"INITIAL STATUS - Globe rotation: X={self.__globeRotationX}, Y={self.__globeRotationY}, Z={self.__globeRotationZ}")
+        
+        # Auto-start a geography challenge for immediate play
+        print("🎮 Auto-starting GeoChallenge for immediate play...")
+        self.startGeoChallenge()
 
     # Properties for controlled access to private fields
     @property
@@ -179,6 +190,13 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         oceanSphere.reparentTo(self.__globe)
         oceanSphere.setTransparency(TransparencyAttrib.MAlpha)
         print("Ocean sphere created")
+
+        # Add collision sphere for click detection
+        collisionSphere = CollisionSphere(0, 0, 0, 1.0)
+        collisionNode = CollisionNode('globe-collision')
+        collisionNode.addSolid(collisionSphere)
+        collisionNP = self.__globe.attachNewNode(collisionNode)
+        collisionNP.setCollideMask(BitMask32.bit(1))
 
         # Add continents with colors
         continentColors = {
@@ -376,7 +394,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         """Rotate globe down by increment amount"""
         self.__globeRotationX -= self.__rotationIncrement
         self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-        self.__guiController.addLogMessage(f"DOWN: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+        self.__guiController.addLogMessage(f"DOWN: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}��")
 
     def rotateLeft(self) -> None:
         """Rotate globe left by increment amount"""
@@ -417,6 +435,366 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY = chosenView["rotation"]
             self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
             self.__guiController.addLogMessage(f"{chosenView['name']}: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+
+    # GeoChallenge Game Methods - Professional GeoPandas/Pandas Showcase
+    def startGeoChallenge(self) -> None:
+        """
+        Start the GeoChallenge game mode
+        Demonstrates professional GeoPandas and Pandas usage for interactive learning
+        """
+        try:
+            if not self.__geoGame:
+                # Initialize game with world data manager
+                dataManager = WorldDataManager()
+                self.__geoGame = GeoChallengeGame(dataManager)
+                print("🎮 GeoChallenge Game initialized with professional GeoPandas backend")
+            
+            self.__gameMode = True
+            self.__currentChallenge = self.__geoGame.get_challenge_by_difficulty()
+            
+            # Display challenge information prominently
+            challenge_info = (
+                f"🌍 GEOCHALLENGE ACTIVE!\n"
+                f"\n🎯 FIND: {self.__currentChallenge.location_name}\n"
+                f"🎚️  Difficulty: {self.__currentChallenge.difficulty.value}\n"
+                f"🏛️  Country: {self.__currentChallenge.country}\n"
+                f"🌎 Continent: {self.__currentChallenge.continent}\n"
+                f"\n💡 HINT: {self.__currentChallenge.hints[0] if self.__currentChallenge.hints else 'No hints available'}\n"
+                f"\n👆 CLICK ON THE GLOBE TO GUESS!"
+                f"\n🔴 Red dot shows where you clicked"
+            )
+            
+            self.__guiController.addLogMessage("🎮 GeoChallenge Mode ACTIVE")
+            self.__guiController.addLogMessage(challenge_info)
+            
+            # Enable mouse clicking for game interaction
+            self.accept("mouse1", self.__handleGameClick)
+            
+            print(f"🎯 Challenge: Find {self.__currentChallenge.location_name} in {self.__currentChallenge.country}")
+            
+        except Exception as e:
+            print(f"Error starting GeoChallenge: {e}")
+            self.__guiController.addLogMessage(f"❌ Error starting game: {e}")
+
+    def __handleGameClick(self) -> None:
+        """
+        Handle mouse clicks during game mode - Convert 3D click to geographic coordinates
+        Shows red dot where clicked and automatically derives coordinates
+        """
+        if not self.__gameMode or not self.__currentChallenge:
+            return
+        
+        # Clear any previous click marker
+        if hasattr(self, '_clickMarker') and self._clickMarker:
+            self._clickMarker.removeNode()
+        
+        # Get mouse position and convert to 3D world coordinates
+        if self.mouseWatcherNode.hasMouse():
+            mpos = self.mouseWatcherNode.getMouse()
+            
+            # Create picker ray from camera through mouse position
+            pickerRay = CollisionRay()
+            pickerRay.setFromLens(self.camNode, mpos.getX(), mpos.getY())
+            
+            # Create collision traverser and handler
+            picker = CollisionTraverser()
+            pq = CollisionHandlerQueue()
+            
+            # Create collision node for the globe
+            pickerNode = CollisionNode('mouseRay')
+            pickerNP = self.camera.attachNewNode(pickerNode)
+            pickerNode.addSolid(pickerRay)
+            picker.addCollider(pickerNP, pq)
+            
+            # Enable collision detection on the globe
+            self.__globe.setCollideMask(BitMask32.bit(1))
+            
+            # Traverse and find collision
+            picker.traverse(self.__globe)
+            
+            if pq.getNumEntries() > 0:
+                # Get the closest intersection point
+                pq.sortEntries()
+                entry = pq.getEntry(0)
+                hit_point = entry.getSurfacePoint(self.render)
+                
+                # Create red dot marker at click position
+                self._clickMarker = createSphere(0.08, (1.0, 0.0, 0.0, 0.9))  # Red dot
+                self._clickMarker.reparentTo(self.__globe)
+                self._clickMarker.setPos(hit_point / GLOBE_SCALE)
+                
+                # Convert 3D position to geographic coordinates
+                x = hit_point.x / GLOBE_SCALE
+                y = hit_point.y / GLOBE_SCALE  
+                z = hit_point.z / GLOBE_SCALE
+                
+                # Calculate latitude and longitude from 3D coordinates
+                lat = math.degrees(math.asin(max(-1, min(1, y))))
+                lon = math.degrees(math.atan2(x, z))
+                
+                # Display click coordinates immediately
+                self.__guiController.addLogMessage(f"🔴 You clicked: {lat:.2f}°, {lon:.2f}°")
+                
+                # Process the game attempt
+                self.__processGameAttempt((lat, lon))
+            
+            # Clean up collision nodes
+            pickerNP.removeNode()
+
+    def __processGameAttempt(self, clicked_coords: Tuple[float, float]) -> None:
+        """
+        Process a game attempt using professional GeoPandas/Pandas analytics
+        Demonstrates advanced spatial analysis and statistical performance tracking
+        """
+        if not self.__geoGame or not self.__currentChallenge:
+            return
+        
+        try:
+            # Score the attempt using advanced spatial calculations
+            attempt = self.__geoGame.score_attempt(clicked_coords)
+            
+            # Create visual feedback on the globe
+            self.__visualizeGameResult(clicked_coords, attempt)
+            
+            # Generate comprehensive result analysis
+            result_analysis = (
+                f"🎯 CHALLENGE RESULT:\n"
+                f"���� Target: {self.__currentChallenge.location_name}\n"
+                f"👆 You clicked: {clicked_coords[0]:.2f}°, {clicked_coords[1]:.2f}°\n"
+                f"🎯 Actual location: {self.__currentChallenge.actual_coordinates[0]:.2f}°, {self.__currentChallenge.actual_coordinates[1]:.2f}°\n"
+                f"📏 Distance off: {attempt.distance_km:.1f} km\n"
+                f"⚡ Response time: {attempt.response_time_seconds:.1f} seconds\n"
+                f"🏆 Score: {attempt.accuracy_score}/1000 points\n"
+                f"🎲 Difficulty: {self.__currentChallenge.difficulty.value}\n"
+            )
+            
+            # Add performance context using Pandas analytics
+            if len(self.__geoGame.player_history) > 1:
+                analytics = self.__geoGame.get_performance_analytics()
+                avg_score = analytics['overview']['average_score']
+                performance_trend = "📈 Improving" if attempt.accuracy_score > avg_score else "📉 Below average"
+                result_analysis += f"📊 Performance: {performance_trend} (Avg: {avg_score:.0f})\n"
+            
+            # Scoring feedback
+            if attempt.accuracy_score >= 900:
+                result_analysis += "🏆 EXCELLENT! You're a geography expert!"
+            elif attempt.accuracy_score >= 700:
+                result_analysis += "👍 GOOD! Nice geographical knowledge!"
+            elif attempt.accuracy_score >= 400:
+                result_analysis += "📚 Not bad, but there's room for improvement!"
+            else:
+                result_analysis += "🗺️ Keep practicing! Geography takes time to master."
+            
+            self.__guiController.addLogMessage(result_analysis)
+            
+            # End current challenge and prepare for next
+            self.__currentChallenge = None
+            self.__gameMode = False
+            self.ignore("mouse1")
+            
+            print(f"🎮 Challenge completed! Score: {attempt.accuracy_score}/1000, Distance: {attempt.distance_km:.1f}km")
+            
+        except Exception as e:
+            print(f"Error processing game attempt: {e}")
+            self.__guiController.addLogMessage(f"❌ Error processing attempt: {e}")
+
+    def __visualizeGameResult(self, clicked_coords: Tuple[float, float], attempt) -> None:
+        """
+        Visualize game results on the 3D globe
+        Demonstrates GeoPandas-style spatial visualization techniques
+        """
+        try:
+            # Create visual markers for the attempt
+            lat, lon = clicked_coords
+            actual_lat, actual_lon = self.__currentChallenge.actual_coordinates
+            
+            # Convert geographic coordinates to 3D globe positions
+            def geo_to_3d(latitude, longitude):
+                lat_rad = math.radians(latitude)
+                lon_rad = math.radians(longitude)
+                radius = CONTINENT_RADIUS * 1.1  # Slightly above surface
+                x = math.cos(lat_rad) * math.sin(lon_rad) * radius * GLOBE_SCALE
+                y = math.sin(lat_rad) * radius * GLOBE_SCALE
+                z = math.cos(lat_rad) * math.cos(lon_rad) * radius * GLOBE_SCALE
+                return (x, y, z)
+            
+            # Create marker for player's guess (red sphere)
+            guess_pos = geo_to_3d(lat, lon)
+            guess_marker = createSphere(0.05, (1.0, 0.0, 0.0, 0.8))  # Red
+            guess_marker.reparentTo(self.__globe)
+            guess_marker.setPos(*guess_pos)
+            
+            # Create marker for actual location (green sphere)
+            actual_pos = geo_to_3d(actual_lat, actual_lon)
+            actual_marker = createSphere(0.05, (0.0, 1.0, 0.0, 0.8))  # Green
+            actual_marker.reparentTo(self.__globe)
+            actual_marker.setPos(*actual_pos)
+            
+            # Create line connecting the two points (distance visualization)
+            # This demonstrates GeoPandas-style spatial relationship visualization
+            line_geom = LineSegs()
+            line_geom.setThickness(3)
+            line_geom.setColor(1, 1, 0, 0.7)  # Yellow line
+            line_geom.moveTo(*guess_pos)
+            line_geom.drawTo(*actual_pos)
+            line_node = line_geom.create()
+            line_path = NodePath(line_node)
+            line_path.reparentTo(self.__globe)
+            
+            # Auto-remove markers after 5 seconds
+            self.taskMgr.doMethodLater(5.0, self.__removeGameMarkers, "removeMarkers", 
+                                     extraArgs=[guess_marker, actual_marker, line_path])
+            
+        except Exception as e:
+            print(f"Error creating game visualization: {e}")
+
+    def __removeGameMarkers(self, *markers) -> None:
+        """Remove game visualization markers from the globe"""
+        for marker in markers:
+            if marker:
+                marker.removeNode()
+
+    def getGameStatistics(self) -> str:
+        """
+        Get comprehensive game statistics using Pandas analytics
+        Demonstrates professional data analysis capabilities
+        """
+        if not self.__geoGame or len(self.__geoGame.player_history) == 0:
+            return "📊 No game statistics available yet. Play some challenges first!"
+        
+        try:
+            analytics = self.__geoGame.get_performance_analytics()
+            
+            # Format comprehensive statistics report
+            stats_report = (
+                f"📊 GEOCHALLENGE PERFORMANCE ANALYTICS\n"
+                f"🎮 Total Games: {analytics['overview']['total_games']}\n"
+                f"🏆 Average Score: {analytics['overview']['average_score']:.1f}/1000\n"
+                f"🎯 Best Score: {analytics['overview']['best_score']}/1000\n"
+                f"📏 Average Distance: {analytics['distance_analysis']['average_distance_km']:.1f} km\n"
+                f"⚡ Average Response Time: {analytics['time_analysis']['average_response_time']:.1f} seconds\n"
+                f"🚀 Fastest Response: {analytics['time_analysis']['fastest_response']:.1f} seconds\n"
+            )
+            
+            # Add difficulty breakdown if available
+            if 'difficulty_breakdown' in analytics:
+                stats_report += "\n🎲 DIFFICULTY BREAKDOWN:\n"
+                for difficulty, stats in analytics['difficulty_breakdown'].items():
+                    if isinstance(stats, dict) and 'count' in stats:
+                        count = stats['count']
+                        avg_score = stats.get('mean', 0)
+                        stats_report += f"   {difficulty}: {count} games, {avg_score:.1f} avg score\n"
+            
+            # Add geographic performance
+            if 'geographic_analysis' in analytics and analytics['geographic_analysis']:
+                geo_analysis = analytics['geographic_analysis']
+                if geo_analysis.get('best_continent'):
+                    stats_report += f"\n🌍 Best Continent: {geo_analysis['best_continent']}\n"
+                if geo_analysis.get('worst_continent'):
+                    stats_report += f"🌍 Challenging Continent: {geo_analysis['worst_continent']}\n"
+            
+            # Add performance trend
+            if 'performance_trends' in analytics:
+                trends = analytics['performance_trends']
+                if isinstance(trends, dict) and 'score_trend' in trends:
+                    trend_emoji = "📈" if trends['score_trend'] == 'improving' else "📉" if trends['score_trend'] == 'declining' else "➡️"
+                    stats_report += f"\n{trend_emoji} Performance Trend: {trends['score_trend'].title()}\n"
+            
+            return stats_report
+            
+        except Exception as e:
+            return f"❌ Error generating statistics: {e}"
+
+    def nextGeoChallenge(self, difficulty: str = None) -> None:
+        """
+        Start the next GeoChallenge with optional difficulty selection
+        Showcases adaptive difficulty based on player performance analytics
+        """
+        if not self.__geoGame:
+            self.startGeoChallenge()
+            return
+        
+        try:
+            # Convert difficulty string to enum if provided
+            selected_difficulty = None
+            if difficulty:
+                difficulty_map = {
+                    'easy': DifficultyLevel.EASY,
+                    'medium': DifficultyLevel.MEDIUM,
+                    'hard': DifficultyLevel.HARD,
+                    'expert': DifficultyLevel.EXPERT
+                }
+                selected_difficulty = difficulty_map.get(difficulty.lower())
+            
+            # Get next challenge with intelligent difficulty selection
+            self.__currentChallenge = self.__geoGame.get_challenge_by_difficulty(selected_difficulty)
+            self.__gameMode = True
+            
+            # Display new challenge
+            challenge_info = (
+                f"🌍 NEW CHALLENGE!\n"
+                f"📍 Find: {self.__currentChallenge.location_name}\n"
+                f"🎯 Difficulty: {self.__currentChallenge.difficulty.value}\n"
+                f"🏛️ Country: {self.__currentChallenge.country}\n"
+                f"🌎 Continent: {self.__currentChallenge.continent}\n"
+                f"💡 Hint: {self.__currentChallenge.hints[0] if self.__currentChallenge.hints else 'No hints available'}\n"
+                f"\n👆 Click on the globe to make your guess!"
+            )
+            
+            self.__guiController.addLogMessage(challenge_info)
+            
+            # Enable mouse clicking
+            self.accept("mouse1", self.__handleGameClick)
+            
+            print(f"🎯 New Challenge: Find {self.__currentChallenge.location_name}")
+            
+        except Exception as e:
+            print(f"Error starting next challenge: {e}")
+            self.__guiController.addLogMessage(f"❌ Error starting next challenge: {e}")
+
+    def getGameHint(self) -> None:
+        """
+        Get additional hints for the current challenge
+        Demonstrates intelligent hint system using geographic data analysis
+        """
+        if not self.__gameMode or not self.__currentChallenge:
+            self.__guiController.addLogMessage("❌ No active challenge for hints")
+            return
+        
+        try:
+            # Get progressive hints
+            hint_count = getattr(self, '_hint_count', 0)
+            hint = self.__geoGame.get_hint(hint_count)
+            
+            hint_message = (
+                f"💡 HINT #{hint_count + 1}:\n"
+                f"{hint}\n"
+                f"🎯 Still looking for: {self.__currentChallenge.location_name}"
+            )
+            
+            self.__guiController.addLogMessage(hint_message)
+            self._hint_count = hint_count + 1
+            
+        except Exception as e:
+            self.__guiController.addLogMessage(f"❌ Error getting hint: {e}")
+
+    # Method aliases for GUI controller compatibility
+    def startGame(self) -> None:
+        """Alias for startGeoChallenge - for GUI controller compatibility"""
+        self.startGeoChallenge()
+    
+    def nextChallenge(self) -> None:
+        """Alias for nextGeoChallenge - for GUI controller compatibility"""
+        self.nextGeoChallenge()
+    
+    def getHint(self) -> None:
+        """Alias for getGameHint - for GUI controller compatibility"""
+        self.getGameHint()
+    
+    def showGameStats(self) -> None:
+        """Show game statistics in log - for GUI controller compatibility"""
+        stats = self.getGameStatistics()
+        self.__guiController.addLogMessage(stats)
 
 
 def main():

@@ -30,6 +30,12 @@ class GlobeGuiController:
         self.__rotateLeftBtn: Optional[DirectButton] = None
         self.__rotateRightBtn: Optional[DirectButton] = None
 
+        # Game-related buttons
+        self.__startGameBtn: Optional[DirectButton] = None
+        self.__nextChallengeBtn: Optional[DirectButton] = None
+        self.__getHintBtn: Optional[DirectButton] = None
+        self.__gameStatsBtn: Optional[DirectButton] = None
+
         self.__createGuiControls()
 
     def __createGuiControls(self) -> None:
@@ -139,6 +145,9 @@ class GlobeGuiController:
 
         # Preset view buttons
         self.__createPresetButtons()
+        
+        # GeoChallenge Game buttons (right side of screen)
+        self.__createGameControls()
 
         # Store all buttons for dark gray click effect
         self.__allButtons = [
@@ -148,13 +157,14 @@ class GlobeGuiController:
             self.__rotateLeftBtn, self.__rotateRightBtn
         ]
 
-        # Log display at bottom
+        # Log display at left side for better challenge visibility
         self.__logDisplay = OnscreenText(
             text=self.__settings.getTextContent("system_ready"),
-            pos=self.__settings.getTextPosition("log_position"),
-            scale=self.__settings.getTextScale("log_scale"),
-            fg=self.__settings.getTextColor("log"),
-            wordwrap=self.__settings.getLogWordWrap()
+            pos=(-0.95, 0.3),  # Moved far left and up for challenge display
+            scale=0.045,  # Slightly larger text for better readability
+            fg=(1.0, 1.0, 1.0, 1.0),  # White text
+            wordwrap=25,  # Wrap text at reasonable width
+            align=TextNode.ALeft  # Left-align text
         )
 
         # Bottom status text
@@ -182,6 +192,57 @@ class GlobeGuiController:
                 pressEffect=1, relief=2
             )
             self.__allButtons.append(btn)
+
+    def __createGameControls(self) -> None:
+        """Create buttons for GeoChallenge game controls"""
+        # Start Game button
+        self.__startGameBtn = DirectButton(
+            text=self.__settings.getTextContent("start_game"),
+            pos=self.__settings.getButtonPosition("game", "start_position"),
+            scale=self.__settings.getButtonScale("game"),
+            command=self.__onStartGame,
+            frameColor=self.__settings.getButtonColor("control", "background"),
+            text_fg=self.__settings.getButtonColor("control", "text"),
+            pressEffect=1, relief=2
+        )
+
+        # Next Challenge button
+        self.__nextChallengeBtn = DirectButton(
+            text=self.__settings.getTextContent("next_challenge"),
+            pos=self.__settings.getButtonPosition("game", "next_position"),
+            scale=self.__settings.getButtonScale("game"),
+            command=self.__onNextChallenge,
+            frameColor=self.__settings.getButtonColor("control", "background"),
+            text_fg=self.__settings.getButtonColor("control", "text"),
+            pressEffect=1, relief=2
+        )
+
+        # Get Hint button
+        self.__getHintBtn = DirectButton(
+            text=self.__settings.getTextContent("get_hint"),
+            pos=self.__settings.getButtonPosition("game", "hint_position"),
+            scale=self.__settings.getButtonScale("game"),
+            command=self.__onGetHint,
+            frameColor=self.__settings.getButtonColor("control", "background"),
+            text_fg=self.__settings.getButtonColor("control", "text"),
+            pressEffect=1, relief=2
+        )
+
+        # Game Stats button
+        self.__gameStatsBtn = DirectButton(
+            text=self.__settings.getTextContent("game_stats"),
+            pos=self.__settings.getButtonPosition("game", "stats_position"),
+            scale=self.__settings.getButtonScale("game"),
+            command=self.__onGameStats,
+            frameColor=self.__settings.getButtonColor("control", "background"),
+            text_fg=self.__settings.getButtonColor("control", "text"),
+            pressEffect=1, relief=2
+        )
+
+        self.__allButtons.extend([
+            self.__startGameBtn, self.__nextChallengeBtn,
+            self.__getHintBtn, self.__gameStatsBtn
+        ])
 
     def __applyButtonEffect(self, button: DirectButton) -> None:
         """Apply dark gray effect to button when clicked"""
@@ -250,3 +311,19 @@ class GlobeGuiController:
         if 0 <= index < len(buttons):
             self.__applyButtonEffect(buttons[index])
         self.__globeApp.setPresetView(index)
+
+    def __onStartGame(self) -> None:
+        self.__applyButtonEffect(self.__startGameBtn)
+        self.__globeApp.startGame()
+
+    def __onNextChallenge(self) -> None:
+        self.__applyButtonEffect(self.__nextChallengeBtn)
+        self.__globeApp.nextChallenge()
+
+    def __onGetHint(self) -> None:
+        self.__applyButtonEffect(self.__getHintBtn)
+        self.__globeApp.getHint()
+
+    def __onGameStats(self) -> None:
+        self.__applyButtonEffect(self.__gameStatsBtn)
+        self.__globeApp.showGameStats()

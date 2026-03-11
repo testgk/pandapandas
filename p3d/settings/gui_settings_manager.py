@@ -36,8 +36,9 @@ class GuiSettingsManager:
             # Fallback colors
             defaults = {
                 "increment": {"background": (0.2, 0.8, 0.2, 1.0), "text": (0, 0, 0, 1.0)},
-                "control": {"background": (0.1, 0.3, 0.1, 1.0), "text": (0, 1.0, 0, 1.0)},
-                "label": {"background": (0, 0, 0, 0), "text": (1.0, 1.0, 1.0, 1.0)}
+                "control": {"background": (0.1, 0.3, 0.1, 1.0), "text": (0, 1.0, 0, 1.0), "pressed": (0.5, 0.5, 0.5, 1.0)},
+                "label": {"background": (0, 0, 0, 0), "text": (1.0, 1.0, 1.0, 1.0)},
+                "game": {"background": (0.2, 0.2, 0.8, 1.0), "text": (1.0, 1.0, 1.0, 1.0), "pressed": (0.1, 0.1, 0.4, 1.0)}
             }
             return defaults.get(buttonType, {}).get(colorType, (1.0, 1.0, 1.0, 1.0))
 
