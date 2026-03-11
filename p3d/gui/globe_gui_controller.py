@@ -157,14 +157,14 @@ class GlobeGuiController:
             self.__rotateLeftBtn, self.__rotateRightBtn
         ]
 
-        # Log display at bottom-left, away from the globe
+        # Log display near game buttons (right side), below stats button
         self.__logDisplay = OnscreenText(
             text=self.__settings.getTextContent("system_ready"),
-            pos=(-1.3, -0.85),  # Bottom-left corner, clear of the globe
+            pos=(0.6, 0.3),  # Right side, below the game buttons
             scale=0.032,  # Smaller font
             fg=(1.0, 1.0, 1.0, 1.0),  # White text
-            wordwrap=30,  # Wider wrap to accommodate bottom placement
-            align=TextNode.ALeft  # Left-align text
+            wordwrap=22,
+            align=TextNode.ALeft
         )
 
         # Bottom status text
@@ -256,6 +256,12 @@ class GlobeGuiController:
 
         effectDuration = self.__settings.getEffectDuration()
         self.__globeApp.taskManager.doMethodLater(effectDuration, resetColor, f"reset_button_{id(button)}")
+
+    def clearLogMessage( self ) -> None:
+        """Clear the log display"""
+        self.__logMessages = []
+        if self.__logDisplay:
+            self.__logDisplay.setText( "" )
 
     def addLogMessage(self, message: str) -> None:
         """Add message to log display"""

@@ -452,6 +452,8 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             self.__gameMode = True
             self.__currentChallenge = self.__geoGame.get_challenge_by_difficulty()
             
+            self.__guiController.clearLogMessage()
+
             # Display challenge information prominently
             challenge_info = (
                 f"🌍 GEOCHALLENGE ACTIVE!\n"
@@ -729,7 +731,9 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             # Get next challenge with intelligent difficulty selection
             self.__currentChallenge = self.__geoGame.get_challenge_by_difficulty(selected_difficulty)
             self.__gameMode = True
-            
+
+            self.__guiController.clearLogMessage()
+
             # Display new challenge
             challenge_info = (
                 f"🌍 NEW CHALLENGE!\n"
