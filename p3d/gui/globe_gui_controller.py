@@ -182,7 +182,7 @@ class GlobeGuiController:
         )
 
     def __createPresetButtons(self) -> None:
-        """Create preset view buttons for different regions"""
+        """Create preset view buttons for different regions (currently hidden)"""
         presetLabels = self.__settings.getPresetLabels()
         presetPositions = self.__settings.getPresetPositions()
         presetScale = self.__settings.getButtonScale("presets")
@@ -197,6 +197,7 @@ class GlobeGuiController:
                 text_fg=self.__settings.getButtonColor("preset", "text"),
                 pressEffect=1, relief=2
             )
+            btn.hide()
             self.__allButtons.append(btn)
 
     def __createGameControls(self) -> None:

@@ -32,6 +32,63 @@ ZOOM_OUT_FACTOR = 1.25
 CAMERA_SCALE_FACTOR = 15.0 / 35.6
 
 
+DISK_SEGMENTS = 24
+
+
+def createDisk(
+    normal: Tuple[ float, float, float ],
+    color: Tuple[ float, float, float, float ],
+    radius: float = 0.06,
+    segments: int = DISK_SEGMENTS
+) -> NodePath:
+    """Create a flat disk aligned to the globe surface at the given surface normal"""
+    nx, ny, nz = normal
+
+    # Build two tangent vectors perpendicular to the normal
+    up = ( 0.0, 1.0, 0.0 ) if abs( ny ) < 0.9 else ( 1.0, 0.0, 0.0 )
+    tx = ny * up[ 2 ] - nz * up[ 1 ]
+    ty = nz * up[ 0 ] - nx * up[ 2 ]
+    tz = nx * up[ 1 ] - ny * up[ 0 ]
+    tLen = ( tx * tx + ty * ty + tz * tz ) ** 0.5
+    tx, ty, tz = tx / tLen, ty / tLen, tz / tLen
+
+    bx = ny * tz - nz * ty
+    by = nz * tx - nx * tz
+    bz = nx * ty - ny * tx
+
+    fmt = GeomVertexFormat.getV3n3()
+    vdata = GeomVertexData( "disk", fmt, Geom.UHStatic )
+    vertexWriter = GeomVertexWriter( vdata, "vertex" )
+    normalWriter = GeomVertexWriter( vdata, "normal" )
+
+    # Centre vertex
+    vertexWriter.addData3f( 0.0, 0.0, 0.0 )
+    normalWriter.addData3f( nx, ny, nz )
+
+    for i in range( segments ):
+        angle = ( i / segments ) * 2 * pi
+        px = ( tx * cos( angle ) + bx * sin( angle ) ) * radius
+        py = ( ty * cos( angle ) + by * sin( angle ) ) * radius
+        pz = ( tz * cos( angle ) + bz * sin( angle ) ) * radius
+        vertexWriter.addData3f( px, py, pz )
+        normalWriter.addData3f( nx, ny, nz )
+
+    geom = Geom( vdata )
+    tris = GeomTriangles( Geom.UHStatic )
+    for i in range( segments ):
+        tris.addVertices( 0, i + 1, ( i + 1 ) % segments + 1 )
+        tris.closePrimitive()
+    geom.addPrimitive( tris )
+
+    node = GeomNode( "disk" )
+    node.addGeom( geom )
+    diskPath = NodePath( node )
+    diskPath.setColor( *color )
+    diskPath.setTwoSided( True )
+    diskPath.setTransparency( TransparencyAttrib.MAlpha )
+    return diskPath
+
+
 def createSphere(radius: float, color: Tuple[float, float, float, float]) -> NodePath:
     """Create a 3D sphere geometry with specified radius and color"""
     format = GeomVertexFormat.getV3n3()
@@ -515,18 +572,36 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
                 # Get the closest intersection point
                 pq.sortEntries()
                 entry = pq.getEntry(0)
-                hit_point = entry.getSurfacePoint(self.render)
-                
-                # Create red dot marker at click position
-                self._clickMarker = createSphere(0.08, (1.0, 0.0, 0.0, 0.9))  # Red dot
-                self._clickMarker.reparentTo(self.__globe)
-                self._clickMarker.setPos(hit_point / GLOBE_SCALE)
-                
-                # Convert 3D position to geographic coordinates
-                x = hit_point.x / GLOBE_SCALE
-                y = hit_point.y / GLOBE_SCALE  
-                z = hit_point.z / GLOBE_SCALE
-                
+
+                # Get hit point in globe LOCAL space (accounts for rotation + scale)
+                localHit = entry.getSurfacePoint( self.__globe )
+                sx = localHit.x
+                sy = localHit.y
+                sz = localHit.z
+
+                # Compute surface normal (unit vector from globe centre to hit point)
+                sLen = ( sx * sx + sy * sy + sz * sz ) ** 0.5
+                surfaceNormal = ( sx / sLen, sy / sLen, sz / sLen )
+
+                # Place disk slightly above the surface to avoid z-fighting
+                DISK_OFFSET = 0.04
+                diskPos = (
+                    sx + surfaceNormal[ 0 ] * DISK_OFFSET,
+                    sy + surfaceNormal[ 1 ] * DISK_OFFSET,
+                    sz + surfaceNormal[ 2 ] * DISK_OFFSET,
+                )
+
+                # Create red opaque disk marker conforming to the globe curvature
+                self._clickMarker = createDisk( surfaceNormal, ( 1.0, 0.0, 0.0, 0.85 ) )
+                self._clickMarker.reparentTo( self.__globe )
+                self._clickMarker.setPos( *diskPos )
+
+                # Convert local-space position to geographic coordinates
+                # Normalise to unit sphere to get direction vector
+                x = sx / sLen
+                y = sy / sLen
+                z = sz / sLen
+
                 # Calculate latitude and longitude from 3D coordinates
                 lat = math.degrees(math.asin(max(-1, min(1, y))))
                 lon = math.degrees(math.atan2(x, z))
