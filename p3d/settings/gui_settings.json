@@ -1,0 +1,88 @@
+{
+  "colors": {
+    "buttons": {
+      "increment": {
+        "background": [0.2, 0.8, 0.2, 1.0],
+        "text": [0, 0, 0, 1.0],
+        "hover": [0.3, 0.9, 0.3, 1.0],
+        "pressed": [0.3, 0.3, 0.3, 1.0]
+      },
+      "control": {
+        "background": [0.1, 0.3, 0.1, 1.0],
+        "text": [0, 1.0, 0, 1.0],
+        "hover": [0.2, 0.4, 0.2, 1.0],
+        "pressed": [0.3, 0.3, 0.3, 1.0]
+      },
+      "label": {
+        "background": [0, 0, 0, 0],
+        "text": [1.0, 1.0, 1.0, 1.0]
+      }
+    },
+    "text": {
+      "log": [1.0, 1.0, 1.0, 1.0],
+      "status": [0, 1.0, 0, 1.0],
+      "system": [1.0, 1.0, 1.0, 1.0]
+    }
+  },
+  "layout": {
+    "buttons": {
+      "increment": {
+        "plus_position": [-0.75, 0, 0.8],
+        "minus_position": [-0.75, 0, 0.7],
+        "scale": 0.04
+      },
+      "zoom": {
+        "label_position": [-0.1, 0, 0.8],
+        "in_position": [0.1, 0, 0.8],
+        "out_position": [0.3, 0, 0.8],
+        "scale": 0.05
+      },
+      "reset": {
+        "position": [0, 0, 0.65],
+        "scale": 0.05
+      },
+      "rotation": {
+        "up_position": [0, 0, 0.9],
+        "down_position": [0, 0, -0.8],
+        "left_position": [-0.95, 0, 0],
+        "right_position": [0.95, 0, 0],
+        "scale": 0.05
+      },
+      "presets": {
+        "positions": [
+          [-0.6, 0, 0.2],
+          [-0.6, 0, 0.1],
+          [-0.6, 0, 0.0],
+          [0.6, 0, 0.2],
+          [0.6, 0, 0.1],
+          [0.6, 0, 0.0]
+        ],
+        "scale": 0.04
+      }
+    },
+    "text": {
+      "log_position": [0, -0.75],
+      "log_scale": 0.04,
+      "log_wordwrap": 80,
+      "status_position": [0, -0.85],
+      "status_scale": 0.04
+    }
+  },
+  "effects": {
+    "button_press_duration": 0.1,
+    "max_log_messages": 3
+  },
+  "text_content": {
+    "status_message": "REAL WORLD DATA • MANUAL CONTROLS ONLY",
+    "system_ready": "SYSTEM READY",
+    "zoom_label": "ZOOM",
+    "presets": [
+      "EUROPE",
+      "AMERICAS",
+      "ASIA",
+      "AFRICA",
+      "ATLANTIC",
+      "PACIFIC"
+    ]
+  }
+}
