@@ -156,42 +156,42 @@ class GlobeGuiController:
     # Event handlers - delegate to globe app
     def __on_zoom_in(self):
         self.__apply_button_effect(self.__zoom_in_btn)
-        self.__globe_app.zoom_in()
+        self.__globe_app.zoomIn()
 
     def __on_zoom_out(self):
         self.__apply_button_effect(self.__zoom_out_btn)
-        self.__globe_app.zoom_out()
+        self.__globe_app.zoomOut()
 
     def __on_reset_view(self):
         self.__apply_button_effect(self.__reset_btn)
-        self.__globe_app.reset_view()
+        self.__globe_app.resetView()
 
     def __on_rotate_up(self):
         self.__apply_button_effect(self.__rotate_up_btn)
-        self.__globe_app.rotate_up()
+        self.__globe_app.rotateUp()
 
     def __on_rotate_down(self):
         self.__apply_button_effect(self.__rotate_down_btn)
-        self.__globe_app.rotate_down()
+        self.__globe_app.rotateDown()
 
     def __on_rotate_left(self):
         self.__apply_button_effect(self.__rotate_left_btn)
-        self.__globe_app.rotate_left()
+        self.__globe_app.rotateLeft()
 
     def __on_rotate_right(self):
         self.__apply_button_effect(self.__rotate_right_btn)
-        self.__globe_app.rotate_right()
+        self.__globe_app.rotateRight()
 
     def __on_increase_rotation_increment(self):
         self.__apply_button_effect(self.__increment_plus_btn)
-        self.__globe_app.increase_rotation_increment()
+        self.__globe_app.increaseRotationIncrement()
 
     def __on_decrease_rotation_increment(self):
         self.__apply_button_effect(self.__increment_minus_btn)
-        self.__globe_app.decrease_rotation_increment()
+        self.__globe_app.decreaseRotationIncrement()
 
     def __on_set_preset_view(self, index):
         buttons = self.__all_buttons[-6:]  # Last 6 are preset buttons
         if 0 <= index < len(buttons):
             self.__apply_button_effect(buttons[index])
-        self.__globe_app.set_preset_view(index)
+        self.__globe_app.setPresetView(index)

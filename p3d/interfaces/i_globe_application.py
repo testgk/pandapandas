@@ -10,76 +10,76 @@ class IGlobeApplication(ABC):
     """Abstract interface for Globe Application implementations"""
 
     @abstractmethod
-    def zoom_in(self) -> None:
+    def zoomIn(self) -> None:
         """Move camera closer to globe center"""
         pass
 
     @abstractmethod
-    def zoom_out(self) -> None:
+    def zoomOut(self) -> None:
         """Move camera further from globe center"""
         pass
 
     @abstractmethod
-    def reset_view(self) -> None:
+    def resetView(self) -> None:
         """Reset camera position and globe rotation to default"""
         pass
 
     @abstractmethod
-    def rotate_up(self) -> None:
+    def rotateUp(self) -> None:
         """Rotate globe up by increment amount"""
         pass
 
     @abstractmethod
-    def rotate_down(self) -> None:
+    def rotateDown(self) -> None:
         """Rotate globe down by increment amount"""
         pass
 
     @abstractmethod
-    def rotate_left(self) -> None:
+    def rotateLeft(self) -> None:
         """Rotate globe left by increment amount"""
         pass
 
     @abstractmethod
-    def rotate_right(self) -> None:
+    def rotateRight(self) -> None:
         """Rotate globe right by increment amount"""
         pass
 
     @abstractmethod
-    def increase_rotation_increment(self) -> None:
+    def increaseRotationIncrement(self) -> None:
         """Increase rotation increment by 1 degree"""
         pass
 
     @abstractmethod
-    def decrease_rotation_increment(self) -> None:
+    def decreaseRotationIncrement(self) -> None:
         """Decrease rotation increment by 1 degree"""
         pass
 
     @abstractmethod
-    def set_preset_view(self, index: int) -> None:
+    def setPresetView(self, index: int) -> None:
         """Set the globe to a specific preset view"""
         pass
 
     @property
     @abstractmethod
-    def rotation_increment(self) -> int:
+    def rotationIncrement(self) -> int:
         """Get current rotation increment in degrees"""
         pass
 
     @property
     @abstractmethod
-    def globe_rotation_x(self) -> int:
+    def globeRotationX(self) -> int:
         """Get globe X rotation in degrees"""
         pass
 
     @property
     @abstractmethod
-    def globe_rotation_y(self) -> int:
+    def globeRotationY(self) -> int:
         """Get globe Y rotation in degrees"""
         pass
 
     @property
     @abstractmethod
-    def globe_rotation_z(self) -> int:
+    def globeRotationZ(self) -> int:
         """Get globe Z rotation in degrees"""
         pass
 
