@@ -157,13 +157,13 @@ class GlobeGuiController:
             self.__rotateLeftBtn, self.__rotateRightBtn
         ]
 
-        # Log display at left side for better challenge visibility
+        # Log display at bottom-left, away from the globe
         self.__logDisplay = OnscreenText(
             text=self.__settings.getTextContent("system_ready"),
-            pos=(-0.95, 0.3),  # Moved far left and up for challenge display
-            scale=0.045,  # Slightly larger text for better readability
+            pos=(-1.3, -0.85),  # Bottom-left corner, clear of the globe
+            scale=0.032,  # Smaller font
             fg=(1.0, 1.0, 1.0, 1.0),  # White text
-            wordwrap=25,  # Wrap text at reasonable width
+            wordwrap=30,  # Wider wrap to accommodate bottom placement
             align=TextNode.ALeft  # Left-align text
         )
 
