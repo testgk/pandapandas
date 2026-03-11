@@ -2,6 +2,8 @@
 Real Globe Application with Manual Controls - Final Version
 Loads real GeoPandas world data with GUI controls for zoom and rotation
 """
+from direct.showbase.ShowBaseGlobal import render2d
+
 print("Starting Real Globe Application with Manual Controls...")
 
 try:
@@ -397,79 +399,199 @@ try:
         def create_gui_controls(self):
             """Create GUI buttons for manual control"""
 
-            # Title
-            OnscreenText(text="Real Globe Manual Controls", pos=(0, 0.9), scale=0.07,
-                        fg=(1, 1, 1, 1), shadow=(0, 0, 0, 0.5))
+            # Initialize log messages list for bottom display
+            self.log_messages = []
 
-            # Zoom buttons
-            DirectButton(text="Zoom In", pos=(-0.3, 0, 0.8), scale=0.05,
-                        command=self.zoom_in, text_scale=1.2)
-            DirectButton(text="Zoom Out", pos=(0.3, 0, 0.8), scale=0.05,
-                        command=self.zoom_out, text_scale=1.2)
+            # Title with 80s hacker font style
+            OnscreenText(text="REAL GLOBE MANUAL CONTROLS", pos=(0, 0.9), scale=0.07,
+                        fg=(0, 1, 0, 1))  # Green hacker text
 
-            # Reset View button
-            DirectButton(text="Reset View", pos=(0, 0, 0.8), scale=0.05,
-                        command=self.reset_view, text_scale=1.0)
+            # Rotation Step controls (top-left corner, vertical layout)
+            # Label at the very top - fix visibility
+            OnscreenText(text="ROTATION INCREMENT", pos=(-0.75, 0, 0.85), scale=0.035,
+                        fg=(1, 1, 1, 1))  # White text for visibility
 
-
-            # Rotation buttons in cross pattern
-            DirectButton(text="Up", pos=(0, 0, 0.6), scale=0.05,
-                        command=self.rotate_up, text_scale=1.0)
-            DirectButton(text="Down", pos=(0, 0, 0.4), scale=0.05,
-                        command=self.rotate_down, text_scale=1.0)
-            DirectButton(text="Left", pos=(-0.15, 0, 0.5), scale=0.05,
-                        command=self.rotate_left, text_scale=1.0)
-            DirectButton(text="Right", pos=(0.15, 0, 0.5), scale=0.05,
-                        command=self.rotate_right, text_scale=1.0)
-
-            # Rotation increment adjustment buttons with colorful styling
-            OnscreenText(text="Rotation Step:", pos=(-0.45, 0, 0.65), scale=0.04,
-                        fg=(1, 1, 1, 1))
-
-            self.increment_minus_btn = DirectButton(
-                text="-", pos=(-0.45, 0, 0.6), scale=0.03,
-                command=self.decrease_rotation_increment, text_scale=1.5,
+            # + button (bigger, properly centered text)
+            self.increment_plus_btn = DirectButton(
+                text="+", pos=(-0.75, 0, 0.8), scale=0.04,
+                command=self.increase_rotation_increment, text_scale=1.0,
                 frameColor=(0.2, 0.8, 0.2, 1),  # Green background
                 text_fg=(0, 0, 0, 1),  # Black text
-                frameSize=(-0.8, 0.8, -0.4, 0.4),
+                frameSize=(-1.0, 1.0, -0.5, 0.5),  # Proper centering
+                textMayChange=0,
                 pressEffect=1,
                 relief=2
             )
 
-            # Display current rotation increment value
+            # Value display - fix visibility
             self.increment_display = OnscreenText(
                 text=f"{self.ROTATION_INCREMENT}°",
-                pos=(-0.45, 0, 0.55), scale=0.04,
-                fg=(0.2, 0.8, 0.2, 1)  # Green text
-            )
+                pos=(-0.75, 0, 0.75), scale=0.04,
+                fg=(1, 1, 1, 1))  # White text for visibility
 
-            self.increment_plus_btn = DirectButton(
-                text="+", pos=(-0.45, 0, 0.5), scale=0.03,
-                command=self.increase_rotation_increment, text_scale=1.5,
+            # - button (bigger, properly centered text)
+            self.increment_minus_btn = DirectButton(
+                text="-", pos=(-0.75, 0, 0.7), scale=0.04,
+                command=self.decrease_rotation_increment, text_scale=1.0,
                 frameColor=(0.2, 0.8, 0.2, 1),  # Green background
                 text_fg=(0, 0, 0, 1),  # Black text
-                frameSize=(-0.8, 0.8, -0.4, 0.4),
+                frameSize=(-1.0, 1.0, -0.5, 0.5),  # Proper centering
+                textMayChange=0,
                 pressEffect=1,
                 relief=2
             )
 
-            # Preset view buttons
-            DirectButton(text="Europe", pos=(-0.6, 0, 0.3), scale=0.04,
-                        command=lambda: self.set_preset_view(0), text_scale=1.0)
-            DirectButton(text="Americas", pos=(-0.6, 0, 0.2), scale=0.04,
-                        command=lambda: self.set_preset_view(1), text_scale=1.0)
-            DirectButton(text="Asia", pos=(-0.6, 0, 0.1), scale=0.04,
-                        command=lambda: self.set_preset_view(2), text_scale=1.0)
+            # Zoom buttons with new layout: "Zoom: IN OUT"
+            OnscreenText(text="ZOOM:", pos=(-0.2, 0, 0.8), scale=0.05,
+                        fg=(0, 1, 0, 1))  # Green label
 
-            DirectButton(text="Africa", pos=(0.6, 0, 0.3), scale=0.04,
-                        command=lambda: self.set_preset_view(3), text_scale=1.0)
-            DirectButton(text="Atlantic", pos=(0.6, 0, 0.2), scale=0.04,
-                        command=lambda: self.set_preset_view(4), text_scale=1.0)
-            DirectButton(text="Pacific", pos=(0.6, 0, 0.1), scale=0.04,
-                        command=lambda: self.set_preset_view(5), text_scale=1.0)
+            self.zoom_in_btn = DirectButton(text="IN", pos=(0.1, 0, 0.8), scale=0.05,
+                        command=self.zoom_in_with_effect, text_scale=1.2,
+                        frameColor=(0.1, 0.3, 0.1, 1),  # Dark green
+                        text_fg=(0, 1, 0, 1),  # Green text
+                        pressEffect=1, relief=2)
 
-            OnscreenText(text="Real world data • Manual controls only",
-                        pos=(0, -0.9), scale=0.05, fg=(0.8, 0.8, 0.8, 1))
+            self.zoom_out_btn = DirectButton(text="OUT", pos=(0.3, 0, 0.8), scale=0.05,
+                        command=self.zoom_out_with_effect, text_scale=1.2,
+                        frameColor=(0.1, 0.3, 0.1, 1),  # Dark green
+                        text_fg=(0, 1, 0, 1),  # Green text
+                        pressEffect=1, relief=2)
+
+            # Reset View button - moved to avoid overlap
+            self.reset_btn = DirectButton(text="RESET VIEW", pos=(0, 0, 0.65), scale=0.05,
+                        command=self.reset_view_with_effect, text_scale=1.0,
+                        frameColor=(0.1, 0.3, 0.1, 1),  # Dark green
+                        text_fg=(0, 1, 0, 1),  # Green text
+                        pressEffect=1, relief=2)
+
+            # Rotation buttons in cross pattern with 80s styling
+            self.rotate_up_btn = DirectButton(text="UP", pos=(0, 0, 0.5), scale=0.05,
+                        command=self.rotate_up_with_effect, text_scale=1.0,
+                        frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
+                        pressEffect=1, relief=2)
+
+            self.rotate_down_btn = DirectButton(text="DOWN", pos=(0, 0, 0.3), scale=0.05,
+                        command=self.rotate_down_with_effect, text_scale=1.0,
+                        frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
+                        pressEffect=1, relief=2)
+
+            self.rotate_left_btn = DirectButton(text="LEFT", pos=(-0.15, 0, 0.4), scale=0.05,
+                        command=self.rotate_left_with_effect, text_scale=1.0,
+                        frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
+                        pressEffect=1, relief=2)
+
+            self.rotate_right_btn = DirectButton(text="RIGHT", pos=(0.15, 0, 0.4), scale=0.05,
+                        command=self.rotate_right_with_effect, text_scale=1.0,
+                        frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
+                        pressEffect=1, relief=2)
+
+            # Preset view buttons with 80s hacker styling - moved up
+            self.europe_btn = DirectButton(text="EUROPE", pos=(-0.6, 0, 0.2), scale=0.04,
+                        command=lambda: self.set_preset_view_with_effect(0), text_scale=1.0,
+                        frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
+                        pressEffect=1, relief=2)
+
+            self.americas_btn = DirectButton(text="AMERICAS", pos=(-0.6, 0, 0.1), scale=0.04,
+                        command=lambda: self.set_preset_view_with_effect(1), text_scale=1.0,
+                        frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
+                        pressEffect=1, relief=2)
+
+            self.asia_btn = DirectButton(text="ASIA", pos=(-0.6, 0, 0.0), scale=0.04,
+                        command=lambda: self.set_preset_view_with_effect(2), text_scale=1.0,
+                        frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
+                        pressEffect=1, relief=2)
+
+            self.africa_btn = DirectButton(text="AFRICA", pos=(0.6, 0, 0.2), scale=0.04,
+                        command=lambda: self.set_preset_view_with_effect(3), text_scale=1.0,
+                        frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
+                        pressEffect=1, relief=2)
+
+            self.atlantic_btn = DirectButton(text="ATLANTIC", pos=(0.6, 0, 0.1), scale=0.04,
+                        command=lambda: self.set_preset_view_with_effect(4), text_scale=1.0,
+                        frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
+                        pressEffect=1, relief=2)
+
+            self.pacific_btn = DirectButton(text="PACIFIC", pos=(0.6, 0, 0.0), scale=0.04,
+                        command=lambda: self.set_preset_view_with_effect(5), text_scale=1.0,
+                        frameColor=(0.1, 0.3, 0.1, 1), text_fg=(0, 1, 0, 1),
+                        pressEffect=1, relief=2)
+
+            # Store all buttons for dark gray click effect
+            self.all_buttons = [
+                self.increment_minus_btn, self.increment_plus_btn,
+                self.zoom_in_btn, self.zoom_out_btn, self.reset_btn,
+                self.rotate_up_btn, self.rotate_down_btn, self.rotate_left_btn, self.rotate_right_btn,
+                self.europe_btn, self.americas_btn, self.asia_btn, self.africa_btn, self.atlantic_btn, self.pacific_btn
+            ]
+
+            # Log display at bottom of screen (white font, 80s style)
+            self.log_display = OnscreenText(
+                text="SYSTEM READY",
+                pos=(0, -0.75), scale=0.04,
+                fg=(1, 1, 1, 1),  # White text
+                wordwrap=80
+            )
+
+            # Bottom status text with 80s hacker style
+            OnscreenText(text="REAL WORLD DATA • MANUAL CONTROLS ONLY",
+                        pos=(0, -0.85), scale=0.04, fg=(0, 1, 0, 1))
+
+        def add_log_message(self, message):
+            """Add message to log display and update the screen"""
+            self.log_messages.append(message)
+            # Keep only last 3 messages
+            if len(self.log_messages) > 3:
+                self.log_messages.pop(0)
+            # Update display
+            log_text = " | ".join(self.log_messages)
+            self.log_display.setText(log_text)
+
+        def apply_button_effect(self, button):
+            """Apply dark gray effect to any button"""
+            original_color = button['frameColor']
+            button['frameColor'] = (0.3, 0.3, 0.3, 1)  # Dark gray
+            self.taskMgr.doMethodLater(0.1, lambda task: self.reset_button_color(button, original_color, task), f"reset_button_{id(button)}")
+
+        def reset_button_color(self, button, original_color, task):
+            """Reset button color back to original"""
+            button['frameColor'] = original_color
+            return task.done
+
+        # Wrapper functions with dark gray effect and logging
+        def zoom_in_with_effect(self):
+            self.apply_button_effect(self.zoom_in_btn)
+            self.zoom_in()
+
+        def zoom_out_with_effect(self):
+            self.apply_button_effect(self.zoom_out_btn)
+            self.zoom_out()
+
+        def reset_view_with_effect(self):
+            self.apply_button_effect(self.reset_btn)
+            self.reset_view()
+
+        def rotate_up_with_effect(self):
+            self.apply_button_effect(self.rotate_up_btn)
+            self.rotate_up()
+
+        def rotate_down_with_effect(self):
+            self.apply_button_effect(self.rotate_down_btn)
+            self.rotate_down()
+
+        def rotate_left_with_effect(self):
+            self.apply_button_effect(self.rotate_left_btn)
+            self.rotate_left()
+
+        def rotate_right_with_effect(self):
+            self.apply_button_effect(self.rotate_right_btn)
+            self.rotate_right()
+
+        def set_preset_view_with_effect(self, index):
+            # Apply effect to the correct button
+            buttons = [self.europe_btn, self.americas_btn, self.asia_btn, self.africa_btn, self.atlantic_btn, self.pacific_btn]
+            if 0 <= index < len(buttons):
+                self.apply_button_effect(buttons[index])
+            self.set_preset_view(index)
 
         # Control functions
         def zoom_in(self):
@@ -477,21 +599,20 @@ try:
             current_pos = self.camera.getPos()
             current_distance = current_pos.length()
 
-            print(f"Zoom In - Current distance: {current_distance:.1f}")
+            self.add_log_message(f"ZOOM IN - Distance: {current_distance:.1f}")
 
             # If camera is at origin, reset to default and don't zoom this time
             if current_distance < 0.1:
-                print("Camera at origin, resetting to default position")
+                self.add_log_message("Camera reset to default position")
                 self.camera.setPos(*self.default_camera_pos)
                 self.camera.lookAt(0, 0, 0)
-                print("Reset complete - try zoom again")
                 return
 
             # Calculate target distance (80% of current)
             target_distance = max(current_distance * 0.8, 8.0)  # Don't go closer than 8
 
             if target_distance >= current_distance - 0.1:  # Already at minimum
-                print("Already at minimum zoom distance")
+                self.add_log_message("Already at minimum zoom distance")
                 return
 
             # Calculate direction vector
@@ -510,28 +631,27 @@ try:
             self.camera.lookAt(0, 0, 0)
 
             verify_distance = self.camera.getPos().length()
-            print(f"Zoomed in to distance: {verify_distance:.1f}")
+            self.add_log_message(f"Zoomed in to distance: {verify_distance:.1f}")
 
         def zoom_out(self):
             """Move camera further from globe center using absolute positioning"""
             current_pos = self.camera.getPos()
             current_distance = current_pos.length()
 
-            print(f"Zoom Out - Current distance: {current_distance:.1f}")
+            self.add_log_message(f"ZOOM OUT - Distance: {current_distance:.1f}")
 
             # If camera is at origin, reset to default and don't zoom this time
             if current_distance < 0.1:
-                print("Camera at origin, resetting to default position")
+                self.add_log_message("Camera reset to default position")
                 self.camera.setPos(*self.default_camera_pos)
                 self.camera.lookAt(0, 0, 0)
-                print("Reset complete - try zoom again")
                 return
 
             # Calculate target distance (125% of current)
             target_distance = min(current_distance * 1.25, 80.0)  # Don't go further than 80
 
             if target_distance <= current_distance + 0.1:  # Already at maximum
-                print("Already at maximum zoom distance")
+                self.add_log_message("Already at maximum zoom distance")
                 return
 
             # Calculate direction vector
@@ -550,7 +670,7 @@ try:
             self.camera.lookAt(0, 0, 0)
 
             verify_distance = self.camera.getPos().length()
-            print(f"Zoomed out to distance: {verify_distance:.1f}")
+            self.add_log_message(f"Zoomed out to distance: {verify_distance:.1f}")
 
         def reset_view(self):
             """Reset camera position and globe rotation to default"""
@@ -567,9 +687,7 @@ try:
             # Verify reset
             pos = self.camera.getPos()
             distance = pos.length()
-            print(f"RESET VIEW - Position: {pos}, Distance: {distance:.1f}")
-            print(f"RESET VIEW - Rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
-
+            self.add_log_message(f"RESET: Distance {distance:.1f} | Rotation X=105° Y=0° Z=0°")
 
         def set_preset_view(self, index):
             """Set the globe to a specific preset view"""
@@ -577,68 +695,56 @@ try:
                 chosen_view = self.preset_views[index]
                 self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y = chosen_view["rotation"]
                 self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
-                print(f"PRESET VIEW: {chosen_view['name']} - {chosen_view['description']}")
-                print(f"PRESET VIEW - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
+                self.add_log_message(f"{chosen_view['name']}: X={self.globe_rotation_x}° Y={self.globe_rotation_y}° Z={self.globe_rotation_z}°")
 
         def rotate_up(self):
             self.globe_rotation_x += self.ROTATION_INCREMENT
             self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
-            print(f"Rotate UP - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
+            self.add_log_message(f"UP: X={self.globe_rotation_x}° Y={self.globe_rotation_y}° Z={self.globe_rotation_z}°")
 
         def rotate_down(self):
             self.globe_rotation_x -= self.ROTATION_INCREMENT
             self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
-            print(f"Rotate DOWN - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
+            self.add_log_message(f"DOWN: X={self.globe_rotation_x}° Y={self.globe_rotation_y}° Z={self.globe_rotation_z}°")
 
         def rotate_left(self):
             self.globe_rotation_z -= self.ROTATION_INCREMENT
             self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
-            print(f"Rotate LEFT - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
+            self.add_log_message(f"LEFT: X={self.globe_rotation_x}° Y={self.globe_rotation_y}° Z={self.globe_rotation_z}°")
 
         def rotate_right(self):
             self.globe_rotation_z += self.ROTATION_INCREMENT
             self.globe.setHpr(self.globe_rotation_z, self.globe_rotation_x, self.globe_rotation_y)
-            print(f"Rotate RIGHT - Current rotation: X={self.globe_rotation_x}°, Y={self.globe_rotation_y}°, Z={self.globe_rotation_z}°")
+            self.add_log_message(f"RIGHT: X={self.globe_rotation_x}° Y={self.globe_rotation_y}° Z={self.globe_rotation_z}°")
 
         def increase_rotation_increment(self):
             """Increase rotation increment by 1 degree (max 30)"""
             if self.ROTATION_INCREMENT < 30:
                 self.ROTATION_INCREMENT += 1
                 self.update_increment_display()
-                print(f"Rotation increment increased to {self.ROTATION_INCREMENT}°")
+                self.add_log_message(f"Rotation increment increased to {self.ROTATION_INCREMENT}°")
 
-                # Visual feedback - temporarily change button color to dark gray
-                self.increment_plus_btn['frameColor'] = (0.3, 0.3, 0.3, 1)  # Dark gray
-                self.taskMgr.doMethodLater(0.1, self.reset_plus_button_color, "reset_plus_color")
+                # Apply dark gray effect
+                self.apply_button_effect(self.increment_plus_btn)
             else:
-                print("Maximum rotation increment reached (30°)")
+                self.add_log_message("Maximum rotation increment reached (30°)")
 
         def decrease_rotation_increment(self):
             """Decrease rotation increment by 1 degree (min 1)"""
             if self.ROTATION_INCREMENT > 1:
                 self.ROTATION_INCREMENT -= 1
                 self.update_increment_display()
-                print(f"Rotation increment decreased to {self.ROTATION_INCREMENT}°")
+                self.add_log_message(f"Rotation increment decreased to {self.ROTATION_INCREMENT}°")
 
-                # Visual feedback - temporarily change button color to dark gray
-                self.increment_minus_btn['frameColor'] = (0.3, 0.3, 0.3, 1)  # Dark gray
-                self.taskMgr.doMethodLater(0.1, self.reset_minus_button_color, "reset_minus_color")
+                # Apply dark gray effect
+                self.apply_button_effect(self.increment_minus_btn)
             else:
-                print("Minimum rotation increment reached (1°)")
+                self.add_log_message("Minimum rotation increment reached (1°)")
 
         def update_increment_display(self):
             """Update the rotation increment display text"""
             self.increment_display.setText(f"{self.ROTATION_INCREMENT}°")
 
-        def reset_plus_button_color(self, task):
-            """Reset plus button color back to green"""
-            self.increment_plus_btn['frameColor'] = (0.2, 0.8, 0.2, 1)  # Back to green
-            return task.done
-
-        def reset_minus_button_color(self, task):
-            """Reset minus button color back to green"""
-            self.increment_minus_btn['frameColor'] = (0.2, 0.8, 0.2, 1)  # Back to green
-            return task.done
 
     print("Creating Real Globe application...")
     app = RealGlobe()
