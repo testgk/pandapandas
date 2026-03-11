@@ -105,6 +105,10 @@
       "always_use_side_branch": true,
       "never_work_directly_on_master": true,
       "auto_create_feature_branch": true,
+      "never_merge_without_permission": true,
+      "update_master_after_merge": true,
+      "create_new_branch_after_merge": true,
+      "commit_each_working_subject": true,
       "branch_naming_pattern": "feature/{description}",
       "description": "Git workflow and branch management preferences"
     },
@@ -112,13 +116,24 @@
       "commit_frequently": true,
       "descriptive_commit_messages": true,
       "test_before_merge": true,
-      "maintain_clean_history": true
+      "maintain_clean_history": true,
+      "order_imports_short_to_long": true,
+      "avoid_getattr_hasattr": true
     },
     "branch_examples": {
       "feature_branch": "feature/add-new-component",
       "bugfix_branch": "bugfix/fix-camera-positioning",
       "refactor_branch": "refactor/improve-performance",
       "experimental_branch": "experimental/try-new-approach"
+    },
+    "merge_workflow": {
+      "steps": [
+        "1. Get permission before merging",
+        "2. Test all changes thoroughly",
+        "3. Merge feature branch to master",
+        "4. Switch to master and pull latest",
+        "5. Create new feature branch for next work"
+      ]
     }
   }
 }

@@ -260,3 +260,124 @@ class GuiSettingsManager:
         else:
             return "ℹ️ Consider using a descriptive branch name with prefix (feature/, bugfix/, etc.)"
 
+    def shouldNeverMergeWithoutPermission(self) -> bool:
+        """Check if merges require explicit permission"""
+        try:
+            return self.__settings["workflow_preferences"]["git"]["never_merge_without_permission"]
+        except KeyError:
+            return True  # Default to requiring permission
+
+    def shouldUpdateMasterAfterMerge(self) -> bool:
+        """Check if master should be updated after merge"""
+        try:
+            return self.__settings["workflow_preferences"]["git"]["update_master_after_merge"]
+        except KeyError:
+            return True
+
+    def shouldCreateNewBranchAfterMerge(self) -> bool:
+        """Check if new branch should be created after merge"""
+        try:
+            return self.__settings["workflow_preferences"]["git"]["create_new_branch_after_merge"]
+        except KeyError:
+            return True
+
+    def shouldCommitEachWorkingSubject(self) -> bool:
+        """Check if each working subject should get its own commit"""
+        try:
+            return self.__settings["workflow_preferences"]["git"]["commit_each_working_subject"]
+        except KeyError:
+            return True
+
+    def shouldOrderImportsShortToLong(self) -> bool:
+        """Check if imports should be ordered from short to long"""
+        try:
+            return self.__settings["workflow_preferences"]["development"]["order_imports_short_to_long"]
+        except KeyError:
+            return True
+
+    def shouldAvoidGetAttrHasAttr(self) -> bool:
+        """Check if getattr/hasattr should be avoided"""
+        try:
+            return self.__settings["workflow_preferences"]["development"]["avoid_getattr_hasattr"]
+        except KeyError:
+            return True
+
+    def getMergeWorkflowSteps(self) -> List[str]:
+        """Get the steps for proper merge workflow"""
+        try:
+            return self.__settings["workflow_preferences"]["merge_workflow"]["steps"]
+        except KeyError:
+            return [
+                "1. Get permission before merging",
+                "2. Test all changes thoroughly",
+                "3. Merge feature branch to master",
+                "4. Switch to master and pull latest",
+                "5. Create new feature branch for next work"
+            ]
+
+    def generateMergeWorkflow(self, featureBranch: str, nextFeatureDescription: str) -> str:
+        """Generate complete merge workflow instructions"""
+        steps = self.getMergeWorkflowSteps()
+        nextBranch = self.generateBranchName("feature", nextFeatureDescription)
+
+        workflow = "📋 MERGE WORKFLOW:\n"
+        workflow += "\n".join(steps)
+        workflow += f"\n\n🔄 COMMANDS:\n"
+        workflow += f"git checkout master\n"
+        workflow += f"git pull origin master\n"
+        workflow += f"git merge {featureBranch}\n"
+        workflow += f"git push origin master\n"
+        workflow += f"git checkout -b {nextBranch}\n"
+
+        return workflow
+
+    def orderImports(self, imports: List[str]) -> List[str]:
+        """Order imports from shortest to longest"""
+        if not self.shouldOrderImportsShortToLong():
+            return imports
+
+        # Separate standard library, third-party, and local imports
+        standard_imports = []
+        third_party_imports = []
+        local_imports = []
+
+        for imp in imports:
+            if imp.startswith(('from os', 'from sys', 'from math', 'from json', 'from typing')):
+                standard_imports.append(imp)
+            elif imp.startswith(('from panda3d', 'from direct', 'from shapely', 'from geopandas')):
+                third_party_imports.append(imp)
+            else:
+                local_imports.append(imp)
+
+        # Sort each group by length
+        standard_imports.sort(key=len)
+        third_party_imports.sort(key=len)
+        local_imports.sort(key=len)
+
+        # Combine with blank lines between groups
+        result = []
+        if standard_imports:
+            result.extend(standard_imports)
+        if third_party_imports:
+            if result:
+                result.append("")  # Blank line separator
+            result.extend(third_party_imports)
+        if local_imports:
+            if result:
+                result.append("")  # Blank line separator
+            result.extend(local_imports)
+
+        return result
+
+    def getCodeStyleViolations(self, code: str) -> List[str]:
+        """Check for code style violations based on preferences"""
+        violations = []
+
+        if self.shouldAvoidGetAttrHasAttr():
+            if 'getattr(' in code:
+                violations.append("⚠️ Avoid using getattr() - use direct attribute access or properties instead")
+            if 'hasattr(' in code:
+                violations.append("⚠️ Avoid using hasattr() - use try/except or isinstance() instead")
+
+        return violations
+
