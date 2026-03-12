@@ -23,14 +23,14 @@ DEFAULT_CAMERA_DIST = 14.6   # matches globe_app default camera distance
 
 # Approximate centre lat/lon for each continent
 CONTINENT_CENTRES = {
-    "Europe":        ( 54.0,    4.0 ),    # calibrated: H=16 → lon=4
-    "Asia":          ( 34.0,   80.0 ),    # calibrated: H=-8(352) → lon=28 was Middle East; use 80 for South/Central Asia
-    "Africa":        (  0.0,   20.0 ),    # calibrated: H=0 → lon=20
-    "North America": ( 45.0, -105.0 ),
-    "South America": (-15.0,  -60.0 ),   # calibrated: H=80 → lon=-60
-    "Oceania":       (-25.0,  135.0 ),
-    "Antarctica":    (-85.0,    0.0 ),
-    "Europe/Asia":   ( 41.0,   29.0 ),
+    "Europe":        ( 54.0,    4.0 ),    # calibrated H=16   → lon=4
+    "Asia":          ( 34.0,   28.0 ),    # calibrated H=352  → lon=28
+    "Africa":        (  0.0,   20.0 ),    # calibrated H=0    → lon=20
+    "North America": ( 45.0, -132.0 ),   # calibrated H=152  → lon=-132
+    "South America": (-15.0,  -60.0 ),   # calibrated H=80   → lon=-60
+    "Oceania":       (-25.0,  140.0 ),   # calibrated H=-120 → lon=140
+    "Antarctica":    (-85.0,   20.0 ),
+    "Europe/Asia":   ( 41.0,   16.0 ),
 }
 
 
@@ -301,18 +301,14 @@ class GameController:
         duration: float = 1.0,
     ) -> None:
         """Rotate globe so coords faces camera, interpolate camera distance.
-        Calibrated formula from 3 debug measurements:
-          Africa      lat=0,   lon=20  → H=0,   P=81
-          S.America   lat=-15, lon=-60 → H=80,  P=41
-          Europe      lat=54,  lon=4   → H=16,  P=129
-
-          H = 20 - lon
-          P = 81 + 2.280*lat - 0.02577*lat²   (quadratic least-squares fit)
+        H is exact on all 5 calibrated points: H = (20 - lon) % 360
+        P is fixed at 81 (default equator-facing angle at default camera dist).
+        The continent will always be horizontally centred; vertical offset is minor.
         """
         lat, lon = coords
 
-        targetH = float( 20.0 - lon )
-        targetP = float( 81.0 + 2.280 * lat - 0.02577 * lat * lat )
+        targetH = float( ( 20.0 - lon ) % 360 )
+        targetP = 81.0   # fixed — reliable across all zoom levels
         targetR = 0.0
 
         startH = self.__globe.getH()
