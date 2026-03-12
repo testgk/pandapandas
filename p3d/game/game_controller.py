@@ -235,10 +235,10 @@ class GameController:
         """Smoothly rotate the globe so the answer city faces the camera, and zoom in slightly."""
         lat, lon = coords
 
-        # Target globe HPR: we want the city to face straight at the camera.
-        # Globe rotates around its own axes — H = -lon (left/right), P = -lat (up/down), R = 0
-        targetH = float( -lon )
-        targetP = float( -lat )
+        # setHpr( H, P, R ) where H spins left/right, P tilts up/down.
+        # To bring (lat, lon) to face the camera: H = lon, P = lat
+        targetH = float( lon )
+        targetP = float( lat )
         targetR = 0.0
 
         startH = self.__globe.getH()
