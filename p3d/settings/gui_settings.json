@@ -115,13 +115,17 @@
       "before_closing_brackets": true,
       "before_equals": true,
       "after_equals": true,
-      "description": "Formatting preferences for code generation"
+      "equals_in_keyword_arguments": true,
+      "equals_in_default_parameters": true,
+      "description": "Space before and after = in ALL contexts: assignments, keyword arguments, and default parameter values"
     },
     "bracket_spacing_examples": {
       "parentheses": "function( param1, param2 )",
       "square_brackets": "array[ index ]",
       "curly_braces": "dict{ key: value }",
-      "assignment": "variable = value"
+      "assignment": "variable = value",
+      "keyword_argument": "function( key = value )",
+      "default_parameter": "def myMethod( self, param = None ):"
     }
   },
   "workflow_preferences": {
