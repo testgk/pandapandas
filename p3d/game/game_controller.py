@@ -168,6 +168,15 @@ class GameController:
         if not self.__mouseWatcher.hasMouse():
             return
 
+        # ── DEBUG: print current globe & camera state ──────────────────────
+        camPos = self.__camera.getPos()
+        globeHpr = self.__globe.getHpr()
+        globeQdbg = self.__globe.getQuat()
+        print( f"[FOCUS DEBUG] Globe HPR   = H={globeHpr.x:.2f}  P={globeHpr.y:.2f}  R={globeHpr.z:.2f}" )
+        print( f"[FOCUS DEBUG] Globe Quat  = R={globeQdbg.getR():.4f}  I={globeQdbg.getI():.4f}  J={globeQdbg.getJ():.4f}  K={globeQdbg.getK():.4f}" )
+        print( f"[FOCUS DEBUG] Camera Pos  = x={camPos.x:.3f}  y={camPos.y:.3f}  z={camPos.z:.3f}  dist={camPos.length():.3f}" )
+        # ───────────────────────────────────────────────────────────────────
+
         mpos = self.__mouseWatcher.getMouse()
 
         pickerRay = CollisionRay()
@@ -207,6 +216,11 @@ class GameController:
             x, y, z = sx / sLen, sy / sLen, sz / sLen
             lat = math.degrees( math.asin( max( -1.0, min( 1.0, y ) ) ) )
             lon = math.degrees( math.atan2( x, z ) )
+
+            print( f"[FOCUS DEBUG] Clicked lat={lat:.2f}  lon={lon:.2f}" )
+            if self.__currentChallenge:
+                tLat, tLon = self.__currentChallenge.actual_coordinates
+                print( f"[FOCUS DEBUG] Target  lat={tLat:.2f}  lon={tLon:.2f}  city={self.__currentChallenge.location_name}" )
 
             self.__log( f"🔴 You clicked: {lat:.2f}°, {lon:.2f}°" )
             self.__scoreAttempt( ( lat, lon ) )
@@ -331,7 +345,11 @@ class GameController:
             self.__camera.setPos( camDirNorm * newDist )
             self.__camera.lookAt( 0, 0, 0 )
 
-            return task.done if t >= 1.0 else task.cont
+            if t >= 1.0:
+                finalHpr = self.__globe.getHpr()
+                print( f"[FOCUS DEBUG] Final Globe HPR = H={finalHpr.x:.2f}  P={finalHpr.y:.2f}  R={finalHpr.z:.2f}  (task={taskName})" )
+                return task.done
+            return task.cont
 
         # Cancel any running focus task before starting a new one
         self.__taskManager.remove( taskName )
