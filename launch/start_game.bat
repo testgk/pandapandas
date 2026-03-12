@@ -10,6 +10,13 @@ if not exist "%DEST%\p3d" (
     if errorlevel 1 ( echo ERROR: Download failed. & pause & exit /b 1 )
 )
 
+REM ── Create and activate venv ──────────────────────────────────
+if not exist "%DEST%\venv" (
+    echo Creating virtual environment...
+    python -m venv "%DEST%\venv"
+)
+call "%DEST%\venv\Scripts\activate.bat"
+
 REM ── Install deps ─────────────────────────────────────────────
 echo Checking dependencies...
 pip install panda3d geopandas numpy shapely matplotlib --quiet
