@@ -158,13 +158,13 @@ def createCityLabel(
     normal: Tuple[ float, float, float ],
     pos: Tuple[ float, float, float ],
     parent: NodePath,
-    offset: float = 0.20,
+    offset: float = 0.35,
 ) -> NodePath:
     """
     Create a text label standing vertically on the globe surface like a sign,
     with a thin line connecting it down to the surface point.
     """
-    from panda3d.core import LVector3f, LPoint3f
+    from panda3d.core import LVector3f, LQuaternionf
 
     root = NodePath( "cityLabelRoot" )
     root.reparentTo( parent )
@@ -178,8 +178,8 @@ def createCityLabel(
 
     # ── Connector line ────────────────────────────────────────────────────────
     lines = LineSegs()
-    lines.setThickness( 1.5 )
-    lines.setColor( 1.0, 1.0, 0.3, 0.8 )
+    lines.setThickness( 2.0 )
+    lines.setColor( 1.0, 1.0, 0.3, 0.9 )
     lines.moveTo( pos[ 0 ], pos[ 1 ], pos[ 2 ] )
     lines.drawTo( tipPos[ 0 ], tipPos[ 1 ], tipPos[ 2 ] )
     lineNP = root.attachNewNode( lines.create() )
@@ -189,42 +189,46 @@ def createCityLabel(
     textNode = TextNode( "cityLabel" )
     textNode.setText( cityName )
     textNode.setAlign( TextNode.ACenter )
-    textNode.setTextColor( 1.0, 1.0, 0.3, 1.0 )
-    textNode.setCardColor( 0.0, 0.0, 0.0, 0.65 )
-    textNode.setCardAsMargin( 0.15, 0.15, 0.08, 0.08 )
+    textNode.setTextColor( 1.0, 1.0, 0.2, 1.0 )
+    textNode.setCardColor( 0.0, 0.0, 0.0, 0.7 )
+    textNode.setCardAsMargin( 0.2, 0.2, 0.1, 0.1 )
     textNode.setCardDecal( True )
 
     labelNP = root.attachNewNode( textNode )
-    labelNP.setPos( tipPos[ 0 ], tipPos[ 1 ], tipPos[ 2 ] )
-    labelNP.setScale( 0.10 )
+    labelNP.setScale( 0.08 )
     labelNP.setDepthOffset( 19 )
 
-    # Orient the sign to stand vertically on the globe:
-    # • forward (+Y in Panda3D model space) points along the surface normal (outward)
-    # • up     (+Z in Panda3D model space) points toward the globe's north pole tangent
-    nVec   = LVector3f( nx, ny, nz )
-    worldUp = LVector3f( 0, 1, 0 )   # globe Y = north pole direction
+    # Orient so the sign face points outward (along normal) and stands upright.
+    # We compute right/up tangent vectors in globe-local space.
+    nVec = LVector3f( nx, ny, nz )
 
-    # right = normal × worldUp  (tangent running east-west)
-    right = nVec.cross( worldUp )
-    if right.lengthSquared() < 1e-6:
+    # "world up" in globe local space is Y axis (north pole)
+    worldUp = LVector3f( 0, 1, 0 )
+    if abs( nVec.dot( worldUp ) ) > 0.99:
         worldUp = LVector3f( 1, 0, 0 )
-        right = nVec.cross( worldUp )
+
+    # right = normalise( normal × worldUp )
+    right = nVec.cross( worldUp )
     right.normalize()
 
-    # up = right × normal  (tangent running south-north, truly upward on globe)
-    up = right.cross( nVec )
-    up.normalize()
+    # up = right × normal  → truly upward on globe surface
+    upVec = right.cross( nVec )
+    upVec.normalize()
 
-    # Build rotation matrix: right=X, normal=Y(forward), up=Z
-    from panda3d.core import LMatrix4f
-    mat = LMatrix4f(
-        right.x,  right.y,  right.z,  0,
-        nVec.x,   nVec.y,   nVec.z,   0,
-        up.x,     up.y,     up.z,     0,
-        0,        0,        0,        1,
+    # Build a quaternion from the three axes:
+    # Panda3D TextNode faces +Y by default, so we map:
+    #   model +X  →  right
+    #   model +Y  →  nVec  (outward, the "forward" face direction)
+    #   model +Z  →  upVec (sign standing up)
+    q = LQuaternionf()
+    q.setFromMatrix(
+        __import__( 'panda3d.core', fromlist=[ 'LMatrix3f' ] ).LMatrix3f(
+            right.x,  right.y,  right.z,
+            nVec.x,   nVec.y,   nVec.z,
+            upVec.x,  upVec.y,  upVec.z,
+        )
     )
-    labelNP.setMat( mat )
-    labelNP.setPos( tipPos[ 0 ], tipPos[ 1 ], tipPos[ 2 ] )   # restore pos after setMat
+    labelNP.setQuat( q )
+    labelNP.setPos( tipPos[ 0 ], tipPos[ 1 ], tipPos[ 2 ] )
 
     return root
