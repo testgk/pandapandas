@@ -23,12 +23,12 @@ DEFAULT_CAMERA_DIST = 14.6   # matches globe_app default camera distance
 
 # Approximate centre lat/lon for each continent
 CONTINENT_CENTRES = {
-    "Europe":        ( 54.0,   15.0 ),
-    "Asia":          ( 34.0,   100.0 ),
+    "Europe":        ( 54.0,    4.0 ),   # lon=4 calibrated from debug H=16
+    "Asia":          ( 34.0,  100.0 ),
     "Africa":        (  0.0,   20.0 ),
-    "North America": ( 45.0,  -100.0 ),
+    "North America": ( 45.0, -100.0 ),
     "South America": (-15.0,  -60.0 ),
-    "Oceania":       (-25.0,   135.0 ),
+    "Oceania":       (-25.0,  135.0 ),
     "Antarctica":    (-85.0,    0.0 ),
     "Europe/Asia":   ( 41.0,   29.0 ),
 }
@@ -62,16 +62,24 @@ class GameController:
         """Provide Panda3D accept/ignore wrappers from the ShowBase instance."""
         self.__acceptCallback = accept
         self.__ignoreCallback = ignore
-        # Debug key: press 'd' any time to print globe & camera state
         accept( "d", self.__printDebugState )
+        accept( "f1", self.__printDebugState )
+        # Auto-print every 5 seconds so we always see state even if key doesn't fire
+        self.__taskManager.doMethodLater( 5.0, self.__autoDebugTask, "autoDebugTask" )
+
+    def __autoDebugTask( self, task ) -> int:
+        self.__printDebugState()
+        return task.again
 
     def __printDebugState( self ) -> None:
         camPos = self.__camera.getPos()
         globeHpr = self.__globe.getHpr()
         globeQ = self.__globe.getQuat()
-        print( f"[DEBUG] Globe HPR  = H={globeHpr.x:.2f}  P={globeHpr.y:.2f}  R={globeHpr.z:.2f}" )
-        print( f"[DEBUG] Globe Quat = R={globeQ.getR():.4f}  I={globeQ.getI():.4f}  J={globeQ.getJ():.4f}  K={globeQ.getK():.4f}" )
-        print( f"[DEBUG] Camera     = x={camPos.x:.3f}  y={camPos.y:.3f}  z={camPos.z:.3f}  dist={camPos.length():.3f}" )
+        import sys
+        print( f"[DEBUG] Globe HPR  = H={globeHpr.x:.2f}  P={globeHpr.y:.2f}  R={globeHpr.z:.2f}", flush = True )
+        print( f"[DEBUG] Globe Quat = R={globeQ.getR():.4f}  I={globeQ.getI():.4f}  J={globeQ.getJ():.4f}  K={globeQ.getK():.4f}", flush = True )
+        print( f"[DEBUG] Camera     = x={camPos.x:.3f}  y={camPos.y:.3f}  z={camPos.z:.3f}  dist={camPos.length():.3f}", flush = True )
+        sys.stdout.flush()
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -188,8 +196,9 @@ class GameController:
         if not self.__mouseWatcher.hasMouse():
             return
 
+        mpos = self.__mouseWatcher.getMouse()
+
         pickerRay = CollisionRay()
-        pickerRay.setFromLens( self.__camNode, mpos.getX(), mpos.getY() )
 
         picker = CollisionTraverser()
         pq = CollisionHandlerQueue()
@@ -292,14 +301,18 @@ class GameController:
         duration: float = 1.0,
     ) -> None:
         """Rotate globe so coords faces camera, interpolate camera distance.
-        Calibrated formula from debug data:
-          H = -lon        (Africa lon=20 → H=0,  S.America lon=-60 → H=80)
-          P = 81 + lat * 2.67  (Africa lat=0 → P=81, S.America lat=-15 → P=41)
+        Calibrated formula from 3 debug measurements:
+          Africa      lat=0,   lon=20  → H=0,   P=81
+          S.America   lat=-15, lon=-60 → H=80,  P=41
+          Europe      lat=54,  lon=4   → H=16,  P=129
+
+          H = 20 - lon
+          P = 81 + 2.280*lat - 0.02577*lat²   (quadratic least-squares fit)
         """
         lat, lon = coords
 
-        targetH = float( -lon )
-        targetP = float( 81.0 + lat * 2.67 )
+        targetH = float( 20.0 - lon )
+        targetP = float( 81.0 + 2.280 * lat - 0.02577 * lat * lat )
         targetR = 0.0
 
         startH = self.__globe.getH()
