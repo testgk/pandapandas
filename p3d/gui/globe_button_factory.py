@@ -1,7 +1,8 @@
 """
-Globe Button Factory - Creates and owns all DirectButton instances for the globe GUI
+Globe Button Factory - Creates and owns all DirectButton instances for globe navigation only.
+Game buttons live in GameGuiController.
 """
-from direct.gui.DirectGui import DirectButton
+from direct.gui.DirectButton import DirectButton
 from typing import List, Callable, Optional
 
 from settings.gui_settings_manager import GuiSettingsManager
@@ -9,7 +10,7 @@ from settings.gui_settings_manager import GuiSettingsManager
 
 
 class GlobeButtonFactory:
-    """Creates and holds all DirectButton instances for the globe GUI"""
+    """Creates and holds all globe-navigation DirectButton instances."""
 
     def __init__( self, settings: GuiSettingsManager ):
         self.__settings: GuiSettingsManager = settings
@@ -23,9 +24,6 @@ class GlobeButtonFactory:
         self.__rotateDownBtn: Optional[ DirectButton ] = None
         self.__rotateLeftBtn: Optional[ DirectButton ] = None
         self.__rotateRightBtn: Optional[ DirectButton ] = None
-        self.__startGameBtn: Optional[ DirectButton ] = None
-        self.__nextChallengeBtn: Optional[ DirectButton ] = None
-        self.__gameStatsBtn: Optional[ DirectButton ] = None
         self.__radiusPlusBtn: Optional[ DirectButton ] = None
         self.__radiusMinusBtn: Optional[ DirectButton ] = None
         self.__presetButtons: List[ DirectButton ] = []
@@ -181,44 +179,6 @@ class GlobeButtonFactory:
             btn.hide()
             self.__presetButtons.append( btn )
 
-    def buildGameControls(
-        self,
-        onStartGame: Callable,
-        onNextChallenge: Callable,
-        onGameStats: Callable
-    ) -> None:
-        """Create game control buttons"""
-        self.__startGameBtn = DirectButton(
-            text = self.__settings.getTextContent( "start_game" ),
-            pos = self.__settings.getButtonPosition( "game", "start_position" ),
-            scale = self.__settings.getButtonScale( "game" ),
-            command = onStartGame,
-            frameColor = self.__settings.getButtonColor( "control", "background" ),
-            text_fg = self.__settings.getButtonColor( "control", "text" ),
-            pressEffect = 1, relief = 2
-        )
-
-        self.__nextChallengeBtn = DirectButton(
-            text = self.__settings.getTextContent( "next_challenge" ),
-            pos = self.__settings.getButtonPosition( "game", "next_position" ),
-            scale = self.__settings.getButtonScale( "game" ),
-            command = onNextChallenge,
-            frameColor = self.__settings.getButtonColor( "control", "background" ),
-            text_fg = self.__settings.getButtonColor( "control", "text" ),
-            pressEffect = 1, relief = 2
-        )
-        self.__nextChallengeBtn.hide()
-
-        self.__gameStatsBtn = DirectButton(
-            text = self.__settings.getTextContent( "game_stats" ),
-            pos = self.__settings.getButtonPosition( "game", "stats_position" ),
-            scale = self.__settings.getButtonScale( "game" ),
-            command = onGameStats,
-            frameColor = self.__settings.getButtonColor( "control", "background" ),
-            text_fg = self.__settings.getButtonColor( "control", "text" ),
-            pressEffect = 1, relief = 2
-        )
-
     def buildRadiusControls(
         self,
         onIncrease: Callable,
@@ -297,18 +257,6 @@ class GlobeButtonFactory:
         return self.__rotateRightBtn
 
     @property
-    def startGameBtn( self ) -> Optional[ DirectButton ]:
-        return self.__startGameBtn
-
-    @property
-    def nextChallengeBtn( self ) -> Optional[ DirectButton ]:
-        return self.__nextChallengeBtn
-
-    @property
-    def gameStatsBtn( self ) -> Optional[ DirectButton ]:
-        return self.__gameStatsBtn
-
-    @property
     def radiusPlusBtn( self ) -> Optional[ DirectButton ]:
         return self.__radiusPlusBtn
 
@@ -321,15 +269,13 @@ class GlobeButtonFactory:
         return list( self.__presetButtons )
 
     def getAllButtons( self ) -> List[ DirectButton ]:
-        """Return all non-None interactive buttons as a flat list"""
+        """Return all non-None navigation buttons as a flat list."""
         candidates = [
             self.__incrementMinusBtn, self.__incrementPlusBtn,
             self.__zoomInBtn, self.__zoomOutBtn,
             self.__resetBtn,
             self.__rotateUpBtn, self.__rotateDownBtn,
             self.__rotateLeftBtn, self.__rotateRightBtn,
-            self.__startGameBtn, self.__nextChallengeBtn,
-            self.__gameStatsBtn,
             self.__radiusPlusBtn, self.__radiusMinusBtn,
         ] + self.__presetButtons
         return [ btn for btn in candidates if btn is not None ]
