@@ -268,22 +268,26 @@ class GameController:
         duration: float = 1.0,
     ) -> None:
         """Move the camera above the target lat/lon point and look down at it."""
-        from panda3d.core import LVector3f
+        from panda3d.core import LVector3f, LPoint3f
 
         lat, lon = coords
         latRad = math.radians( lat )
         lonRad = math.radians( lon )
 
-        # Unit vector pointing from globe centre toward the target location
-        targetDir = LVector3f(
+        # Unit vector in globe local space pointing toward the target location
+        localDir = LVector3f(
             math.cos( latRad ) * math.sin( lonRad ),
             math.sin( latRad ),
             math.cos( latRad ) * math.cos( lonRad ),
         )
-        targetDir.normalize()
+        localDir.normalize()
 
-        # Target camera position = targetDir * targetCamDist
-        targetCamPos = targetDir * targetCamDist
+        # Transform to world space — accounts for globe rotation (HPR) and scale
+        globeMat = self.__globe.getMat( self.__globe.getParent() )
+        worldDir = globeMat.xformVec( localDir )
+        worldDir.normalize()
+
+        targetCamPos = worldDir * targetCamDist
 
         startCamPos = self.__camera.getPos()
         elapsed = [ 0.0 ]
