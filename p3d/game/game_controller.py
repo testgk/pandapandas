@@ -19,6 +19,19 @@ from world_data_manager import WorldDataManager
 CONTINENT_RADIUS = 1.01
 DISK_OFFSET = 0.01
 GLOBE_SCALE = 5
+DEFAULT_CAMERA_DIST = 14.6   # matches globe_app default camera distance
+
+# Approximate centre lat/lon for each continent
+CONTINENT_CENTRES = {
+    "Europe":        ( 54.0,   15.0 ),
+    "Asia":          ( 34.0,   100.0 ),
+    "Africa":        (  0.0,   20.0 ),
+    "North America": ( 45.0,  -100.0 ),
+    "South America": (-15.0,  -60.0 ),
+    "Oceania":       (-25.0,   135.0 ),
+    "Antarctica":    (-85.0,    0.0 ),
+    "Europe/Asia":   ( 41.0,   29.0 ),
+}
 
 
 class GameController:
@@ -76,6 +89,8 @@ class GameController:
             self.__log( challenge_info )
             self.__acceptCallback( "mouse1", self.__handleClick )
 
+            self.__focusOnContinent( self.__currentChallenge.continent )
+
         except Exception as e:
             self.__log( f"❌ Error starting game: {e}" )
 
@@ -106,6 +121,8 @@ class GameController:
             )
             self.__log( challenge_info )
             self.__acceptCallback( "mouse1", self.__handleClick )
+
+            self.__focusOnContinent( self.__currentChallenge.continent )
 
         except Exception as e:
             self.__log( f"❌ Error starting next challenge: {e}" )
@@ -232,63 +249,69 @@ class GameController:
             self.__log( f"❌ Error scoring attempt: {e}" )
 
     def __focusOnCity( self, coords: Tuple[ float, float ] ) -> None:
-        """Smoothly rotate the globe so the answer city faces the camera."""
-        from panda3d.core import LVector3f, LQuaternionf, LMatrix4f
+        """Smoothly rotate the globe so the answer city faces the camera and zoom in."""
+        camDist = self.__camera.getPos().length()
+        targetDist = max( camDist * 0.72, 8.0 )
+        self.__animateGlobeFocus( coords, targetDist, taskName = "focusCityTask" )
+
+    def __focusOnContinent( self, continentName: str ) -> None:
+        """Rotate the globe to the continent of the next challenge and zoom out to default."""
+        coords = CONTINENT_CENTRES.get( continentName )
+        if not coords:
+            return
+        self.__animateGlobeFocus( coords, DEFAULT_CAMERA_DIST, taskName = "focusContinentTask" )
+
+    def __animateGlobeFocus(
+        self,
+        coords: Tuple[ float, float ],
+        targetCamDist: float,
+        taskName: str = "focusTask",
+        duration: float = 1.0,
+    ) -> None:
+        """Shared animation: rotate globe so coords faces camera, interpolate camera distance."""
+        from panda3d.core import LVector3f, LQuaternionf
 
         lat, lon = coords
         latRad = math.radians( lat )
         lonRad = math.radians( lon )
 
-        # City unit vector in globe local space
-        cityVec = LVector3f(
+        targetVec = LVector3f(
             math.cos( latRad ) * math.sin( lonRad ),
             math.sin( latRad ),
             math.cos( latRad ) * math.cos( lonRad ),
         )
-        cityVec.normalize()
+        targetVec.normalize()
 
-        # Camera direction in world space (from origin toward camera)
         camPos = self.__camera.getPos()
         camDirWorld = LVector3f( camPos.x, camPos.y, camPos.z )
         camDirWorld.normalize()
 
-        # Transform camera direction into current globe local space
         globeQuat = self.__globe.getQuat()
         globeQuatInv = LQuaternionf( globeQuat )
         globeQuatInv.invertInPlace()
         camDirLocal = globeQuatInv.xform( camDirWorld )
         camDirLocal.normalize()
 
-        # Build quaternion that rotates cityVec → camDirLocal (shortest arc)
-        dot = max( -1.0, min( 1.0, cityVec.dot( camDirLocal ) ) )
-        cross = cityVec.cross( camDirLocal )
+        dot = max( -1.0, min( 1.0, targetVec.dot( camDirLocal ) ) )
+        cross = targetVec.cross( camDirLocal )
         if cross.length() < 1e-6:
-            # Already facing or exactly opposite
             arcQ = LQuaternionf.identQuat() if dot > 0 else LQuaternionf( 0, 0, 1, 0 )
         else:
             cross.normalize()
-            angle = math.acos( dot )
             arcQ = LQuaternionf()
-            arcQ.setFromAxisAngleRad( angle, cross )
+            arcQ.setFromAxisAngleRad( math.acos( dot ), cross )
 
-        # Apply arc rotation on top of current globe rotation
         targetQ = globeQuat * arcQ
         targetQ.normalize()
-
         startQ = LQuaternionf(
             globeQuat.getR(), globeQuat.getI(), globeQuat.getJ(), globeQuat.getK()
         )
 
-        # Camera zoom
         camDist = camPos.length()
-        targetDist = max( camDist * 0.72, 8.0 )
         camDirNorm = LVector3f( camPos.x, camPos.y, camPos.z ) / camDist
-
-        DURATION = 1.0
         elapsed = [ 0.0 ]
 
         def nlerp( a: LQuaternionf, b: LQuaternionf, t: float ) -> LQuaternionf:
-            """Normalised linear interpolation between two quaternions."""
             r = LQuaternionf(
                 a.getR() + ( b.getR() - a.getR() ) * t,
                 a.getI() + ( b.getI() - a.getI() ) * t,
@@ -300,20 +323,19 @@ class GameController:
 
         def animateTask( task ):
             elapsed[ 0 ] += ClockObject.getGlobalClock().getDt()
-            t = min( elapsed[ 0 ] / DURATION, 1.0 )
-            t = t * t * ( 3.0 - 2.0 * t )
+            t = min( elapsed[ 0 ] / duration, 1.0 )
+            t = t * t * ( 3.0 - 2.0 * t )   # ease-in-out
 
             self.__globe.setQuat( nlerp( startQ, targetQ, t ) )
-
-            newDist = camDist + ( targetDist - camDist ) * t
+            newDist = camDist + ( targetCamDist - camDist ) * t
             self.__camera.setPos( camDirNorm * newDist )
             self.__camera.lookAt( 0, 0, 0 )
 
-            if t >= 1.0:
-                return task.done
-            return task.cont
+            return task.done if t >= 1.0 else task.cont
 
-        self.__taskManager.add( animateTask, "focusCityTask" )
+        # Cancel any running focus task before starting a new one
+        self.__taskManager.remove( taskName )
+        self.__taskManager.add( animateTask, taskName )
 
     def __placeAnswerMarker( self ) -> None:
         """Place scoring rings + green X at the correct answer location."""
@@ -392,4 +414,3 @@ class GameController:
             return report
         except Exception as e:
             return f"❌ Error generating stats: {e}"
-
