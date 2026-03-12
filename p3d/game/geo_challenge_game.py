@@ -569,23 +569,22 @@ class GeoChallengeGame:
             "Puerto Rico":               9_104, "Macau":                  115,
         }
 
-        # Difficulty multipliers — easier = more forgiving rings
+        # Difficulty multipliers applied to the country-size bonus only
         DIFFICULTY_MULTIPLIER: Dict[ DifficultyLevel, float ] = {
-            DifficultyLevel.EASY:   2.5,
-            DifficultyLevel.MEDIUM: 1.8,
-            DifficultyLevel.HARD:   1.2,
-            DifficultyLevel.EXPERT: 0.75,
+            DifficultyLevel.EASY:   2.0,
+            DifficultyLevel.MEDIUM: 1.4,
+            DifficultyLevel.HARD:   1.0,
+            DifficultyLevel.EXPERT: 0.65,
         }
 
-        MIN_THRESHOLD_KM = 200.0
-        MAX_THRESHOLD_KM = 900.0
+        BASE_THRESHOLD_KM = 500.0   # every country gets at least this
+        MAX_THRESHOLD_KM  = 900.0
 
         areaKm2 = COUNTRY_AREA_KM2.get( challenge.country, 500_000 )
-        # sqrt(area) gives a characteristic linear size of the country in km
-        baseKm = math.sqrt( areaKm2 )
         multiplier = DIFFICULTY_MULTIPLIER[ challenge.difficulty ]
-        threshold = baseKm * multiplier
-        return max( MIN_THRESHOLD_KM, min( MAX_THRESHOLD_KM, threshold ) )
+        # Large countries push the threshold above the base; small ones stay at base
+        countryKm = math.sqrt( areaKm2 ) * multiplier
+        return min( MAX_THRESHOLD_KM, max( BASE_THRESHOLD_KM, countryKm ) )
 
     def _update_statistics(self, attempt: PlayerAttempt):
         """Update game statistics using Pandas analytics (percentage-based scoring)"""
