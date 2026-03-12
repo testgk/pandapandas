@@ -291,76 +291,57 @@ class GameController:
         taskName: str = "focusTask",
         duration: float = 1.0,
     ) -> None:
-        """Shared animation: rotate globe so coords faces camera, interpolate camera distance."""
-        from panda3d.core import LVector3f, LQuaternionf
-
+        """Rotate globe so coords faces camera, interpolate camera distance.
+        Calibrated formula from debug data:
+          H = -lon        (Africa lon=20 → H=0,  S.America lon=-60 → H=80)
+          P = 81 + lat * 2.67  (Africa lat=0 → P=81, S.America lat=-15 → P=41)
+        """
         lat, lon = coords
-        latRad = math.radians( lat )
-        lonRad = math.radians( lon )
 
-        targetVec = LVector3f(
-            math.cos( latRad ) * math.sin( lonRad ),
-            math.sin( latRad ),
-            math.cos( latRad ) * math.cos( lonRad ),
-        )
-        targetVec.normalize()
+        targetH = float( -lon )
+        targetP = float( 81.0 + lat * 2.67 )
+        targetR = 0.0
+
+        startH = self.__globe.getH()
+        startP = self.__globe.getP()
+        startR = self.__globe.getR()
+
+        def shortAngle( a: float, b: float ) -> float:
+            """Shortest signed delta between two angles."""
+            d = ( b - a ) % 360.0
+            if d > 180.0:
+                d -= 360.0
+            return d
+
+        dH = shortAngle( startH, targetH )
+        dP = shortAngle( startP, targetP )
+        dR = shortAngle( startR, targetR )
 
         camPos = self.__camera.getPos()
-        camDirWorld = LVector3f( camPos.x, camPos.y, camPos.z )
-        camDirWorld.normalize()
-
-        globeQuat = self.__globe.getQuat()
-        globeQuatInv = LQuaternionf( globeQuat )
-        globeQuatInv.invertInPlace()
-        camDirLocal = globeQuatInv.xform( camDirWorld )
-        camDirLocal.normalize()
-
-        dot = max( -1.0, min( 1.0, targetVec.dot( camDirLocal ) ) )
-        cross = targetVec.cross( camDirLocal )
-        if cross.length() < 1e-6:
-            arcQ = LQuaternionf.identQuat() if dot > 0 else LQuaternionf( 0, 0, 1, 0 )
-        else:
-            cross.normalize()
-            arcQ = LQuaternionf()
-            arcQ.setFromAxisAngleRad( math.acos( dot ), cross )
-
-        targetQ = globeQuat * arcQ
-        targetQ.normalize()
-        startQ = LQuaternionf(
-            globeQuat.getR(), globeQuat.getI(), globeQuat.getJ(), globeQuat.getK()
-        )
-
         camDist = camPos.length()
+        from panda3d.core import LVector3f
         camDirNorm = LVector3f( camPos.x, camPos.y, camPos.z ) / camDist
         elapsed = [ 0.0 ]
-
-        def nlerp( a: LQuaternionf, b: LQuaternionf, t: float ) -> LQuaternionf:
-            r = LQuaternionf(
-                a.getR() + ( b.getR() - a.getR() ) * t,
-                a.getI() + ( b.getI() - a.getI() ) * t,
-                a.getJ() + ( b.getJ() - a.getJ() ) * t,
-                a.getK() + ( b.getK() - a.getK() ) * t,
-            )
-            r.normalize()
-            return r
 
         def animateTask( task ):
             elapsed[ 0 ] += ClockObject.getGlobalClock().getDt()
             t = min( elapsed[ 0 ] / duration, 1.0 )
             t = t * t * ( 3.0 - 2.0 * t )   # ease-in-out
 
-            self.__globe.setQuat( nlerp( startQ, targetQ, t ) )
+            self.__globe.setHpr(
+                startH + dH * t,
+                startP + dP * t,
+                startR + dR * t,
+            )
             newDist = camDist + ( targetCamDist - camDist ) * t
             self.__camera.setPos( camDirNorm * newDist )
             self.__camera.lookAt( 0, 0, 0 )
 
             if t >= 1.0:
-                finalHpr = self.__globe.getHpr()
-                print( f"[FOCUS DEBUG] Final Globe HPR = H={finalHpr.x:.2f}  P={finalHpr.y:.2f}  R={finalHpr.z:.2f}  (task={taskName})" )
+                print( f"[FOCUS DEBUG] Final HPR = H={self.__globe.getH():.1f} P={self.__globe.getP():.1f} (task={taskName})" )
                 return task.done
             return task.cont
 
-        # Cancel any running focus task before starting a new one
         self.__taskManager.remove( taskName )
         self.__taskManager.add( animateTask, taskName )
 
