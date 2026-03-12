@@ -23,11 +23,11 @@ DEFAULT_CAMERA_DIST = 14.6   # matches globe_app default camera distance
 
 # Approximate centre lat/lon for each continent
 CONTINENT_CENTRES = {
-    "Europe":        ( 54.0,    4.0 ),   # lon=4 calibrated from debug H=16
-    "Asia":          ( 34.0,  100.0 ),
-    "Africa":        (  0.0,   20.0 ),
-    "North America": ( 45.0, -100.0 ),
-    "South America": (-15.0,  -60.0 ),
+    "Europe":        ( 54.0,    4.0 ),    # calibrated: H=16 → lon=4
+    "Asia":          ( 34.0,   80.0 ),    # calibrated: H=-8(352) → lon=28 was Middle East; use 80 for South/Central Asia
+    "Africa":        (  0.0,   20.0 ),    # calibrated: H=0 → lon=20
+    "North America": ( 45.0, -105.0 ),
+    "South America": (-15.0,  -60.0 ),   # calibrated: H=80 → lon=-60
     "Oceania":       (-25.0,  135.0 ),
     "Antarctica":    (-85.0,    0.0 ),
     "Europe/Asia":   ( 41.0,   29.0 ),
