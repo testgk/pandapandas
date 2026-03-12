@@ -8,6 +8,7 @@ import geopandas as gpd
 from pathlib import Path
 import requests
 import tempfile
+from world_data.continent_country_map import COUNTRY_TO_CONTINENT
 
 # GLOBAL SSL CERTIFICATE BYPASS - NO VERIFICATION
 import ssl
@@ -170,106 +171,28 @@ class WorldDataManager:
         return continents
 
     def _add_continent_classification( self, world ):
-        """Add continent column to world data"""
-        print("🗺️ Classifying countries by continent...")
+        """Add continent column to world data using the continent-country map."""
+        print( "🗺️ Classifying countries by continent..." )
 
-        # Comprehensive country-to-continent mapping
-        country_mapping = {
-            # North America
-            'United States of America': 'North America', 'Canada': 'North America', 'Mexico': 'North America',
-            'United States': 'North America', 'USA': 'North America', 'US': 'North America',
-            'Guatemala': 'North America', 'Belize': 'North America', 'Honduras': 'North America',
-            'El Salvador': 'North America', 'Nicaragua': 'North America', 'Costa Rica': 'North America',
-            'Panama': 'North America', 'Cuba': 'North America', 'Jamaica': 'North America',
-            'Haiti': 'North America', 'Dominican Republic': 'North America', 'Bahamas': 'North America',
+        COUNTRY_NAME_COLS = [ 'NAME', 'name', 'NAME_EN', 'ADMIN', 'NAME_LONG', 'COUNTRY', 'properties.NAME' ]
 
-            # South America
-            'Brazil': 'South America', 'Argentina': 'South America', 'Chile': 'South America',
-            'Peru': 'South America', 'Colombia': 'South America', 'Venezuela': 'South America',
-            'Bolivia': 'South America', 'Ecuador': 'South America', 'Uruguay': 'South America',
-            'Paraguay': 'South America', 'Guyana': 'South America', 'Suriname': 'South America',
-            'French Guiana': 'South America',
-
-            # Europe
-            'Germany': 'Europe', 'France': 'Europe', 'United Kingdom': 'Europe', 'Italy': 'Europe',
-            'Spain': 'Europe', 'Poland': 'Europe', 'Romania': 'Europe', 'Netherlands': 'Europe',
-            'Belgium': 'Europe', 'Greece': 'Europe', 'Portugal': 'Europe', 'Czech Republic': 'Europe',
-            'Hungary': 'Europe', 'Sweden': 'Europe', 'Belarus': 'Europe', 'Austria': 'Europe',
-            'Serbia': 'Europe', 'Switzerland': 'Europe', 'Bulgaria': 'Europe', 'Slovakia': 'Europe',
-            'Denmark': 'Europe', 'Finland': 'Europe', 'Norway': 'Europe', 'Ireland': 'Europe',
-            'Bosnia and Herzegovina': 'Europe', 'Croatia': 'Europe', 'Albania': 'Europe',
-            'Lithuania': 'Europe', 'Slovenia': 'Europe', 'Latvia': 'Europe', 'Estonia': 'Europe',
-            'North Macedonia': 'Europe', 'Moldova': 'Europe', 'Luxembourg': 'Europe', 'Malta': 'Europe',
-            'Iceland': 'Europe', 'Montenegro': 'Europe', 'Cyprus': 'Europe', 'Ukraine': 'Europe',
-
-            # Asia
-            'China': 'Asia', 'India': 'Asia', 'Russia': 'Asia', 'Russian Federation': 'Asia',
-            'Indonesia': 'Asia', 'Pakistan': 'Asia', 'Bangladesh': 'Asia', 'Japan': 'Asia',
-            'Philippines': 'Asia', 'Vietnam': 'Asia', 'Turkey': 'Asia', 'Iran': 'Asia',
-            'Thailand': 'Asia', 'Myanmar': 'Asia', 'South Korea': 'Asia', 'Iraq': 'Asia',
-            'Afghanistan': 'Asia', 'Saudi Arabia': 'Asia', 'Uzbekistan': 'Asia', 'Malaysia': 'Asia',
-            'Nepal': 'Asia', 'Yemen': 'Asia', 'North Korea': 'Asia', 'Sri Lanka': 'Asia',
-            'Kazakhstan': 'Asia', 'Syria': 'Asia', 'Cambodia': 'Asia', 'Jordan': 'Asia',
-            'Azerbaijan': 'Asia', 'United Arab Emirates': 'Asia', 'Tajikistan': 'Asia',
-            'Israel': 'Asia', 'Laos': 'Asia', 'Singapore': 'Asia', 'Oman': 'Asia',
-            'Kuwait': 'Asia', 'Georgia': 'Asia', 'Mongolia': 'Asia', 'Armenia': 'Asia',
-            'Qatar': 'Asia', 'Bahrain': 'Asia', 'East Timor': 'Asia', 'Maldives': 'Asia',
-            'Brunei': 'Asia', 'Kyrgyzstan': 'Asia', 'Turkmenistan': 'Asia',
-
-            # Africa
-            'Nigeria': 'Africa', 'Ethiopia': 'Africa', 'Egypt': 'Africa', 'South Africa': 'Africa',
-            'Kenya': 'Africa', 'Uganda': 'Africa', 'Algeria': 'Africa', 'Sudan': 'Africa',
-            'Morocco': 'Africa', 'Angola': 'Africa', 'Ghana': 'Africa', 'Mozambique': 'Africa',
-            'Madagascar': 'Africa', 'Cameroon': 'Africa', 'Ivory Coast': 'Africa', 'Niger': 'Africa',
-            'Burkina Faso': 'Africa', 'Mali': 'Africa', 'Malawi': 'Africa', 'Zambia': 'Africa',
-            'Senegal': 'Africa', 'Somalia': 'Africa', 'Chad': 'Africa', 'Zimbabwe': 'Africa',
-            'Guinea': 'Africa', 'Rwanda': 'Africa', 'Benin': 'Africa', 'Tunisia': 'Africa',
-            'Burundi': 'Africa', 'Togo': 'Africa', 'Sierra Leone': 'Africa', 'Libya': 'Africa',
-            'Liberia': 'Africa', 'Central African Republic': 'Africa', 'Mauritania': 'Africa',
-            'Eritrea': 'Africa', 'Gambia': 'Africa', 'Botswana': 'Africa', 'Namibia': 'Africa',
-            'Gabon': 'Africa', 'Lesotho': 'Africa', 'Guinea-Bissau': 'Africa',
-            'Equatorial Guinea': 'Africa', 'Mauritius': 'Africa', 'Eswatini': 'Africa',
-            'Djibouti': 'Africa', 'Comoros': 'Africa', 'Cape Verde': 'Africa',
-            'São Tomé and Príncipe': 'Africa', 'Seychelles': 'Africa', 'Tanzania': 'Africa',
-            'Democratic Republic of the Congo': 'Africa', 'Republic of the Congo': 'Africa',
-
-            # Oceania
-            'Australia': 'Oceania', 'Papua New Guinea': 'Oceania', 'New Zealand': 'Oceania',
-            'Fiji': 'Oceania', 'Solomon Islands': 'Oceania', 'Vanuatu': 'Oceania',
-            'Samoa': 'Oceania', 'Micronesia': 'Oceania', 'Tonga': 'Oceania',
-            'Kiribati': 'Oceania', 'Palau': 'Oceania', 'Marshall Islands': 'Oceania',
-            'Tuvalu': 'Oceania', 'Nauru': 'Oceania'
-        }
-
-        # Add continent column
-        continents = []
-        for _, row in world.iterrows():
-            # Try different column names for country
-            country_name = None
-            for col in ['NAME', 'name', 'NAME_EN', 'ADMIN', 'NAME_LONG', 'COUNTRY', 'properties.NAME']:
-                if col in row and row[col]:
-                    country_name = str(row[col])
-                    break
-
-            if not country_name:
-                continents.append('Unknown')
-                continue
-
-            # Direct mapping
-            continent = country_mapping.get(country_name, None)
-
-            # Partial matching if direct fails
-            if not continent:
-                country_lower = country_name.lower()
-                for mapped_country, mapped_continent in country_mapping.items():
-                    if mapped_country.lower() in country_lower or country_lower in mapped_country.lower():
-                        continent = mapped_continent
-                        break
-
-            continents.append(continent or 'Unknown')
+        def resolveContinent( row ) -> str:
+            for col in COUNTRY_NAME_COLS:
+                if col in row and row[ col ]:
+                    countryName = str( row[ col ] )
+                    # Direct lookup
+                    continent = COUNTRY_TO_CONTINENT.get( countryName )
+                    if continent:
+                        return continent
+                    # Case-insensitive partial match as fallback
+                    lower = countryName.lower()
+                    for known, knownContinent in COUNTRY_TO_CONTINENT.items():
+                        if known.lower() in lower or lower in known.lower():
+                            return knownContinent
+            return "Unknown"
 
         world = world.copy()
-        world['continent'] = continents
+        world[ 'continent' ] = world.apply( resolveContinent, axis = 1 )
         return world
 
     def _save_cache( self, continents ):
