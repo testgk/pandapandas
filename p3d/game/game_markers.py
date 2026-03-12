@@ -15,12 +15,12 @@ from panda3d.core import (
 DISK_SEGMENTS = 48
 
 # Scoring zones: outermost→innermost — ( fraction_of_threshold, RGBA, depth_offset )
-# Higher depth_offset = renders on top. Inner zones get higher values.
+# Keep offsets LOW so the click X (depthOffset=20) always renders above them.
 SCORING_ZONES: List[ Tuple[ float, Tuple[ float, float, float, float ], int ] ] = [
-    ( 1.00, ( 1.0, 0.15, 0.0,  0.55 ), 1 ),   # red    — worst  (outer)
-    ( 0.75, ( 1.0, 0.55, 0.0,  0.60 ), 2 ),   # orange
-    ( 0.50, ( 1.0, 0.90, 0.0,  0.65 ), 3 ),   # yellow
-    ( 0.25, ( 0.1, 0.85, 0.15, 0.75 ), 4 ),   # green  — best   (inner)
+    ( 1.00, ( 1.0, 0.15, 0.0,  0.55 ), -4 ),   # red    — worst  (outer)
+    ( 0.75, ( 1.0, 0.55, 0.0,  0.60 ), -3 ),   # orange
+    ( 0.50, ( 1.0, 0.90, 0.0,  0.65 ), -2 ),   # yellow
+    ( 0.25, ( 0.1, 0.85, 0.15, 0.75 ), -1 ),   # green  — best   (inner)
 ]
 
 # Multiplier applied on top of the km→local conversion to make rings visually larger
@@ -161,45 +161,42 @@ def createCityLabel(
     offset: float = 0.12,
 ) -> NodePath:
     """
-    Create a 3D text label floating above the answer rings, facing outward
-    along the surface normal so it is readable from the camera.
-
-    Args:
-        cityName:  text to display
-        normal:    surface normal at the answer point (unit vector, globe local space)
-        pos:       base position of the rings in globe local space
-        parent:    NodePath to attach to (the globe node)
-        offset:    how far above the surface to push the label
+    Create a 3D text label floating above the answer rings, facing the camera,
+    with a thin line connecting it down to the surface point.
     """
-    textNode = TextNode( "cityLabel" )
-    textNode.setText( cityName )
-    textNode.setAlign( TextNode.ACenter )
-    textNode.setTextColor( 1.0, 1.0, 0.3, 1.0 )   # bright yellow
-    textNode.setCardColor( 0.0, 0.0, 0.0, 0.55 )   # dark semi-transparent background
-    textNode.setCardAsMargin( 0.1, 0.1, 0.05, 0.05 )
-    textNode.setCardDecal( True )
+    root = NodePath( "cityLabelRoot" )
+    root.reparentTo( parent )
 
-    labelNP = NodePath( textNode )
-    labelNP.reparentTo( parent )
-
-    # Position above the rings along the surface normal
+    # ── Connector line ────────────────────────────────────────────────────────
     nx, ny, nz = normal
-    labelNP.setPos(
+    tipPos = (
         pos[ 0 ] + nx * offset,
         pos[ 1 ] + ny * offset,
         pos[ 2 ] + nz * offset,
     )
 
-    # Orient the text to face along the surface normal (outward from globe centre)
-    labelNP.lookAt(
-        pos[ 0 ] + nx * ( offset + 1.0 ),
-        pos[ 1 ] + ny * ( offset + 1.0 ),
-        pos[ 2 ] + nz * ( offset + 1.0 ),
-    )
+    lines = LineSegs()
+    lines.setThickness( 1.5 )
+    lines.setColor( 1.0, 1.0, 0.3, 0.8 )
+    lines.moveTo( pos[ 0 ], pos[ 1 ], pos[ 2 ] )
+    lines.drawTo( tipPos[ 0 ], tipPos[ 1 ], tipPos[ 2 ] )
+    lineNode = lines.create()
+    lineNP = root.attachNewNode( lineNode )
+    lineNP.setDepthOffset( 18 )
+
+    # ── Text label ────────────────────────────────────────────────────────────
+    textNode = TextNode( "cityLabel" )
+    textNode.setText( cityName )
+    textNode.setAlign( TextNode.ACenter )
+    textNode.setTextColor( 1.0, 1.0, 0.3, 1.0 )
+    textNode.setCardColor( 0.0, 0.0, 0.0, 0.6 )
+    textNode.setCardAsMargin( 0.1, 0.1, 0.05, 0.05 )
+    textNode.setCardDecal( True )
+
+    labelNP = root.attachNewNode( textNode )
+    labelNP.setPos( tipPos[ 0 ], tipPos[ 1 ], tipPos[ 2 ] )
     labelNP.setScale( 0.06 )
-    labelNP.setDepthOffset( 15 )
-    labelNP.setBillboardPointEye()   # always faces the camera
+    labelNP.setDepthOffset( 19 )
+    labelNP.setBillboardPointEye()
 
-    return labelNP
-
-
+    return root
