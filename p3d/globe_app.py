@@ -10,8 +10,10 @@ from typing import Dict, Tuple, List, Optional
 
 from world_data_manager import WorldDataManager
 from gui.globe_gui_controller import GlobeGuiController
+from gui.game_gui_controller import GameGuiController
 from interfaces.i_globe_application import IGlobeApplication
 from game.game_controller import GameController
+from game.game_app_delegate import GameAppDelegate
 from app_mode import AppMode
 
 
@@ -117,32 +119,39 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.__createGlobe()
         self.__setupCamera()
 
-        # Create GUI controller
-        isGameMode = self.__appMode == AppMode.GAME
-        self.__guiController = GlobeGuiController( self, showGameControls = isGameMode )
+        # Globe navigation GUI — always present
+        isGameMode: bool = self.__appMode == AppMode.GAME
+        self.__guiController: GlobeGuiController = GlobeGuiController( self )
 
-        # Create Game controller only in game mode
-        self.__gameController = None
+        # Game GUI + logic — game mode only
+        self.__gameDelegate: Optional[ GameAppDelegate ] = None
         if isGameMode:
-            self.__gameController = GameController(
+            gameGui = GameGuiController(
+                onStartGame = lambda: self.__gameDelegate.startGame(),
+                onNextChallenge = lambda: self.__gameDelegate.nextChallenge(),
+                onGameStats = lambda: self.__gameDelegate.showGameStats(),
+                taskManager = self.taskMgr,
+            )
+            gameController = GameController(
                 globeNodePath = self.__globe,
                 cameraNodePath = self.camera,
                 camNode = self.camNode,
                 mouseWatcherNode = self.mouseWatcherNode,
-                guiController = self.__guiController,
+                gameGui = gameGui,
                 taskManager = self.taskMgr
             )
-            self.__gameController.setInputCallbacks(
+            gameController.setInputCallbacks(
                 accept = self.accept,
                 ignore = self.ignore
             )
+            self.__gameDelegate = GameAppDelegate( gameController, gameGui )
 
         print("Application ready with manual controls")
         print(f"INITIAL STATUS - Globe rotation: X={self.__globeRotationX}, Y={self.__globeRotationY}, Z={self.__globeRotationZ}")
 
         if isGameMode:
-            print("🎮 Auto-starting GeoChallenge for immediate play...")
-            self.__gameController.startGame()
+            print("Auto-starting GeoChallenge for immediate play...")
+            self.__gameDelegate.startGame()
 
     # Properties for controlled access to private fields
     @property
@@ -557,16 +566,16 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
     # ── Game delegation ───────────────────────────────────────────────────────
 
     def startGame( self ) -> None:
-        if self.__gameController:
-            self.__gameController.startGame()
+        if self.__gameDelegate:
+            self.__gameDelegate.startGame()
 
     def nextChallenge( self ) -> None:
-        if self.__gameController:
-            self.__gameController.nextChallenge()
+        if self.__gameDelegate:
+            self.__gameDelegate.nextChallenge()
 
     def showGameStats( self ) -> None:
-        if self.__gameController:
-            self.__gameController.showStats()
+        if self.__gameDelegate:
+            self.__gameDelegate.showGameStats()
 
 
 def main():

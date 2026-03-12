@@ -13,6 +13,7 @@ from panda3d.core import (
 
 from game.geo_challenge_game import DifficultyLevel, GeoChallengeGame
 from game.game_markers import createDisk, createXMark
+from gui.game_gui_controller import GameGuiController
 from world_data_manager import WorldDataManager
 
 CONTINENT_RADIUS = 1.01
@@ -26,12 +27,12 @@ class GameController:
     NodePath, the camera NodePath and the GUI controller as dependencies.
     """
 
-    def __init__( self, globeNodePath: NodePath, cameraNodePath, camNode, mouseWatcherNode, guiController, taskManager ):
+    def __init__( self, globeNodePath: NodePath, cameraNodePath, camNode, mouseWatcherNode, gameGui: GameGuiController, taskManager ):
         self.__globe: NodePath = globeNodePath
         self.__camera = cameraNodePath
         self.__camNode = camNode
         self.__mouseWatcher = mouseWatcherNode
-        self.__gui = guiController
+        self.__gui: GameGuiController = gameGui
         self.__taskManager = taskManager
 
         self.__geoGame: Optional[ GeoChallengeGame ] = None
@@ -59,8 +60,8 @@ class GameController:
             self.__hintCount = 0
 
             self.__clearMarkers()
-            self.__gui.clearLogMessage()
-            self.__gui.disableNextChallenge()
+            self.__gui.clearChallengeText()
+            self.__gui.hideNextChallengeButton()
 
             challenge_info = (
                 f"🌍 GEOCHALLENGE ACTIVE!\n"
@@ -90,8 +91,8 @@ class GameController:
             self.__hintCount = 0
 
             self.__clearMarkers()
-            self.__gui.clearLogMessage()
-            self.__gui.disableNextChallenge()
+            self.__gui.clearChallengeText()
+            self.__gui.hideNextChallengeButton()
 
             challenge_info = (
                 f"🌍 NEW CHALLENGE!\n"
@@ -120,8 +121,8 @@ class GameController:
         return re.sub( r'[^\u0000-\u00FF]', '', text ).strip()
 
     def __log( self, message: str ) -> None:
-        """Send a message to the GUI challenge display, emoji-free."""
-        self.__gui.addLogMessage( self.__stripEmoji( message ) )
+        """Send a message to the game challenge display, emoji-free."""
+        self.__gui.setChallengeText( self.__stripEmoji( message ) )
 
     def __ensureGameInitialised( self ) -> None:
         if self.__geoGame:
@@ -216,8 +217,8 @@ class GameController:
 
             resultText += self.__scoreFeedback( attempt.accuracy_score )
 
-            self.__log( resultText )
-            self.__gui.enableNextChallenge()
+            self.__gui.setChallengeText( self.__stripEmoji( resultText ) )
+            self.__gui.showNextChallengeButton()
 
             self.__currentChallenge = None
             self.__gameMode = False

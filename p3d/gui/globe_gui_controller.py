@@ -1,5 +1,6 @@
 """
-Globe GUI Controller - Handles all GUI elements and user interactions
+Globe GUI Controller - Handles globe navigation GUI elements only.
+Game-related GUI lives in GameGuiController.
 """
 from direct.gui.OnscreenText import OnscreenText
 from direct.gui.DirectGui import DirectButton
@@ -12,24 +13,20 @@ from gui.globe_button_factory import GlobeButtonFactory
 
 
 class GlobeGuiController:
-    """Controls all GUI elements for the globe application"""
+    """Controls all globe navigation GUI elements."""
 
-    def __init__( self, globeApp: IGlobeApplication, showGameControls: bool = True ):
+    def __init__( self, globeApp: IGlobeApplication ):
         self.__globeApp: IGlobeApplication = globeApp
-        self.__showGameControls: bool = showGameControls
         self.__settings: GuiSettingsManager = GuiSettingsManager()
         self.__buttonFactory: GlobeButtonFactory = GlobeButtonFactory( self.__settings )
-        self.__challengeMaxLines: int = self.__settings.getChallengeTextSettings()[ "max_lines" ]
 
-        self.__logDisplay: Optional[ OnscreenText ] = None
-        self.__challengeDisplay: Optional[ OnscreenText ] = None
         self.__debugDisplay: Optional[ OnscreenText ] = None
         self.__radiusDisplay: Optional[ OnscreenText ] = None
 
         self.__createGuiControls()
 
     def __createGuiControls( self ) -> None:
-        """Create all GUI buttons and text labels"""
+        """Create all globe navigation buttons and labels."""
         self.__buttonFactory.buildStepControls(
             onIncrease = self.__onIncreaseRotationIncrement,
             onDecrease = self.__onDecreaseRotationIncrement
@@ -46,31 +43,11 @@ class GlobeGuiController:
             onRight = self.__onRotateRight
         )
         self.__buttonFactory.buildPresetButtons( onPreset = self.__onSetPresetView )
-
-        if self.__showGameControls:
-            self.__buttonFactory.buildGameControls(
-                onStartGame = self.__onStartGame,
-                onNextChallenge = self.__onNextChallenge,
-                onGameStats = self.__onGameStats
-            )
-
         self.__buttonFactory.buildRadiusControls(
             onIncrease = self.__onIncreaseRadius,
             onDecrease = self.__onDecreaseRadius,
             initialValue = self.__globeApp.continentRadius
         )
-
-        # Challenge label — bottom-left, pale yellow (game mode only)
-        if self.__showGameControls:
-            challengeSettings = self.__settings.getChallengeTextSettings()
-            self.__challengeDisplay = OnscreenText(
-                text = "",
-                pos = challengeSettings[ "pos" ],
-                scale = challengeSettings[ "scale" ],
-                fg = self.__settings.getTextColor( "challenge" ),
-                wordwrap = challengeSettings[ "wordwrap" ],
-                align = TextNode.ALeft
-            )
 
         # Debug label — bottom-right, gray
         debugSettings = self.__settings.getDebugTextSettings()
@@ -83,7 +60,7 @@ class GlobeGuiController:
             align = TextNode.ALeft
         )
 
-        # Radius value display (hidden)
+        # Radius value display (hidden by default)
         self.__radiusDisplay = OnscreenText(
             text = f"{self.__globeApp.continentRadius:.2f}",
             pos = ( -0.75, 0.50 ),
@@ -94,7 +71,7 @@ class GlobeGuiController:
         self.__radiusDisplay.hide()
 
     def __applyButtonEffect( self, button: DirectButton ) -> None:
-        """Apply dark gray flash to button when clicked"""
+        """Flash button darker when clicked."""
         originalColor = button[ 'frameColor' ]
         pressedColor = self.__settings.getButtonColor( "control", "pressed" )
         button[ 'frameColor' ] = pressedColor
@@ -103,47 +80,23 @@ class GlobeGuiController:
             button[ 'frameColor' ] = originalColor
             return task.done
 
-        effectDuration = self.__settings.getEffectDuration()
         self.__globeApp.taskManager.doMethodLater(
-            effectDuration, resetColor, f"reset_button_{id( button )}"
+            self.__settings.getEffectDuration(),
+            resetColor,
+            f"reset_button_{id( button )}"
         )
 
     # ── Public API ────────────────────────────────────────────────────────────
 
-    def clearLogMessage( self ) -> None:
-        """Clear the challenge display"""
-        if self.__challengeDisplay:
-            self.__challengeDisplay.setText( "" )
-
-    def addLogMessage( self, message: str ) -> None:
-        """Replace challenge display with a single message, capped to max lines"""
-        if not self.__challengeDisplay:
-            return
-        lines = message.splitlines()
-        truncated = "\n".join( lines[ :self.__challengeMaxLines ] )
-        self.__challengeDisplay.setText( truncated )
-
     def addDebugMessage( self, message: str ) -> None:
-        """Replace debug display with a single message"""
+        """Update the debug label."""
         if self.__debugDisplay:
             self.__debugDisplay.setText( message )
 
     def updateContinentRadiusDisplay( self, value: float ) -> None:
-        """Update the continent radius value display"""
+        """Update the continent radius value display."""
         if self.__radiusDisplay:
             self.__radiusDisplay.setText( f"{value:.3f}" )
-
-    def enableNextChallenge( self ) -> None:
-        """Show the Next Challenge button after question is answered"""
-        btn = self.__buttonFactory.nextChallengeBtn
-        if btn:
-            btn.show()
-
-    def disableNextChallenge( self ) -> None:
-        """Hide the Next Challenge button until question is answered"""
-        btn = self.__buttonFactory.nextChallengeBtn
-        if btn:
-            btn.hide()
 
     # ── Event handlers ────────────────────────────────────────────────────────
 
@@ -189,18 +142,6 @@ class GlobeGuiController:
             self.__applyButtonEffect( presets[ index ] )
         self.__globeApp.setPresetView( index )
 
-    def __onStartGame( self ) -> None:
-        self.__applyButtonEffect( self.__buttonFactory.startGameBtn )
-        self.__globeApp.startGame()
-
-    def __onNextChallenge( self ) -> None:
-        self.__applyButtonEffect( self.__buttonFactory.nextChallengeBtn )
-        self.__globeApp.nextChallenge()
-
-    def __onGameStats( self ) -> None:
-        self.__applyButtonEffect( self.__buttonFactory.gameStatsBtn )
-        self.__globeApp.showGameStats()
-
     def __onIncreaseRadius( self ) -> None:
         self.__applyButtonEffect( self.__buttonFactory.radiusPlusBtn )
         self.__globeApp.increaseContinentRadius()
@@ -208,4 +149,3 @@ class GlobeGuiController:
     def __onDecreaseRadius( self ) -> None:
         self.__applyButtonEffect( self.__buttonFactory.radiusMinusBtn )
         self.__globeApp.decreaseContinentRadius()
-
