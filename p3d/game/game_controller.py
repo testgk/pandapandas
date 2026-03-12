@@ -250,13 +250,11 @@ class GameController:
             self.__log( f"❌ Error scoring attempt: {e}" )
 
     def __focusOnCity( self, coords: Tuple[ float, float ] ) -> None:
-        """Smoothly rotate the globe so the answer city faces the camera and zoom in."""
-        camDist = self.__camera.getPos().length()
-        targetDist = max( camDist * 0.72, 8.0 )
-        self.__animateGlobeFocus( coords, targetDist, taskName = "focusCityTask" )
+        """Move camera above the answer city and zoom in."""
+        self.__animateGlobeFocus( coords, DEFAULT_CAMERA_DIST * 0.6, taskName = "focusCityTask" )
 
     def __focusOnContinent( self, continentName: str ) -> None:
-        """Rotate the globe to the continent of the next challenge and zoom out to default."""
+        """Move camera above the continent centre and zoom out to default distance."""
         coords = CONTINENT_CENTRES.get( continentName )
         if not coords:
             return
@@ -269,36 +267,25 @@ class GameController:
         taskName: str = "focusTask",
         duration: float = 1.0,
     ) -> None:
-        """Rotate globe so coords faces camera, interpolate camera distance.
-        H is exact on all 5 calibrated points: H = (20 - lon) % 360
-        P is fixed at 81 (default equator-facing angle at default camera dist).
-        The continent will always be horizontally centred; vertical offset is minor.
-        """
-        lat, lon = coords
-
-        targetH = float( ( 20.0 - lon ) % 360 )
-        targetP = 81.0   # fixed — reliable across all zoom levels
-        targetR = 0.0
-
-        startH = self.__globe.getH()
-        startP = self.__globe.getP()
-        startR = self.__globe.getR()
-
-        def shortAngle( a: float, b: float ) -> float:
-            """Shortest signed delta between two angles."""
-            d = ( b - a ) % 360.0
-            if d > 180.0:
-                d -= 360.0
-            return d
-
-        dH = shortAngle( startH, targetH )
-        dP = shortAngle( startP, targetP )
-        dR = shortAngle( startR, targetR )
-
-        camPos = self.__camera.getPos()
-        camDist = camPos.length()
+        """Move the camera above the target lat/lon point and look down at it."""
         from panda3d.core import LVector3f
-        camDirNorm = LVector3f( camPos.x, camPos.y, camPos.z ) / camDist
+
+        lat, lon = coords
+        latRad = math.radians( lat )
+        lonRad = math.radians( lon )
+
+        # Unit vector pointing from globe centre toward the target location
+        targetDir = LVector3f(
+            math.cos( latRad ) * math.sin( lonRad ),
+            math.sin( latRad ),
+            math.cos( latRad ) * math.cos( lonRad ),
+        )
+        targetDir.normalize()
+
+        # Target camera position = targetDir * targetCamDist
+        targetCamPos = targetDir * targetCamDist
+
+        startCamPos = self.__camera.getPos()
         elapsed = [ 0.0 ]
 
         def animateTask( task ):
@@ -306,13 +293,12 @@ class GameController:
             t = min( elapsed[ 0 ] / duration, 1.0 )
             t = t * t * ( 3.0 - 2.0 * t )   # ease-in-out
 
-            self.__globe.setHpr(
-                startH + dH * t,
-                startP + dP * t,
-                startR + dR * t,
+            newPos = LVector3f(
+                startCamPos.x + ( targetCamPos.x - startCamPos.x ) * t,
+                startCamPos.y + ( targetCamPos.y - startCamPos.y ) * t,
+                startCamPos.z + ( targetCamPos.z - startCamPos.z ) * t,
             )
-            newDist = camDist + ( targetCamDist - camDist ) * t
-            self.__camera.setPos( camDirNorm * newDist )
+            self.__camera.setPos( newPos )
             self.__camera.lookAt( 0, 0, 0 )
 
             if t >= 1.0:
