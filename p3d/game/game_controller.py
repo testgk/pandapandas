@@ -3,6 +3,7 @@ Game Controller — owns all GeoChallenge game state and logic.
 Communicates with the globe app via the IGlobeApplication interface.
 """
 import math
+import re
 from typing import List, Optional, Tuple
 
 from panda3d.core import (
@@ -70,11 +71,11 @@ class GameController:
                 f"\n💡 HINT: {self.__currentChallenge.hints[ 0 ] if self.__currentChallenge.hints else 'No hints available'}\n"
                 f"\n👆 CLICK ON THE GLOBE TO GUESS!"
             )
-            self.__gui.addLogMessage( challenge_info )
+            self.__log( challenge_info )
             self.__acceptCallback( "mouse1", self.__handleClick )
 
         except Exception as e:
-            self.__gui.addLogMessage( f"❌ Error starting game: {e}" )
+            self.__log( f"❌ Error starting game: {e}" )
 
     def nextChallenge( self, difficulty: Optional[ str ] = None ) -> None:
         """Load the next challenge, optionally forcing a difficulty level."""
@@ -101,17 +102,26 @@ class GameController:
                 f"💡 Hint: {self.__currentChallenge.hints[ 0 ] if self.__currentChallenge.hints else 'No hints available'}\n"
                 f"\n👆 Click on the globe to make your guess!"
             )
-            self.__gui.addLogMessage( challenge_info )
+            self.__log( challenge_info )
             self.__acceptCallback( "mouse1", self.__handleClick )
 
         except Exception as e:
-            self.__gui.addLogMessage( f"❌ Error starting next challenge: {e}" )
+            self.__log( f"❌ Error starting next challenge: {e}" )
 
     def showStats( self ) -> None:
         """Display performance analytics in the challenge log."""
-        self.__gui.addLogMessage( self.__buildStatsReport() )
+        self.__log( self.__buildStatsReport() )
 
     # ── Private helpers ───────────────────────────────────────────────────────
+
+    @staticmethod
+    def __stripEmoji( text: str ) -> str:
+        """Remove emoji / non-BMP characters that Panda3D's default font cannot render."""
+        return re.sub( r'[^\u0000-\u00FF]', '', text ).strip()
+
+    def __log( self, message: str ) -> None:
+        """Send a message to the GUI challenge display, emoji-free."""
+        self.__gui.addLogMessage( self.__stripEmoji( message ) )
 
     def __ensureGameInitialised( self ) -> None:
         if self.__geoGame:
@@ -177,7 +187,7 @@ class GameController:
             lat = math.degrees( math.asin( max( -1.0, min( 1.0, y ) ) ) )
             lon = math.degrees( math.atan2( x, z ) )
 
-            self.__gui.addLogMessage( f"🔴 You clicked: {lat:.2f}°, {lon:.2f}°" )
+            self.__log( f"🔴 You clicked: {lat:.2f}°, {lon:.2f}°" )
             self.__scoreAttempt( ( lat, lon ) )
 
         pickerNP.removeNode()
@@ -206,7 +216,7 @@ class GameController:
 
             resultText += self.__scoreFeedback( attempt.accuracy_score )
 
-            self.__gui.addLogMessage( resultText )
+            self.__log( resultText )
             self.__gui.enableNextChallenge()
 
             self.__currentChallenge = None
@@ -214,7 +224,7 @@ class GameController:
             self.__ignoreCallback( "mouse1" )
 
         except Exception as e:
-            self.__gui.addLogMessage( f"❌ Error scoring attempt: {e}" )
+            self.__log( f"❌ Error scoring attempt: {e}" )
 
     def __placeAnswerMarker( self ) -> None:
         """Place a green X at the correct answer location."""
