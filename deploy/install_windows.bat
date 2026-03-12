@@ -3,6 +3,10 @@ REM 🌍 GeoChallenge - Quick Windows Installer
 echo 🌍 GeoChallenge Game - Quick Installer
 echo.
 
+echo 📁 Creating destination folder...
+mkdir geopanda3d
+cd geopanda3d
+
 echo 📦 Installing dependencies...
 pip install pandas geopandas panda3d pyinstaller --quiet
 

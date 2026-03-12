@@ -3,6 +3,10 @@
 echo "🌍 GeoChallenge Game - Quick Installer"
 echo ""
 
+echo "📁 Creating destination folder..."
+mkdir -p geopanda3d
+cd geopanda3d
+
 echo "📦 Installing dependencies..."
 pip3 install pandas geopandas panda3d pyinstaller --quiet
 
