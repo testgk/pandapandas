@@ -3,6 +3,7 @@ Game Controller — owns all GeoChallenge game state and logic.
 Communicates with the globe app via the IGlobeApplication interface.
 """
 import math
+import random
 import re
 from typing import List, Optional, Tuple
 
@@ -264,11 +265,23 @@ class GameController:
         self.__animateGlobeFocus( coords, DEFAULT_CAMERA_DIST * 1.1, taskName = "focusContinentTask" )
 
     def onHint( self ) -> None:
-        """Focus the camera on the challenge country (using city coords) at country zoom level."""
+        """Focus near the challenge country but with a random offset — doesn't reveal exact location."""
         if not self.__currentChallenge:
             return
+
+        actualLat, actualLon = self.__currentChallenge.actual_coordinates
+
+        # Random offset: 15–25 degrees in a random direction
+        offsetDist = random.uniform( 15.0, 25.0 )
+        offsetAngle = random.uniform( 0.0, 360.0 )
+        hintLat = actualLat + offsetDist * math.cos( math.radians( offsetAngle ) )
+        hintLon = actualLon + offsetDist * math.sin( math.radians( offsetAngle ) )
+
+        # Clamp lat to valid range
+        hintLat = max( -85.0, min( 85.0, hintLat ) )
+
         self.__animateGlobeFocus(
-            self.__currentChallenge.actual_coordinates,
+            ( hintLat, hintLon ),
             DEFAULT_CAMERA_DIST * 0.75,
             taskName = "focusHintTask",
         )
