@@ -7,6 +7,7 @@ from typing import List, Callable, Optional
 from settings.gui_settings_manager import GuiSettingsManager
 
 
+
 class GlobeButtonFactory:
     """Creates and holds all DirectButton instances for the globe GUI"""
 
