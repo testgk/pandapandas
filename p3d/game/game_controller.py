@@ -272,9 +272,6 @@ class GameController:
             DEFAULT_CAMERA_DIST * 0.75,
             taskName = "focusHintTask",
         )
-        if not coords:
-            return
-        self.__animateGlobeFocus( coords, DEFAULT_CAMERA_DIST, taskName = "focusContinentTask" )
 
     def __animateGlobeFocus(
         self,

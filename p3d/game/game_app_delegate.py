@@ -25,3 +25,6 @@ class GameAppDelegate:
     def showGameStats( self ) -> None:
         self.__gameController.showStats()
 
+    def onHint( self ) -> None:
+        self.__gameController.onHint()
+

@@ -130,6 +130,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
                 onStartGame = lambda: self.__gameDelegate.startGame(),
                 onNextChallenge = lambda: self.__gameDelegate.nextChallenge(),
                 onGameStats = lambda: self.__gameDelegate.showGameStats(),
+                onHint = lambda: self.__gameDelegate.onHint(),
                 taskManager = self.taskMgr,
             )
             gameController = GameController(
