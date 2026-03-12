@@ -17,10 +17,10 @@ DISK_SEGMENTS = 48
 # Scoring zones: outermost→innermost — ( fraction_of_threshold, RGBA, depth_offset )
 # Keep offsets LOW so the click X (depthOffset=20) always renders above them.
 SCORING_ZONES: List[ Tuple[ float, Tuple[ float, float, float, float ], int ] ] = [
-    ( 1.00, ( 1.0, 0.15, 0.0,  0.55 ), -4 ),   # red    — worst  (outer)
-    ( 0.75, ( 1.0, 0.55, 0.0,  0.60 ), -3 ),   # orange
-    ( 0.50, ( 1.0, 0.90, 0.0,  0.65 ), -2 ),   # yellow
-    ( 0.25, ( 0.1, 0.85, 0.15, 0.75 ), -1 ),   # green  — best   (inner)
+    ( 1.00, ( 1.0, 0.15, 0.0,  0.55 ), 1 ),   # red    — worst  (outer,  behind)
+    ( 0.75, ( 1.0, 0.55, 0.0,  0.60 ), 2 ),   # orange
+    ( 0.50, ( 1.0, 0.90, 0.0,  0.65 ), 3 ),   # yellow
+    ( 0.25, ( 0.1, 0.85, 0.15, 0.75 ), 4 ),   # green  — best   (inner,  on top)
 ]
 
 # Multiplier applied on top of the km→local conversion to make rings visually larger
