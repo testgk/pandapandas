@@ -161,11 +161,9 @@ def createCityLabel(
     offset: float = 0.35,
 ) -> NodePath:
     """
-    Create a text label standing vertically on the globe surface like a sign,
-    with a thin line connecting it down to the surface point.
+    Create a billboard text label floating above the surface point,
+    tilted ~30° for a leaning-sign feel, with a connector line.
     """
-    from panda3d.core import LVector3f, LQuaternionf
-
     root = NodePath( "cityLabelRoot" )
     root.reparentTo( parent )
 
@@ -195,40 +193,11 @@ def createCityLabel(
     textNode.setCardDecal( True )
 
     labelNP = root.attachNewNode( textNode )
+    labelNP.setPos( tipPos[ 0 ], tipPos[ 1 ], tipPos[ 2 ] )
     labelNP.setScale( 0.08 )
     labelNP.setDepthOffset( 19 )
-
-    # Orient so the sign face points outward (along normal) and stands upright.
-    # We compute right/up tangent vectors in globe-local space.
-    nVec = LVector3f( nx, ny, nz )
-
-    # "world up" in globe local space is Y axis (north pole)
-    worldUp = LVector3f( 0, 1, 0 )
-    if abs( nVec.dot( worldUp ) ) > 0.99:
-        worldUp = LVector3f( 1, 0, 0 )
-
-    # right = normalise( normal × worldUp )
-    right = nVec.cross( worldUp )
-    right.normalize()
-
-    # up = right × normal  → truly upward on globe surface
-    upVec = right.cross( nVec )
-    upVec.normalize()
-
-    # Build a quaternion from the three axes:
-    # Panda3D TextNode faces +Y by default, so we map:
-    #   model +X  →  right
-    #   model +Y  →  nVec  (outward, the "forward" face direction)
-    #   model +Z  →  upVec (sign standing up)
-    q = LQuaternionf()
-    q.setFromMatrix(
-        __import__( 'panda3d.core', fromlist=[ 'LMatrix3f' ] ).LMatrix3f(
-            right.x,  right.y,  right.z,
-            nVec.x,   nVec.y,   nVec.z,
-            upVec.x,  upVec.y,  upVec.z,
-        )
-    )
-    labelNP.setQuat( q )
-    labelNP.setPos( tipPos[ 0 ], tipPos[ 1 ], tipPos[ 2 ] )
+    # Tilt 30° around the roll axis so it looks like a leaning sign
+    labelNP.setR( 30 )
+    labelNP.setBillboardPointEye()
 
     return root
