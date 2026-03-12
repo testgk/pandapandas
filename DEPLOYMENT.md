@@ -4,7 +4,7 @@
 
 ### Windows (PowerShell)
 ```powershell
-wget --show-progress -O install.bat https://raw.githubusercontent.com/testgk/pandapandas/master/deploy/install_windows.bat ; .\install.bat
+wget.exe --show-progress -O install.bat https://raw.githubusercontent.com/testgk/pandapandas/master/deploy/install_windows.bat ; .\install.bat
 ```
 
 ### Linux/macOS
