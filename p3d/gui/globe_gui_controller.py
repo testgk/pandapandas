@@ -20,6 +20,7 @@ class GlobeGuiController:
         self.__logDisplay: Optional[OnscreenText] = None
         self.__challengeDisplay: Optional[OnscreenText] = None
         self.__debugDisplay: Optional[OnscreenText] = None
+        self.__challengeMaxLines: int = self.__settings.getChallengeTextSettings()[ "max_lines" ]
 
         # Button references for effects
         self.__incrementPlusBtn: Optional[DirectButton] = None
@@ -35,7 +36,6 @@ class GlobeGuiController:
         # Game-related buttons
         self.__startGameBtn: Optional[DirectButton] = None
         self.__nextChallengeBtn: Optional[DirectButton] = None
-        self.__getHintBtn: Optional[DirectButton] = None
         self.__gameStatsBtn: Optional[DirectButton] = None
 
         # Continent radius controls
@@ -124,8 +124,8 @@ class GlobeGuiController:
             pos=self.__settings.getButtonPosition("rotation", "up_position"),
             scale=self.__settings.getButtonScale("rotation"),
             command=self.__onRotateUp,
-            frameColor=self.__settings.getButtonColor("control", "background"),
-            text_fg=self.__settings.getButtonColor("control", "text"),
+            frameColor=self.__settings.getButtonColor("rotation", "background"),
+            text_fg=self.__settings.getButtonColor("rotation", "text"),
             pressEffect=1, relief=2
         )
 
@@ -134,8 +134,8 @@ class GlobeGuiController:
             pos=self.__settings.getButtonPosition("rotation", "down_position"),
             scale=self.__settings.getButtonScale("rotation"),
             command=self.__onRotateDown,
-            frameColor=self.__settings.getButtonColor("control", "background"),
-            text_fg=self.__settings.getButtonColor("control", "text"),
+            frameColor=self.__settings.getButtonColor("rotation", "background"),
+            text_fg=self.__settings.getButtonColor("rotation", "text"),
             pressEffect=1, relief=2
         )
 
@@ -144,8 +144,8 @@ class GlobeGuiController:
             pos=self.__settings.getButtonPosition("rotation", "left_position"),
             scale=self.__settings.getButtonScale("rotation"),
             command=self.__onRotateLeft,
-            frameColor=self.__settings.getButtonColor("control", "background"),
-            text_fg=self.__settings.getButtonColor("control", "text"),
+            frameColor=self.__settings.getButtonColor("rotation", "background"),
+            text_fg=self.__settings.getButtonColor("rotation", "text"),
             pressEffect=1, relief=2
         )
 
@@ -154,8 +154,8 @@ class GlobeGuiController:
             pos=self.__settings.getButtonPosition("rotation", "right_position"),
             scale=self.__settings.getButtonScale("rotation"),
             command=self.__onRotateRight,
-            frameColor=self.__settings.getButtonColor("control", "background"),
-            text_fg=self.__settings.getButtonColor("control", "text"),
+            frameColor=self.__settings.getButtonColor("rotation", "background"),
+            text_fg=self.__settings.getButtonColor("rotation", "text"),
             pressEffect=1, relief=2
         )
 
@@ -230,7 +230,7 @@ class GlobeGuiController:
             pressEffect=1, relief=2
         )
 
-        # Next Challenge button - disabled until question is answered
+        # Next Challenge button - hidden until question is answered
         self.__nextChallengeBtn = DirectButton(
             text=self.__settings.getTextContent("next_challenge"),
             pos=self.__settings.getButtonPosition("game", "next_position"),
@@ -238,22 +238,11 @@ class GlobeGuiController:
             command=self.__onNextChallenge,
             frameColor=self.__settings.getButtonColor("control", "background"),
             text_fg=self.__settings.getButtonColor("control", "text"),
-            pressEffect=1, relief=2,
-            state=DGG.DISABLED
-        )
-
-        # Get Hint button
-        self.__getHintBtn = DirectButton(
-            text=self.__settings.getTextContent("get_hint"),
-            pos=self.__settings.getButtonPosition("game", "hint_position"),
-            scale=self.__settings.getButtonScale("game"),
-            command=self.__onGetHint,
-            frameColor=self.__settings.getButtonColor("control", "background"),
-            text_fg=self.__settings.getButtonColor("control", "text"),
             pressEffect=1, relief=2
         )
+        self.__nextChallengeBtn.hide()
 
-        # Game Stats button
+        # Get Hint button
         self.__gameStatsBtn = DirectButton(
             text=self.__settings.getTextContent("game_stats"),
             pos=self.__settings.getButtonPosition("game", "stats_position"),
@@ -266,7 +255,7 @@ class GlobeGuiController:
 
         self.__allButtons.extend([
             self.__startGameBtn, self.__nextChallengeBtn,
-            self.__getHintBtn, self.__gameStatsBtn
+            self.__gameStatsBtn
         ])
 
     def __createRadiusControls( self ) -> None:
@@ -334,9 +323,12 @@ class GlobeGuiController:
             self.__challengeDisplay.setText( "" )
 
     def addLogMessage( self, message: str ) -> None:
-        """Replace challenge display with a single message"""
-        if self.__challengeDisplay:
-            self.__challengeDisplay.setText( message )
+        """Replace challenge display with a single message, capped to max lines"""
+        if not self.__challengeDisplay:
+            return
+        lines = message.splitlines()
+        truncated = "\n".join( lines[ :self.__challengeMaxLines ] )
+        self.__challengeDisplay.setText( truncated )
 
     def addDebugMessage( self, message: str ) -> None:
         """Replace debug display with a single message"""
@@ -349,14 +341,14 @@ class GlobeGuiController:
             self.__radiusDisplay.setText( f"{value:.3f}" )
 
     def enableNextChallenge( self ) -> None:
-        """Enable the Next Challenge button after question is answered"""
+        """Show the Next Challenge button after question is answered"""
         if self.__nextChallengeBtn:
-            self.__nextChallengeBtn[ 'state' ] = DGG.NORMAL
+            self.__nextChallengeBtn.show()
 
     def disableNextChallenge( self ) -> None:
-        """Disable the Next Challenge button until question is answered"""
+        """Hide the Next Challenge button until question is answered"""
         if self.__nextChallengeBtn:
-            self.__nextChallengeBtn[ 'state' ] = DGG.DISABLED
+            self.__nextChallengeBtn.hide()
 
     # Event handlers - delegate to globe app
     def __onZoomIn(self) -> None:
@@ -409,9 +401,6 @@ class GlobeGuiController:
         self.__applyButtonEffect(self.__nextChallengeBtn)
         self.__globeApp.nextChallenge()
 
-    def __onGetHint(self) -> None:
-        self.__applyButtonEffect(self.__getHintBtn)
-        self.__globeApp.getHint()
 
     def __onGameStats(self) -> None:
         self.__applyButtonEffect(self.__gameStatsBtn)

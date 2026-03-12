@@ -85,8 +85,9 @@ class GuiSettingsManager:
         text = self.__settings.get( "layout", {} ).get( "text", {} )
         return {
             "pos": tuple( text.get( "challenge_position", [ -1.3, -0.75 ] ) ),
-            "scale": text.get( "challenge_scale", 0.038 ),
-            "wordwrap": text.get( "challenge_wordwrap", 28 ),
+            "scale": text.get( "challenge_scale", 0.036 ),
+            "wordwrap": text.get( "challenge_wordwrap", 26 ),
+            "max_lines": text.get( "challenge_max_lines", 14 ),
         }
 
     def getDebugTextSettings( self ) -> Dict[ str, Any ]:
