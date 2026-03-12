@@ -5,8 +5,6 @@ __pycache__/
 *.so
 .Python
 build/
-!build/nuitka/
-!build/pyinstaller/
 develop-eggs/
 dist/
 downloads/
@@ -28,6 +26,19 @@ MANIFEST
 # PyInstaller
 *.manifest
 *.spec
+*.exe
+temp/
+
+# Build output directories
+p3d/globe_app.dist/
+p3d/globe_app.build/
+p3d/dist/
+p3d/build/
+p3d/temp/
+
+# Cloned/installed game directories
+geochallenge-game/
+deploy/geochallenge-game/
 
 # Installer logs
 pip-log.txt
