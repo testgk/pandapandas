@@ -331,30 +331,23 @@ class GeoChallengeGame:
         Uses Pandas for intelligent selection based on player performance
         """
         available_challenges = self.challenges_database.copy()
-        
-        # Filter by difficulty if specified
+
+        # Filter by difficulty only when explicitly requested
         if difficulty:
             available_challenges = available_challenges[
                 available_challenges['difficulty'] == difficulty.value
             ]
-        else:
-            # Intelligent difficulty selection based on player performance
-            difficulty = self._calculate_adaptive_difficulty()
-            available_challenges = available_challenges[
-                available_challenges['difficulty'] == difficulty.value
+
+        # Avoid repeating recent challenges
+        if len( self.player_history ) > 0:
+            recentNames = self.player_history.tail( 8 )[ 'location_name' ].tolist()
+            filtered = available_challenges[
+                ~available_challenges[ 'location_name' ].isin( recentNames )
             ]
-        
-        # Avoid repeating recent challenges (using pandas operations)
-        if len(self.player_history) > 0:
-            recent_challenges = self.player_history.tail(5)['challenge_id'].tolist()
-            available_challenges = available_challenges[
-                ~available_challenges['id'].isin(recent_challenges)
-            ]
-        
-        # Select random challenge
-        if len(available_challenges) == 0:
-            available_challenges = self.challenges_database  # Fallback
-            
+            # Only apply filter if enough remain
+            if len( filtered ) > 0:
+                available_challenges = filtered
+
         selected_row = available_challenges.sample(n=1).iloc[0]
         
         challenge = GameChallenge(
@@ -377,8 +370,10 @@ class GeoChallengeGame:
         Calculate appropriate difficulty based on player performance using Pandas analytics
         """
         if len(self.player_history) < 3:
-            return DifficultyLevel.EASY
-        
+            # Mix difficulties from the start so player sees variety
+            import random as _random
+            return _random.choice( [ DifficultyLevel.EASY, DifficultyLevel.EASY, DifficultyLevel.MEDIUM ] )
+
         # Analyze recent performance (last 10 games)
         recent_games = self.player_history.tail(10)
         
