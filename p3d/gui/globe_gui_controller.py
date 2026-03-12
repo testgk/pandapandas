@@ -14,8 +14,9 @@ from gui.globe_button_factory import GlobeButtonFactory
 class GlobeGuiController:
     """Controls all GUI elements for the globe application"""
 
-    def __init__( self, globeApp: IGlobeApplication ):
+    def __init__( self, globeApp: IGlobeApplication, showGameControls: bool = True ):
         self.__globeApp: IGlobeApplication = globeApp
+        self.__showGameControls: bool = showGameControls
         self.__settings: GuiSettingsManager = GuiSettingsManager()
         self.__buttonFactory: GlobeButtonFactory = GlobeButtonFactory( self.__settings )
         self.__challengeMaxLines: int = self.__settings.getChallengeTextSettings()[ "max_lines" ]
@@ -45,27 +46,31 @@ class GlobeGuiController:
             onRight = self.__onRotateRight
         )
         self.__buttonFactory.buildPresetButtons( onPreset = self.__onSetPresetView )
-        self.__buttonFactory.buildGameControls(
-            onStartGame = self.__onStartGame,
-            onNextChallenge = self.__onNextChallenge,
-            onGameStats = self.__onGameStats
-        )
+
+        if self.__showGameControls:
+            self.__buttonFactory.buildGameControls(
+                onStartGame = self.__onStartGame,
+                onNextChallenge = self.__onNextChallenge,
+                onGameStats = self.__onGameStats
+            )
+
         self.__buttonFactory.buildRadiusControls(
             onIncrease = self.__onIncreaseRadius,
             onDecrease = self.__onDecreaseRadius,
             initialValue = self.__globeApp.continentRadius
         )
 
-        # Challenge label — bottom-left, pale yellow
-        challengeSettings = self.__settings.getChallengeTextSettings()
-        self.__challengeDisplay = OnscreenText(
-            text = "",
-            pos = challengeSettings[ "pos" ],
-            scale = challengeSettings[ "scale" ],
-            fg = self.__settings.getTextColor( "challenge" ),
-            wordwrap = challengeSettings[ "wordwrap" ],
-            align = TextNode.ALeft
-        )
+        # Challenge label — bottom-left, pale yellow (game mode only)
+        if self.__showGameControls:
+            challengeSettings = self.__settings.getChallengeTextSettings()
+            self.__challengeDisplay = OnscreenText(
+                text = "",
+                pos = challengeSettings[ "pos" ],
+                scale = challengeSettings[ "scale" ],
+                fg = self.__settings.getTextColor( "challenge" ),
+                wordwrap = challengeSettings[ "wordwrap" ],
+                align = TextNode.ALeft
+            )
 
         # Debug label — bottom-right, gray
         debugSettings = self.__settings.getDebugTextSettings()

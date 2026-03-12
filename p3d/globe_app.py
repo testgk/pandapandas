@@ -12,6 +12,7 @@ from world_data_manager import WorldDataManager
 from gui.globe_gui_controller import GlobeGuiController
 from interfaces.i_globe_application import IGlobeApplication
 from game.game_controller import GameController
+from app_mode import AppMode
 
 
 # Constants for magic numbers
@@ -81,9 +82,11 @@ def createSphere(radius: float, color: Tuple[float, float, float, float]) -> Nod
 class RealGlobeApplication(ShowBase, IGlobeApplication):
     """Main application class for the Real Globe with proper encapsulation"""
 
-    def __init__(self):
+    def __init__( self, appMode: AppMode = AppMode.GAME ):
         ShowBase.__init__(self)
         print("Panda3D initialized")
+
+        self.__appMode: AppMode = appMode
 
         # Initialize private fields with proper typing
         self.__continents: Dict = {}
@@ -115,27 +118,31 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.__setupCamera()
 
         # Create GUI controller
-        self.__guiController = GlobeGuiController(self)
+        isGameMode = self.__appMode == AppMode.GAME
+        self.__guiController = GlobeGuiController( self, showGameControls = isGameMode )
 
-        # Create Game controller — owns all game state and logic
-        self.__gameController = GameController(
-            globeNodePath = self.__globe,
-            cameraNodePath = self.camera,
-            camNode = self.camNode,
-            mouseWatcherNode = self.mouseWatcherNode,
-            guiController = self.__guiController,
-            taskManager = self.taskMgr
-        )
-        self.__gameController.setInputCallbacks(
-            accept = self.accept,
-            ignore = self.ignore
-        )
+        # Create Game controller only in game mode
+        self.__gameController = None
+        if isGameMode:
+            self.__gameController = GameController(
+                globeNodePath = self.__globe,
+                cameraNodePath = self.camera,
+                camNode = self.camNode,
+                mouseWatcherNode = self.mouseWatcherNode,
+                guiController = self.__guiController,
+                taskManager = self.taskMgr
+            )
+            self.__gameController.setInputCallbacks(
+                accept = self.accept,
+                ignore = self.ignore
+            )
 
         print("Application ready with manual controls")
         print(f"INITIAL STATUS - Globe rotation: X={self.__globeRotationX}, Y={self.__globeRotationY}, Z={self.__globeRotationZ}")
 
-        print("🎮 Auto-starting GeoChallenge for immediate play...")
-        self.__gameController.startGame()
+        if isGameMode:
+            print("🎮 Auto-starting GeoChallenge for immediate play...")
+            self.__gameController.startGame()
 
     # Properties for controlled access to private fields
     @property
@@ -550,27 +557,34 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
     # ── Game delegation ───────────────────────────────────────────────────────
 
     def startGame( self ) -> None:
-        """Start the GeoChallenge game."""
-        self.__gameController.startGame()
+        if self.__gameController:
+            self.__gameController.startGame()
 
     def nextChallenge( self ) -> None:
-        """Load the next GeoChallenge."""
-        self.__gameController.nextChallenge()
+        if self.__gameController:
+            self.__gameController.nextChallenge()
 
     def showGameStats( self ) -> None:
-        """Show game statistics."""
-        self.__gameController.showStats()
+        if self.__gameController:
+            self.__gameController.showStats()
 
 
 def main():
     """Main entry point"""
-    print("Starting Real Globe Application with Manual Controls...")
+    import sys
+    mode = AppMode.GAME
+    if "--mode" in sys.argv:
+        idx = sys.argv.index( "--mode" )
+        if idx + 1 < len( sys.argv ):
+            modeArg = sys.argv[ idx + 1 ].lower()
+            mode = AppMode.GLOBE if modeArg == "globe" else AppMode.GAME
+
+    print( f"Starting Real Globe Application (mode: {mode.value})..." )
     try:
-        app = RealGlobeApplication()
-        print("Starting application with real world data and manual controls...")
+        app = RealGlobeApplication( appMode = mode )
         app.run()
     except Exception as e:
-        print(f"ERROR: {e}")
+        print( f"ERROR: {e}" )
         import traceback
         traceback.print_exc()
 
