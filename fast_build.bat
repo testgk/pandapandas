@@ -1,12 +1,16 @@
 @echo off
+setlocal EnableDelayedExpansion
 echo ⚡ Super Fast GeoChallenge Builder
 echo.
+
+REM Store starting directory
+set "START_DIR=%CD%"
 
 REM Check if exe already exists and is recent
 if exist GeoChallenge.exe (
     echo 📁 Found existing GeoChallenge.exe
     set /p rebuild="🔄 Rebuild anyway? (y/N): "
-    if not "!rebuild!"=="y" if not "!rebuild!"=="Y" (
+    if /i not "!rebuild!"=="y" (
         echo 🚀 Using existing exe: GeoChallenge.exe
         goto :run_exe
     )
@@ -20,7 +24,9 @@ cd p3d
 echo ⚡ Lightning-fast build...
 pyinstaller --onefile --noconsole --optimize=2 --strip --clean --distpath=.. --name="GeoChallenge" globe_launcher.py >nul 2>&1
 
-if exist ..\GeoChallenge.exe (
+cd "%START_DIR%"
+
+if exist GeoChallenge.exe (
     echo ✅ Built in seconds: GeoChallenge.exe
 ) else (
     echo ❌ Build failed
@@ -28,6 +34,6 @@ if exist ..\GeoChallenge.exe (
 )
 
 :run_exe
-cd ..
+cd "%START_DIR%"
 echo 🎮 Starting game...
-start GeoChallenge.exe
+start "" "GeoChallenge.exe"
