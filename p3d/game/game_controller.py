@@ -62,6 +62,16 @@ class GameController:
         """Provide Panda3D accept/ignore wrappers from the ShowBase instance."""
         self.__acceptCallback = accept
         self.__ignoreCallback = ignore
+        # Debug key: press 'd' any time to print globe & camera state
+        accept( "d", self.__printDebugState )
+
+    def __printDebugState( self ) -> None:
+        camPos = self.__camera.getPos()
+        globeHpr = self.__globe.getHpr()
+        globeQ = self.__globe.getQuat()
+        print( f"[DEBUG] Globe HPR  = H={globeHpr.x:.2f}  P={globeHpr.y:.2f}  R={globeHpr.z:.2f}" )
+        print( f"[DEBUG] Globe Quat = R={globeQ.getR():.4f}  I={globeQ.getI():.4f}  J={globeQ.getJ():.4f}  K={globeQ.getK():.4f}" )
+        print( f"[DEBUG] Camera     = x={camPos.x:.3f}  y={camPos.y:.3f}  z={camPos.z:.3f}  dist={camPos.length():.3f}" )
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -162,13 +172,8 @@ class GameController:
 
     def __handleClick( self ) -> None:
         """Convert a mouse click to globe coordinates and score the attempt."""
-        if not self.__gameMode or not self.__currentChallenge:
-            return
 
-        if not self.__mouseWatcher.hasMouse():
-            return
-
-        # ── DEBUG: print current globe & camera state ──────────────────────
+        # ── DEBUG: always print globe & camera state on any click ──────────
         camPos = self.__camera.getPos()
         globeHpr = self.__globe.getHpr()
         globeQdbg = self.__globe.getQuat()
@@ -177,7 +182,11 @@ class GameController:
         print( f"[FOCUS DEBUG] Camera Pos  = x={camPos.x:.3f}  y={camPos.y:.3f}  z={camPos.z:.3f}  dist={camPos.length():.3f}" )
         # ───────────────────────────────────────────────────────────────────
 
-        mpos = self.__mouseWatcher.getMouse()
+        if not self.__gameMode or not self.__currentChallenge:
+            return
+
+        if not self.__mouseWatcher.hasMouse():
+            return
 
         pickerRay = CollisionRay()
         pickerRay.setFromLens( self.__camNode, mpos.getX(), mpos.getY() )
