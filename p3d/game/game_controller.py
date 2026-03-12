@@ -288,14 +288,23 @@ class GameController:
         DURATION = 1.0
         elapsed = [ 0.0 ]
 
+        def nlerp( a: LQuaternionf, b: LQuaternionf, t: float ) -> LQuaternionf:
+            """Normalised linear interpolation between two quaternions."""
+            r = LQuaternionf(
+                a.getR() + ( b.getR() - a.getR() ) * t,
+                a.getI() + ( b.getI() - a.getI() ) * t,
+                a.getJ() + ( b.getJ() - a.getJ() ) * t,
+                a.getK() + ( b.getK() - a.getK() ) * t,
+            )
+            r.normalize()
+            return r
+
         def animateTask( task ):
             elapsed[ 0 ] += ClockObject.getGlobalClock().getDt()
             t = min( elapsed[ 0 ] / DURATION, 1.0 )
             t = t * t * ( 3.0 - 2.0 * t )
 
-            interpQ = LQuaternionf()
-            interpQ.slerp( startQ, targetQ, t )
-            self.__globe.setQuat( interpQ )
+            self.__globe.setQuat( nlerp( startQ, targetQ, t ) )
 
             newDist = camDist + ( targetDist - camDist ) * t
             self.__camera.setPos( camDirNorm * newDist )
