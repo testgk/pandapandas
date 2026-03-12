@@ -32,6 +32,7 @@ temp/
 # Build output directories
 p3d/globe_app.dist/
 p3d/globe_app.build/
+p3d/globe_app.onefile-build/
 p3d/dist/
 p3d/build/
 p3d/temp/
@@ -134,6 +135,7 @@ dmypy.json
 # Panda3D specific
 *.egg
 *.bam
+*.pkl
 *.txo
 *.rgb
 *.dds
