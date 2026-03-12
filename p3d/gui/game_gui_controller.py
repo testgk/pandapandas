@@ -18,6 +18,7 @@ class GameGuiController:
         onStartGame: Callable,
         onNextChallenge: Callable,
         onGameStats: Callable,
+        onHint: Callable,
         taskManager,
     ):
         self.__settings: GuiSettingsManager = GuiSettingsManager()
@@ -27,9 +28,10 @@ class GameGuiController:
         self.__startGameBtn: Optional[ DirectButton ] = None
         self.__nextChallengeBtn: Optional[ DirectButton ] = None
         self.__gameStatsBtn: Optional[ DirectButton ] = None
+        self.__hintBtn: Optional[ DirectButton ] = None
         self.__challengeDisplay: Optional[ OnscreenText ] = None
 
-        self.__buildButtons( onStartGame, onNextChallenge, onGameStats )
+        self.__buildButtons( onStartGame, onNextChallenge, onGameStats, onHint )
         self.__buildChallengeDisplay()
 
     # ── Build ─────────────────────────────────────────────────────────────────
@@ -39,6 +41,7 @@ class GameGuiController:
         onStartGame: Callable,
         onNextChallenge: Callable,
         onGameStats: Callable,
+        onHint: Callable,
     ) -> None:
         self.__startGameBtn = DirectButton(
             text = self.__settings.getTextContent( "start_game" ),
@@ -70,6 +73,17 @@ class GameGuiController:
             text_fg = self.__settings.getButtonColor( "control", "text" ),
             pressEffect = 1, relief = 2
         )
+
+        self.__hintBtn = DirectButton(
+            text = self.__settings.getTextContent( "hint" ),
+            pos = self.__settings.getButtonPosition( "game", "hint_position" ),
+            scale = self.__settings.getButtonScale( "game" ),
+            command = lambda: ( self.__applyButtonEffect( self.__hintBtn ), onHint() ),
+            frameColor = self.__settings.getButtonColor( "control", "background" ),
+            text_fg = self.__settings.getButtonColor( "control", "text" ),
+            pressEffect = 1, relief = 2
+        )
+        self.__hintBtn.hide()
 
     def __buildChallengeDisplay( self ) -> None:
         challengeSettings = self.__settings.getChallengeTextSettings()
@@ -122,4 +136,14 @@ class GameGuiController:
         """Hide the Next Question button."""
         if self.__nextChallengeBtn:
             self.__nextChallengeBtn.hide()
+
+    def showHintButton( self ) -> None:
+        """Show the Hint button during an active challenge."""
+        if self.__hintBtn:
+            self.__hintBtn.show()
+
+    def hideHintButton( self ) -> None:
+        """Hide the Hint button."""
+        if self.__hintBtn:
+            self.__hintBtn.hide()
 

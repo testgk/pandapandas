@@ -77,6 +77,7 @@
         "start_position": [0.78, 0, 0.90],
         "next_position": [-1.05, 0, -0.82],
         "stats_position": [1.05, 0, 0.90],
+        "hint_position": [-1.05, 0, -0.72],
         "scale": 0.033
       }
     },
@@ -105,9 +106,10 @@
       "ATLANTIC",
       "PACIFIC"
     ],
-    "start_game": "🎯 START GAME",
-    "next_challenge": "🌍 NEXT QUESTION",
-    "game_stats": "📊 STATS"
+    "start_game": "START GAME",
+    "next_challenge": "NEXT QUESTION",
+    "game_stats": "STATS",
+    "hint": "HINT"
   },
   "code_formatting": {
     "spacing": {

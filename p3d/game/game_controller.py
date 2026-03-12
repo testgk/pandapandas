@@ -76,15 +76,16 @@ class GameController:
             self.__clearMarkers()
             self.__gui.clearChallengeText()
             self.__gui.hideNextChallengeButton()
+            self.__gui.showHintButton()
 
             challenge_info = (
-                f"🌍 GEOCHALLENGE ACTIVE!\n"
-                f"\n🎯 FIND: {self.__currentChallenge.location_name}\n"
-                f"🎚️  Difficulty: {self.__currentChallenge.difficulty.value}\n"
-                f"🏛️  Country: {self.__currentChallenge.country}\n"
-                f"🌎 Continent: {self.__currentChallenge.continent}\n"
-                f"\n💡 HINT: {self.__currentChallenge.hints[ 0 ] if self.__currentChallenge.hints else 'No hints available'}\n"
-                f"\n👆 CLICK ON THE GLOBE TO GUESS!"
+                f"GEOCHALLENGE ACTIVE!\n"
+                f"\nFIND: {self.__currentChallenge.location_name}\n"
+                f"Difficulty: {self.__currentChallenge.difficulty.value}\n"
+                f"Country: {self.__currentChallenge.country}\n"
+                f"Continent: {self.__currentChallenge.continent}\n"
+                f"\nHINT: {self.__currentChallenge.hints[ 0 ] if self.__currentChallenge.hints else 'No hints available'}\n"
+                f"\nCLICK ON THE GLOBE TO GUESS!"
             )
             self.__log( challenge_info )
             self.__acceptCallback( "mouse1", self.__handleClick )
@@ -109,15 +110,16 @@ class GameController:
             self.__clearMarkers()
             self.__gui.clearChallengeText()
             self.__gui.hideNextChallengeButton()
+            self.__gui.showHintButton()
 
             challenge_info = (
-                f"🌍 NEW CHALLENGE!\n"
-                f"📍 Find: {self.__currentChallenge.location_name}\n"
-                f"🎯 Difficulty: {self.__currentChallenge.difficulty.value}\n"
-                f"🏛️ Country: {self.__currentChallenge.country}\n"
-                f"🌎 Continent: {self.__currentChallenge.continent}\n"
-                f"💡 Hint: {self.__currentChallenge.hints[ 0 ] if self.__currentChallenge.hints else 'No hints available'}\n"
-                f"\n👆 Click on the globe to make your guess!"
+                f"NEW CHALLENGE!\n"
+                f"Find: {self.__currentChallenge.location_name}\n"
+                f"Difficulty: {self.__currentChallenge.difficulty.value}\n"
+                f"Country: {self.__currentChallenge.country}\n"
+                f"Continent: {self.__currentChallenge.continent}\n"
+                f"Hint: {self.__currentChallenge.hints[ 0 ] if self.__currentChallenge.hints else 'No hints available'}\n"
+                f"\nClick on the globe to make your guess!"
             )
             self.__log( challenge_info )
             self.__acceptCallback( "mouse1", self.__handleClick )
@@ -241,6 +243,7 @@ class GameController:
 
             self.__gui.setChallengeText( self.__stripEmoji( resultText ) )
             self.__gui.showNextChallengeButton()
+            self.__gui.hideHintButton()
 
             self.__currentChallenge = None
             self.__gameMode = False
@@ -250,12 +253,25 @@ class GameController:
             self.__log( f"❌ Error scoring attempt: {e}" )
 
     def __focusOnCity( self, coords: Tuple[ float, float ] ) -> None:
-        """Move camera above the answer city and zoom in."""
-        self.__animateGlobeFocus( coords, DEFAULT_CAMERA_DIST * 0.8, taskName = "focusCityTask" )
+        """Move camera above the answer city — slightly zoomed in."""
+        self.__animateGlobeFocus( coords, DEFAULT_CAMERA_DIST * 0.95, taskName = "focusCityTask" )
 
     def __focusOnContinent( self, continentName: str ) -> None:
-        """Move camera above the continent centre and zoom out to default distance."""
+        """Move camera above the continent centre at default distance."""
         coords = CONTINENT_CENTRES.get( continentName )
+        if not coords:
+            return
+        self.__animateGlobeFocus( coords, DEFAULT_CAMERA_DIST * 1.1, taskName = "focusContinentTask" )
+
+    def onHint( self ) -> None:
+        """Focus the camera on the challenge country (using city coords) at country zoom level."""
+        if not self.__currentChallenge:
+            return
+        self.__animateGlobeFocus(
+            self.__currentChallenge.actual_coordinates,
+            DEFAULT_CAMERA_DIST * 0.75,
+            taskName = "focusHintTask",
+        )
         if not coords:
             return
         self.__animateGlobeFocus( coords, DEFAULT_CAMERA_DIST, taskName = "focusContinentTask" )
