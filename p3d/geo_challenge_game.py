@@ -228,16 +228,43 @@ class GeoChallengeGame:
             ("Freetown", (8.4657, -13.2317), "Sierra Leone", "Africa", ["Capital of Sierra Leone", "Freed slaves", "Blood diamonds"]),
             ("Monrovia", (6.2907, -10.7605), "Liberia", "Africa", ["Capital of Liberia", "American colony", "Never colonized"]),
         ]
-            ("Vientiane", (17.9757, 102.6331), "Laos", "Asia", ["Capital of Laos", "Mekong River", "Buddhist temples"]),
-            ("Port Vila", (-17.7333, 168.3273), "Vanuatu", "Oceania", ["Capital of Vanuatu", "Pacific islands", "Volcanoes"]),
-        ]
         
         cities_expert = [
+            # Very Obscure Capitals & Remote Cities
             ("Nuuk", (64.1836, -51.7214), "Greenland", "North America", ["Capital of Greenland", "Arctic Circle", "Icebergs"]),
             ("Funafuti", (-8.5167, 179.2167), "Tuvalu", "Oceania", ["Capital of Tuvalu", "Smallest country", "Rising sea levels"]),
             ("Majuro", (7.1315, 171.1845), "Marshall Islands", "Oceania", ["Capital of Marshall Islands", "Coral atolls", "Pacific"]),
             ("Ngerulmud", (7.5006, 134.6242), "Palau", "Oceania", ["Capital of Palau", "Rock Islands", "Diving paradise"]),
             ("Avarua", (-21.2078, -159.7750), "Cook Islands", "Oceania", ["Capital of Cook Islands", "Polynesia", "Lagoons"]),
+            ("Nuku'alofa", (-21.1395, -175.2018), "Tonga", "Oceania", ["Capital of Tonga", "Kingdom in Pacific", "Coral islands"]),
+            ("Apia", (-13.8506, -171.7513), "Samoa", "Oceania", ["Capital of Samoa", "Polynesian culture", "Robert Louis Stevenson"]),
+            ("Suva", (-18.1248, 178.4501), "Fiji", "Oceania", ["Capital of Fiji", "Coral coast", "Bula"]),
+            ("Port Moresby", (-9.4438, 147.1803), "Papua New Guinea", "Oceania", ["Capital of Papua New Guinea", "Bird of paradise", "Tribal cultures"]),
+            ("Honiara", (-9.4280, 159.9497), "Solomon Islands", "Oceania", ["Capital of Solomon Islands", "WWII battles", "Coral reefs"]),
+            ("Port-au-Prince", (18.5944, -72.3074), "Haiti", "North America", ["Capital of Haiti", "Caribbean", "Earthquake zone"]),
+            ("Nassau", (25.0443, -77.3504), "Bahamas", "North America", ["Capital of Bahamas", "Caribbean paradise", "Pink sand beaches"]),
+            ("Bridgetown", (13.1939, -59.5432), "Barbados", "North America", ["Capital of Barbados", "Rum birthplace", "Cricket"]),
+            ("Port of Spain", (10.6918, -61.2225), "Trinidad and Tobago", "North America", ["Capital of Trinidad", "Carnival", "Oil and gas"]),
+            ("Georgetown", (6.8013, -58.1551), "Guyana", "South America", ["Capital of Guyana", "Only English-speaking South American country", "Kaieteur Falls"]),
+            ("Paramaribo", (5.8520, -55.2038), "Suriname", "South America", ["Capital of Suriname", "Dutch colonial", "Amazon rainforest"]),
+            ("Cayenne", (4.9375, -52.3260), "French Guiana", "South America", ["Capital of French Guiana", "Space center", "French territory"]),
+            ("Malé", (4.1755, 73.5093), "Maldives", "Asia", ["Capital of Maldives", "Lowest country", "Coral atolls"]),
+            ("Bandar Seri Begawan", (4.9031, 114.9398), "Brunei", "Asia", ["Capital of Brunei", "Oil sultanate", "Southeast Asia"]),
+            ("Dili", (-8.5569, 125.5603), "East Timor", "Asia", ["Capital of East Timor", "Newest Asian nation", "Portuguese colonial"]),
+            ("Moroni", (-11.7172, 43.2473), "Comoros", "Africa", ["Capital of Comoros", "Volcanic islands", "Ylang-ylang perfume"]),
+            ("Victoria", (-4.6199, 55.4513), "Seychelles", "Africa", ["Capital of Seychelles", "Granite islands", "Coco de mer"]),
+            ("Port Louis", (-20.1619, 57.5012), "Mauritius", "Africa", ["Capital of Mauritius", "Dodo bird extinct", "Sugar and tourism"]),
+            ("Praia", (14.9177, -23.5092), "Cape Verde", "Africa", ["Capital of Cape Verde", "Atlantic islands", "Creole culture"]),
+            ("São Tomé", (0.3365, 6.7273), "São Tomé and Príncipe", "Africa", ["Capital of São Tomé", "Equatorial islands", "Cocoa plantations"]),
+            ("Malabo", (3.7558, 8.7892), "Equatorial Guinea", "Africa", ["Capital of Equatorial Guinea", "Oil rich", "Spanish speaking Africa"]),
+            ("Libreville", (0.4162, 9.4673), "Gabon", "Africa", ["Capital of Gabon", "Equatorial rainforest", "Oil wealth"]),
+            ("N'Djamena", (12.1348, 15.0557), "Chad", "Africa", ["Capital of Chad", "Lake Chad", "Sahel region"]),
+            ("Bangui", (4.3947, 18.5582), "Central African Republic", "Africa", ["Capital of CAR", "Geographic center of Africa", "Diamonds"]),
+            ("Banjul", (13.4549, -16.5790), "Gambia", "Africa", ["Capital of Gambia", "Smallest African mainland country", "River Gambia"]),
+            ("Bissau", (11.8811, -15.6178), "Guinea-Bissau", "Africa", ["Capital of Guinea-Bissau", "Portuguese colonial", "Cashew nuts"]),
+            ("Conakry", (9.6412, -13.5784), "Guinea", "Africa", ["Capital of Guinea", "Bauxite mining", "West Africa"]),
+            ("Freetown", (8.4657, -13.2317), "Sierra Leone", "Africa", ["Capital of Sierra Leone", "Freed slaves", "Blood diamonds"]),
+            ("Monrovia", (6.2907, -10.7605), "Liberia", "Africa", ["Capital of Liberia", "American colony", "Never colonized"]),
         ]
         
         # Process cities and create challenges
