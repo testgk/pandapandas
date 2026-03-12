@@ -476,14 +476,116 @@ class GeoChallengeGame:
         return attempt
 
     def getThresholdKm( self, challenge ) -> float:
-        """Return the scoring threshold in km for the given challenge's difficulty."""
-        distance_thresholds = {
-            DifficultyLevel.EASY:   500,
-            DifficultyLevel.MEDIUM: 500,
-            DifficultyLevel.HARD:   500,
-            DifficultyLevel.EXPERT: 500,
+        """
+        Compute scoring threshold in km based on country size × difficulty multiplier.
+        Large countries (Russia, Canada) get bigger rings; small countries (UK, Singapore) get smaller ones.
+        Clamped to [ MIN_THRESHOLD_KM, MAX_THRESHOLD_KM ].
+        """
+        # Approximate country areas in km² — covers all challenge countries
+        COUNTRY_AREA_KM2: Dict[ str, float ] = {
+            "Russia":              17_098_242, "Canada":            9_984_670,
+            "United States":        9_833_517, "China":             9_596_960,
+            "Brazil":               8_515_767, "Australia":         7_692_024,
+            "India":                3_287_263, "Argentina":         2_780_400,
+            "Kazakhstan":           2_724_900, "Algeria":           2_381_741,
+            "Democratic Republic of the Congo": 2_344_858,
+            "Saudi Arabia":         2_149_690, "Mexico":            1_964_375,
+            "Indonesia":            1_904_569, "Sudan":             1_861_484,
+            "Libya":                1_759_540, "Iran":              1_648_195,
+            "Mongolia":             1_564_116, "Peru":              1_285_216,
+            "Chad":                 1_284_000, "Niger":             1_267_000,
+            "Angola":               1_246_700, "Mali":              1_240_192,
+            "South Africa":         1_219_090, "Colombia":          1_141_748,
+            "Ethiopia":             1_104_300, "Bolivia":           1_098_581,
+            "Mauritania":           1_030_700, "Egypt":             1_001_450,
+            "Tanzania":               945_087, "Nigeria":             923_768,
+            "Venezuela":              916_445, "Namibia":             824_292,
+            "Mozambique":             801_590, "Pakistan":            881_913,
+            "Turkey":                 783_562, "Chile":               756_102,
+            "Zambia":                 752_612, "Myanmar":             676_578,
+            "Afghanistan":            652_230, "Somalia":             637_657,
+            "Central African Republic": 622_984,
+            "Ukraine":                603_550, "Botswana":            581_730,
+            "Madagascar":             587_041, "Kenya":               580_367,
+            "France":                 643_801, "Thailand":            513_120,
+            "Spain":                  505_990, "Turkmenistan":        488_100,
+            "Cameroon":               475_442, "Papua New Guinea":    462_840,
+            "Sweden":                 450_295, "Uzbekistan":          448_978,
+            "Iraq":                   438_317, "Morocco":             446_550,
+            "Paraguay":               406_752, "Zimbabwe":            390_757,
+            "Japan":                  377_915, "Germany":             357_114,
+            "Congo":                  342_000, "Finland":             338_145,
+            "Malaysia":               329_847, "Vietnam":             331_212,
+            "Norway":                 323_802, "Ivory Coast":         322_463,
+            "Poland":                 312_696, "Oman":                309_500,
+            "Italy":                  301_340, "Philippines":         300_000,
+            "Ecuador":                283_561, "Burkina Faso":        274_200,
+            "New Zealand":            268_838, "Gabon":               267_668,
+            "Guinea":                 245_857, "United Kingdom":      243_610,
+            "Uganda":                 241_038, "Ghana":               238_533,
+            "Romania":                238_397, "Laos":                236_800,
+            "Guyana":                 214_969, "Belarus":             207_600,
+            "Kyrgyzstan":             199_951, "Senegal":             196_722,
+            "Syria":                  185_180, "Cambodia":            181_035,
+            "Uruguay":                176_215, "Suriname":            163_820,
+            "Tunisia":                163_610, "Bangladesh":          147_570,
+            "Nepal":                  147_181, "Tajikistan":          143_100,
+            "Greece":                 131_957, "Nicaragua":           130_373,
+            "North Korea":            120_538, "Malawi":              118_484,
+            "Eritrea":                117_600, "Benin":               112_622,
+            "Honduras":               112_492, "Liberia":             111_369,
+            "Bulgaria":               110_879, "Cuba":                109_884,
+            "Guatemala":              108_889, "Iceland":             103_000,
+            "South Korea":             99_678, "Hungary":              93_028,
+            "Portugal":                92_212, "Jordan":               89_342,
+            "Azerbaijan":              86_600, "Austria":              83_871,
+            "UAE":                     83_600, "Czech Republic":       78_866,
+            "Serbia":                  77_474, "Panama":               75_417,
+            "Georgia":                 69_700, "Sri Lanka":            65_610,
+            "Lithuania":               65_300, "Latvia":               64_589,
+            "Croatia":                 56_594, "Bosnia and Herzegovina": 51_197,
+            "Costa Rica":              51_100, "Slovakia":             49_035,
+            "Dominican Republic":      48_671, "Estonia":              45_228,
+            "Denmark":                 42_924, "Netherlands":          41_543,
+            "Switzerland":             41_285, "Bhutan":               38_394,
+            "Moldova":                 33_846, "Belgium":              30_528,
+            "Armenia":                 29_743, "Albania":              28_748,
+            "Solomon Islands":         28_896, "Equatorial Guinea":    28_051,
+            "Burundi":                 27_830, "Haiti":                27_750,
+            "North Macedonia":         25_713, "Djibouti":             23_200,
+            "Belize":                  22_966, "El Salvador":          21_041,
+            "Israel":                  20_770, "Slovenia":             20_273,
+            "Fiji":                    18_274, "Kosovo":               10_887,
+            "Cyprus":                   9_251, "Luxembourg":            2_586,
+            "Vanuatu":                 12_189, "Samoa":                 2_842,
+            "Montenegro":              13_812, "Eswatini":             17_364,
+            "Lesotho":                 30_355, "Timor-Leste":          14_874,
+            "Tonga":                      747, "Marshall Islands":        181,
+            "Tuvalu":                      26, "Palau":                   459,
+            "Cook Islands":               236, "Nauru":                    21,
+            "Kiribati":                   811, "Maldives":               298,
+            "Bahrain":                    765, "Singapore":              728,
+            "Hong Kong":                 1_104, "Greenland":          836_330,
+            "Puerto Rico":               9_104, "Macau":                  115,
         }
-        return float( distance_thresholds[ challenge.difficulty ] )
+
+        # Difficulty multipliers — easier = more forgiving rings
+        DIFFICULTY_MULTIPLIER: Dict[ DifficultyLevel, float ] = {
+            DifficultyLevel.EASY:   1.5,
+            DifficultyLevel.MEDIUM: 1.0,
+            DifficultyLevel.HARD:   0.65,
+            DifficultyLevel.EXPERT: 0.40,
+        }
+
+        MIN_THRESHOLD_KM = 80.0
+        MAX_THRESHOLD_KM = 900.0
+
+        areaKm2 = COUNTRY_AREA_KM2.get( challenge.country, 500_000 )
+        # sqrt(area) gives a characteristic linear size of the country in km
+        baseKm = math.sqrt( areaKm2 )
+        multiplier = DIFFICULTY_MULTIPLIER[ challenge.difficulty ]
+        threshold = baseKm * multiplier
+        return max( MIN_THRESHOLD_KM, min( MAX_THRESHOLD_KM, threshold ) )
 
     def _update_statistics(self, attempt: PlayerAttempt):
         """Update game statistics using Pandas analytics (percentage-based scoring)"""
