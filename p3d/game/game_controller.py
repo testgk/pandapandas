@@ -260,12 +260,7 @@ class GameController:
             )
             self.__markers.extend( rings )
 
-            # Green X on top of the rings
-            xMark = createXMark( normal, ( 0.0, 1.0, 0.0, 1.0 ) )
-            xMark.reparentTo( self.__globe )
-            xMark.setPos( *markerPos )
-            xMark.setDepthOffset( 10 )
-            self.__markers.append( xMark )
+
 
         except Exception as e:
             print( f"Error placing answer marker: {e}" )
