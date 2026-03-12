@@ -68,12 +68,7 @@ class IGlobeApplication(ABC):
     def nextChallenge(self) -> None:
         """Start the next GeoChallenge"""
         pass
-    
-    @abstractmethod
-    def getHint(self) -> None:
-        """Get a hint for the current challenge"""
-        pass
-    
+
     @abstractmethod
     def showGameStats(self) -> str:
         """Show comprehensive game statistics"""
