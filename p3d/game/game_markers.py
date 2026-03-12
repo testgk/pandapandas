@@ -1,6 +1,6 @@
 """
 Game Markers — Panda3D geometry helpers for placing visual feedback on the globe.
-Creates disk, X-mark and scoring-ring nodes aligned to the globe surface.
+Creates disk, X-mark, scoring-ring and city-label nodes aligned to the globe surface.
 """
 from math import cos, sin, pi
 from typing import List, Tuple
@@ -8,7 +8,8 @@ from typing import List, Tuple
 from panda3d.core import (
     Geom, GeomNode, GeomTriangles, GeomVertexData,
     GeomVertexFormat, GeomVertexWriter, LineSegs,
-    NodePath, TransparencyAttrib
+    NodePath, TransparencyAttrib,
+    TextNode, CardMaker
 )
 
 DISK_SEGMENTS = 48
@@ -150,4 +151,55 @@ def createXMark(
     xPath = NodePath( xNode )
     xPath.setTwoSided( True )
     return xPath
+
+
+def createCityLabel(
+    cityName: str,
+    normal: Tuple[ float, float, float ],
+    pos: Tuple[ float, float, float ],
+    parent: NodePath,
+    offset: float = 0.12,
+) -> NodePath:
+    """
+    Create a 3D text label floating above the answer rings, facing outward
+    along the surface normal so it is readable from the camera.
+
+    Args:
+        cityName:  text to display
+        normal:    surface normal at the answer point (unit vector, globe local space)
+        pos:       base position of the rings in globe local space
+        parent:    NodePath to attach to (the globe node)
+        offset:    how far above the surface to push the label
+    """
+    textNode = TextNode( "cityLabel" )
+    textNode.setText( cityName )
+    textNode.setAlign( TextNode.ACenter )
+    textNode.setTextColor( 1.0, 1.0, 0.3, 1.0 )   # bright yellow
+    textNode.setCardColor( 0.0, 0.0, 0.0, 0.55 )   # dark semi-transparent background
+    textNode.setCardAsMargin( 0.1, 0.1, 0.05, 0.05 )
+    textNode.setCardDecal( True )
+
+    labelNP = NodePath( textNode )
+    labelNP.reparentTo( parent )
+
+    # Position above the rings along the surface normal
+    nx, ny, nz = normal
+    labelNP.setPos(
+        pos[ 0 ] + nx * offset,
+        pos[ 1 ] + ny * offset,
+        pos[ 2 ] + nz * offset,
+    )
+
+    # Orient the text to face along the surface normal (outward from globe centre)
+    labelNP.lookAt(
+        pos[ 0 ] + nx * ( offset + 1.0 ),
+        pos[ 1 ] + ny * ( offset + 1.0 ),
+        pos[ 2 ] + nz * ( offset + 1.0 ),
+    )
+    labelNP.setScale( 0.06 )
+    labelNP.setDepthOffset( 15 )
+    labelNP.setBillboardPointEye()   # always faces the camera
+
+    return labelNP
+
 

@@ -12,7 +12,7 @@ from panda3d.core import (
 )
 
 from game.geo_challenge_game import DifficultyLevel, GeoChallengeGame
-from game.game_markers import createDisk, createTargetRings, createXMark
+from game.game_markers import createDisk, createTargetRings, createXMark, createCityLabel
 from gui.game_gui_controller import GameGuiController
 from world_data_manager import WorldDataManager
 
@@ -180,11 +180,11 @@ class GameController:
                 sy + surfaceNormal[ 1 ] * DISK_OFFSET,
                 sz + surfaceNormal[ 2 ] * DISK_OFFSET,
             )
-            # Small green X to mark exactly where the player clicked
-            clickMark = createXMark( surfaceNormal, ( 0.0, 1.0, 0.0, 1.0 ), size = 0.025, thickness = 3.0 )
+            # Bright green X to mark exactly where the player clicked
+            clickMark = createXMark( surfaceNormal, ( 0.2, 1.0, 0.2, 1.0 ), size = 0.05, thickness = 5.0 )
             clickMark.reparentTo( self.__globe )
             clickMark.setPos( *diskPos )
-            clickMark.setDepthOffset( 10 )
+            clickMark.setDepthOffset( 20 )
             self.__markers.append( clickMark )
 
             x, y, z = sx / sLen, sy / sLen, sz / sLen
@@ -259,6 +259,15 @@ class GameController:
                 globeScale = GLOBE_SCALE,
             )
             self.__markers.extend( rings )
+
+            # City name label floating above the green ring
+            label = createCityLabel(
+                cityName = self.__currentChallenge.location_name,
+                normal = normal,
+                pos = markerPos,
+                parent = self.__globe,
+            )
+            self.__markers.append( label )
 
 
 
