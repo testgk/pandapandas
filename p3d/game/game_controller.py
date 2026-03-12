@@ -8,7 +8,7 @@ from typing import List, Optional, Tuple
 
 from panda3d.core import (
     BitMask32, CollisionHandlerQueue, CollisionNode,
-    CollisionRay, CollisionTraverser, NodePath
+    CollisionRay, CollisionTraverser, NodePath, ClockObject
 )
 
 from game.geo_challenge_game import DifficultyLevel, GeoChallengeGame
@@ -232,56 +232,73 @@ class GameController:
             self.__log( f"❌ Error scoring attempt: {e}" )
 
     def __focusOnCity( self, coords: Tuple[ float, float ] ) -> None:
-        """Smoothly rotate the globe so the answer city faces the camera, and zoom in slightly."""
+        """Smoothly rotate the globe so the answer city faces the camera."""
+        from panda3d.core import LVector3f, LQuaternionf, LMatrix4f
+
         lat, lon = coords
+        latRad = math.radians( lat )
+        lonRad = math.radians( lon )
 
-        # Globe geometry: x=cos(lat)*sin(lon), y=sin(lat), z=cos(lat)*cos(lon)
-        # Camera faces roughly +Z. Default P=105 tilts the equator to face the camera.
-        # To bring (lat, lon) to face camera:
-        #   H (= globeRotationZ) = -lon  — spins globe so city faces forward
-        #   P (= globeRotationX) = 105 - lat — accounts for default tilt + latitude
-        targetH = float( -lon )
-        targetP = float( 105.0 - lat )
-        targetR = 0.0
+        # City unit vector in globe local space
+        cityVec = LVector3f(
+            math.cos( latRad ) * math.sin( lonRad ),
+            math.sin( latRad ),
+            math.cos( latRad ) * math.cos( lonRad ),
+        )
+        cityVec.normalize()
 
-        startH = self.__globe.getH()
-        startP = self.__globe.getP()
-        startR = self.__globe.getR()
+        # Camera direction in world space (from origin toward camera)
+        camPos = self.__camera.getPos()
+        camDirWorld = LVector3f( camPos.x, camPos.y, camPos.z )
+        camDirWorld.normalize()
 
-        # Normalise difference to [-180, 180] for shortest rotation
-        def shortAngle( a: float, b: float ) -> float:
-            d = ( b - a ) % 360.0
-            if d > 180.0:
-                d -= 360.0
-            return d
+        # Transform camera direction into current globe local space
+        # (inverse of globe world transform = transpose of rotation part)
+        globeQuat = LQuaternionf()
+        self.__globe.getQuat( globeQuat )
+        globeQuatInv = LQuaternionf( globeQuat )
+        globeQuatInv.invertInPlace()
+        camDirLocal = globeQuatInv.xform( camDirWorld )
+        camDirLocal.normalize()
 
-        dH = shortAngle( startH, targetH )
-        dP = shortAngle( startP, targetP )
-        dR = shortAngle( startR, targetR )
+        # Build quaternion that rotates cityVec → camDirLocal (shortest arc)
+        dot = max( -1.0, min( 1.0, cityVec.dot( camDirLocal ) ) )
+        cross = cityVec.cross( camDirLocal )
+        if cross.length() < 1e-6:
+            # Already facing or exactly opposite
+            arcQ = LQuaternionf.identQuat() if dot > 0 else LQuaternionf( 0, 0, 1, 0 )
+        else:
+            cross.normalize()
+            angle = math.acos( dot )
+            arcQ = LQuaternionf()
+            arcQ.setFromAxisAngleRad( angle, cross )
+
+        # Apply arc rotation on top of current globe rotation
+        targetQ = LQuaternionf()
+        targetQ = globeQuat * arcQ
+        targetQ.normalize()
+
+        startQ = LQuaternionf( globeQuat )
 
         # Camera zoom
-        camPos = self.__camera.getPos()
         camDist = camPos.length()
-        targetDist = max( camDist * 0.72, 8.0 )   # zoom in ~28%, min distance 8
-        camDir = camPos / camDist
+        targetDist = max( camDist * 0.72, 8.0 )
+        camDirNorm = LVector3f( camPos.x, camPos.y, camPos.z ) / camDist
 
-        DURATION = 1.0   # seconds
+        DURATION = 1.0
         elapsed = [ 0.0 ]
 
         def animateTask( task ):
-            elapsed[ 0 ] += globalClock.getDt()
+            elapsed[ 0 ] += ClockObject.getGlobalClock().getDt()
             t = min( elapsed[ 0 ] / DURATION, 1.0 )
-            # Smooth ease-in-out
             t = t * t * ( 3.0 - 2.0 * t )
 
-            self.__globe.setHpr(
-                startH + dH * t,
-                startP + dP * t,
-                startR + dR * t,
-            )
+            interpQ = LQuaternionf()
+            interpQ.slerp( startQ, targetQ, t )
+            self.__globe.setQuat( interpQ )
 
             newDist = camDist + ( targetDist - camDist ) * t
-            self.__camera.setPos( camDir * newDist )
+            self.__camera.setPos( camDirNorm * newDist )
             self.__camera.lookAt( 0, 0, 0 )
 
             if t >= 1.0:
