@@ -2,16 +2,14 @@
 
 ## 🚀 One-Command Installation
 
-### Windows
-```batch
-# Download and run the universal installer
-curl -o install.py https://raw.githubusercontent.com/testgk/pandapandas/master/deploy/install.py && python install.py
+### Windows (PowerShell)
+```powershell
+wget --show-progress -O install.bat https://raw.githubusercontent.com/testgk/pandapandas/master/deploy/install_windows.bat ; .\install.bat
 ```
 
 ### Linux/macOS
 ```bash
-# Download and run the universal installer
-curl -sSL https://raw.githubusercontent.com/testgk/pandapandas/master/deploy/install.py | python3
+wget --show-progress -O install.sh https://raw.githubusercontent.com/testgk/pandapandas/master/deploy/install_linux.sh ; bash install.sh
 ```
 
 ## 📋 What Gets Installed
