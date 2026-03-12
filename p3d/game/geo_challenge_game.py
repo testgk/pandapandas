@@ -422,13 +422,23 @@ class GeoChallengeGame:
         """
         if not self.current_challenge or not self.challenge_start_time:
             raise ValueError("No active challenge")
-        
+
         # Calculate distance using GeoPandas spatial operations
         distance_km = self.calculate_distance_km(
-            clicked_coordinates, 
+            clicked_coordinates,
             self.current_challenge.actual_coordinates
         )
-        
+
+    def getThresholdKm( self, challenge ) -> float:
+        """Return the scoring threshold in km for the given challenge's difficulty."""
+        distance_thresholds = {
+            DifficultyLevel.EASY:   500,
+            DifficultyLevel.MEDIUM: 500,
+            DifficultyLevel.HARD:   500,
+            DifficultyLevel.EXPERT: 500,
+        }
+        return float( distance_thresholds[ challenge.difficulty ] )
+
         # Calculate response time
         response_time = (datetime.now() - self.challenge_start_time).total_seconds()
         

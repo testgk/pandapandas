@@ -12,12 +12,13 @@ from panda3d.core import (
 )
 
 from game.geo_challenge_game import DifficultyLevel, GeoChallengeGame
-from game.game_markers import createDisk, createXMark
+from game.game_markers import createDisk, createTargetRings, createXMark
 from gui.game_gui_controller import GameGuiController
 from world_data_manager import WorldDataManager
 
 CONTINENT_RADIUS = 1.01
 DISK_OFFSET = 0.01
+GLOBE_SCALE = 5
 
 
 class GameController:
@@ -179,10 +180,11 @@ class GameController:
                 sy + surfaceNormal[ 1 ] * DISK_OFFSET,
                 sz + surfaceNormal[ 2 ] * DISK_OFFSET,
             )
-            clickDisk = createDisk( surfaceNormal, ( 1.0, 0.0, 0.0, 1.0 ) )
-            clickDisk.reparentTo( self.__globe )
-            clickDisk.setPos( *diskPos )
-            self.__markers.append( clickDisk )
+            # Small white dot to show exactly where the player clicked
+            clickDot = createDisk( surfaceNormal, ( 1.0, 1.0, 1.0, 1.0 ), radius = 0.015 )
+            clickDot.reparentTo( self.__globe )
+            clickDot.setPos( *diskPos )
+            self.__markers.append( clickDot )
 
             x, y, z = sx / sLen, sy / sLen, sz / sLen
             lat = math.degrees( math.asin( max( -1.0, min( 1.0, y ) ) ) )
@@ -228,7 +230,7 @@ class GameController:
             self.__log( f"❌ Error scoring attempt: {e}" )
 
     def __placeAnswerMarker( self ) -> None:
-        """Place a green X at the correct answer location."""
+        """Place scoring rings + green X at the correct answer location."""
         try:
             actualLat, actualLon = self.__currentChallenge.actual_coordinates
             latRad = math.radians( actualLat )
@@ -239,15 +241,30 @@ class GameController:
             az = math.cos( latRad ) * math.cos( lonRad ) * r
             aLen = ( ax * ax + ay * ay + az * az ) ** 0.5
             normal = ( ax / aLen, ay / aLen, az / aLen )
-            xPos = (
+            markerPos = (
                 ax + normal[ 0 ] * DISK_OFFSET,
                 ay + normal[ 1 ] * DISK_OFFSET,
                 az + normal[ 2 ] * DISK_OFFSET,
             )
+
+            # Scoring rings centred on the answer — outermost (red) first so inner rings
+            # render on top due to z-ordering
+            thresholdKm = self.__geoGame.getThresholdKm( self.__currentChallenge )
+            rings = createTargetRings(
+                normal = normal,
+                thresholdKm = thresholdKm,
+                parent = self.__globe,
+                pos = markerPos,
+                globeScale = GLOBE_SCALE,
+            )
+            self.__markers.extend( rings )
+
+            # Green X on top of the rings
             xMark = createXMark( normal, ( 0.0, 1.0, 0.0, 1.0 ) )
             xMark.reparentTo( self.__globe )
-            xMark.setPos( *xPos )
+            xMark.setPos( *markerPos )
             self.__markers.append( xMark )
+
         except Exception as e:
             print( f"Error placing answer marker: {e}" )
 

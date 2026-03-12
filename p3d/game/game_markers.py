@@ -1,9 +1,9 @@
 """
 Game Markers — Panda3D geometry helpers for placing visual feedback on the globe.
-Creates disk and X-mark nodes aligned to the globe surface.
+Creates disk, X-mark and scoring-ring nodes aligned to the globe surface.
 """
 from math import cos, sin, pi
-from typing import Tuple
+from typing import List, Tuple
 
 from panda3d.core import (
     Geom, GeomNode, GeomTriangles, GeomVertexData,
@@ -11,7 +11,19 @@ from panda3d.core import (
     NodePath, TransparencyAttrib
 )
 
-DISK_SEGMENTS = 24
+DISK_SEGMENTS = 48
+
+# Scoring zones as fractions of the total threshold radius (outermost → innermost)
+# Each tuple: ( fraction_of_threshold, RGBA )
+SCORING_ZONES: List[ Tuple[ float, Tuple[ float, float, float, float ] ] ] = [
+    ( 1.00, ( 1.0, 0.15, 0.0,  0.55 ) ),   # red    — worst  (outer)
+    ( 0.75, ( 1.0, 0.55, 0.0,  0.60 ) ),   # orange
+    ( 0.50, ( 1.0, 0.90, 0.0,  0.65 ) ),   # yellow
+    ( 0.25, ( 0.1, 0.85, 0.15, 0.75 ) ),   # green  — best   (inner)
+]
+
+# Earth radius in km — used to convert km distances to globe local-space units
+EARTH_RADIUS_KM = 6371.0
 
 
 def createDisk(
@@ -64,6 +76,43 @@ def createDisk(
     diskPath.setTwoSided( True )
     diskPath.setTransparency( TransparencyAttrib.MAlpha )
     return diskPath
+
+
+def createTargetRings(
+    normal: Tuple[ float, float, float ],
+    thresholdKm: float,
+    parent: NodePath,
+    pos: Tuple[ float, float, float ],
+    globeScale: float,
+) -> List[ NodePath ]:
+    """
+    Create 4 concentric scoring-zone disks centred on the answer location.
+    Drawn outermost→innermost so inner zones render on top.
+
+    Args:
+        normal:       surface normal at the answer point (unit vector, globe local space)
+        thresholdKm:  full scoring radius in km (maps to the outermost red ring)
+        parent:       NodePath to attach the disks to (the globe node)
+        pos:          disk centre position in globe local space
+        globeScale:   the globe's uniform scale factor (used to convert km → local units)
+    Returns:
+        list of NodePaths (one per zone, outermost first)
+    """
+    # km → globe local-space radius
+    # globe local unit sphere = 1.0 = EARTH_RADIUS_KM km (before globeScale is applied)
+    # but disks are children of the globe node which is already scaled,
+    # so we work in pre-scale units: local_r = km / (EARTH_RADIUS_KM * globeScale)
+    maxLocalRadius = thresholdKm / ( EARTH_RADIUS_KM * globeScale )
+
+    nodes: List[ NodePath ] = []
+    for fraction, color in SCORING_ZONES:
+        radius = maxLocalRadius * fraction
+        disk = createDisk( normal, color, radius = radius )
+        disk.reparentTo( parent )
+        disk.setPos( *pos )
+        nodes.append( disk )
+
+    return nodes
 
 
 def createXMark(
