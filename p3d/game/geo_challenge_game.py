@@ -417,17 +417,63 @@ class GeoChallengeGame:
         return earth_radius_km * c
     
     def score_attempt(self, clicked_coordinates: Tuple[float, float]) -> PlayerAttempt:
-        """
-        Score a player's attempt using advanced spatial analysis with percentage-based scoring
-        """
+        """Score a player's attempt using advanced spatial analysis with percentage-based scoring."""
         if not self.current_challenge or not self.challenge_start_time:
             raise ValueError("No active challenge")
 
-        # Calculate distance using GeoPandas spatial operations
         distance_km = self.calculate_distance_km(
             clicked_coordinates,
             self.current_challenge.actual_coordinates
         )
+
+        response_time = (datetime.now() - self.challenge_start_time).total_seconds()
+
+        threshold_km = self.getThresholdKm( self.current_challenge )
+
+        if distance_km > threshold_km:
+            final_score = 0
+        else:
+            max_distance = threshold_km
+            base_score = max(0, 1000 * (1 - distance_km / max_distance))
+            time_bonus = max(0, 100 * (1 - response_time / 60))
+
+            difficulty_multipliers = {
+                DifficultyLevel.EASY:   1.0,
+                DifficultyLevel.MEDIUM: 1.2,
+                DifficultyLevel.HARD:   1.5,
+                DifficultyLevel.EXPERT: 2.0,
+            }
+            multiplier = difficulty_multipliers[ self.current_challenge.difficulty ]
+            max_achievable = int( 1000 * multiplier + 100 )
+            raw_score = max( 0, min( max_achievable, int( ( base_score + time_bonus ) * multiplier ) ) )
+            final_score = int( ( raw_score / max_achievable ) * 100 ) if max_achievable > 0 else 0
+
+        attempt = PlayerAttempt(
+            challenge_id = f"{self.current_challenge.location_name}_{datetime.now().timestamp()}",
+            clicked_coordinates = clicked_coordinates,
+            distance_km = distance_km,
+            accuracy_score = final_score,
+            response_time_seconds = response_time,
+            timestamp = datetime.now()
+        )
+
+        new_row = {
+            'challenge_id':    attempt.challenge_id,
+            'location_name':   self.current_challenge.location_name,
+            'difficulty':      self.current_challenge.difficulty.value,
+            'distance_km':     attempt.distance_km,
+            'accuracy_score':  attempt.accuracy_score,
+            'response_time':   attempt.response_time_seconds,
+            'timestamp':       attempt.timestamp,
+        }
+        self.player_history = pd.concat(
+            [ self.player_history, pd.DataFrame( [ new_row ] ) ],
+            ignore_index = True
+        )
+
+        self.current_challenge = None
+        self.challenge_start_time = None
+        return attempt
 
     def getThresholdKm( self, challenge ) -> float:
         """Return the scoring threshold in km for the given challenge's difficulty."""
@@ -439,80 +485,6 @@ class GeoChallengeGame:
         }
         return float( distance_thresholds[ challenge.difficulty ] )
 
-        # Calculate response time
-        response_time = (datetime.now() - self.challenge_start_time).total_seconds()
-        
-        # Distance thresholds - above this distance, score becomes 0 (500km for all levels)
-        distance_thresholds = {
-            DifficultyLevel.EASY: 500,      # Above 500km = no score
-            DifficultyLevel.MEDIUM: 500,    # Above 500km = no score
-            DifficultyLevel.HARD: 500,      # Above 500km = no score
-            DifficultyLevel.EXPERT: 500     # Above 500km = no score
-        }
-        
-        threshold_km = distance_thresholds[self.current_challenge.difficulty]
-        
-        # If too far away, score becomes 0
-        if distance_km > threshold_km:
-            final_score = 0
-            print(f"🚫 Too far! Distance {distance_km:.1f}km > {threshold_km}km threshold. Score = 0%")
-        else:
-            # Advanced scoring algorithm - distance within acceptable range
-            max_distance = threshold_km  # Use threshold as max distance for scoring
-            base_score = max(0, 1000 * (1 - distance_km / max_distance))
-            
-            # Bonus for quick responses
-            time_bonus = max(0, 100 * (1 - response_time / 60))  # Bonus for sub-60 second responses
-            
-            # Difficulty multipliers for maximum achievable points
-            difficulty_multipliers = {
-                DifficultyLevel.EASY: 1.0,      # Max 1000 points
-                DifficultyLevel.MEDIUM: 1.2,    # Max 1200 points  
-                DifficultyLevel.HARD: 1.5,      # Max 1500 points
-                DifficultyLevel.EXPERT: 2.0     # Max 2000 points
-            }
-            
-            multiplier = difficulty_multipliers[self.current_challenge.difficulty]
-            max_achievable = int(1000 * multiplier + 100)  # Include time bonus in max
-            
-            # Calculate raw score
-            raw_score = int((base_score + time_bonus) * multiplier)
-            raw_score = max(0, min(max_achievable, raw_score))
-            
-            # Convert to percentage of achievable points
-            final_score = int((raw_score / max_achievable) * 100) if max_achievable > 0 else 0
-        
-        # Create attempt record
-        attempt = PlayerAttempt(
-            challenge_id=f"{self.current_challenge.location_name}_{datetime.now().timestamp()}",
-            clicked_coordinates=clicked_coordinates,
-            distance_km=distance_km,
-            accuracy_score=final_score,
-            response_time_seconds=response_time,
-            timestamp=datetime.now()
-        )
-        
-        # Store in player history using Pandas
-        new_row = {
-            'challenge_id': attempt.challenge_id,
-            'location_name': self.current_challenge.location_name,
-            'difficulty': self.current_challenge.difficulty.value,
-            'distance_km': attempt.distance_km,
-            'accuracy_score': attempt.accuracy_score,
-            'response_time': attempt.response_time_seconds,
-            'timestamp': attempt.timestamp
-        }
-        
-        self.player_history = pd.concat([
-            self.player_history, 
-            pd.DataFrame([new_row])
-        ], ignore_index=True)
-        
-        # Update statistics
-        self._update_statistics(attempt)
-        
-        return attempt
-    
     def _update_statistics(self, attempt: PlayerAttempt):
         """Update game statistics using Pandas analytics (percentage-based scoring)"""
         stats = self.game_statistics
