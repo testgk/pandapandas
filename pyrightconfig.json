@@ -1,0 +1,11 @@
+{
+  "include": [
+    "p3d"
+  ],
+  "extraPaths": [
+    "p3d"
+  ],
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "basic"
+}
+
