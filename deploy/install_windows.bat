@@ -1,6 +1,8 @@
 @echo off
 REM 🌍 GeoChallenge - One-Line Windows Installer
 echo 🌍 GeoChallenge Game - Quick Installer
-echo Downloading and running installer...
-powershell -Command "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/testgk/pandapandas/master/deploy/install.py' -OutFile 'install.py'; python install.py"
+echo Downloading installer...
+wget --show-progress -O install.py https://raw.githubusercontent.com/testgk/pandapandas/master/deploy/install.py
+echo Running installer...
+python install.py
 pause
