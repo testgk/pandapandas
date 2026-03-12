@@ -117,7 +117,8 @@
       "after_equals": true,
       "equals_in_keyword_arguments": true,
       "equals_in_default_parameters": true,
-      "description": "Space before and after = in ALL contexts: assignments, keyword arguments, and default parameter values"
+      "fstring_format_specifiers": "NO spaces inside f-string format specs — f\"{value:.2f}\" NOT f\"{ value:.2f }\"",
+      "description": "Space before and after = in ALL contexts: assignments, keyword arguments, and default parameter values. Bracket spacing does NOT apply inside f-string format specifiers."
     },
     "bracket_spacing_examples": {
       "parentheses": "function( param1, param2 )",
@@ -125,7 +126,9 @@
       "curly_braces": "dict{ key: value }",
       "assignment": "variable = value",
       "keyword_argument": "function( key = value )",
-      "default_parameter": "def myMethod( self, param = None ):"
+      "default_parameter": "def myMethod( self, param = None ):",
+      "fstring_correct": "f\"{value:.2f}\"",
+      "fstring_incorrect": "f\"{ value:.2f }\""
     }
   },
   "workflow_preferences": {

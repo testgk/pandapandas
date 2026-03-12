@@ -80,7 +80,7 @@ class GlobeGuiController:
 
         # Radius value display (hidden)
         self.__radiusDisplay = OnscreenText(
-            text = f"{ self.__globeApp.continentRadius:.2f }",
+            text = f"{self.__globeApp.continentRadius:.2f}",
             pos = ( -0.75, 0.50 ),
             scale = 0.04,
             fg = ( 1.0, 1.0, 1.0, 1.0 ),
@@ -100,7 +100,7 @@ class GlobeGuiController:
 
         effectDuration = self.__settings.getEffectDuration()
         self.__globeApp.taskManager.doMethodLater(
-            effectDuration, resetColor, f"reset_button_{ id( button ) }"
+            effectDuration, resetColor, f"reset_button_{id( button )}"
         )
 
     # ── Public API ────────────────────────────────────────────────────────────
@@ -126,7 +126,7 @@ class GlobeGuiController:
     def updateContinentRadiusDisplay( self, value: float ) -> None:
         """Update the continent radius value display"""
         if self.__radiusDisplay:
-            self.__radiusDisplay.setText( f"{ value:.3f }" )
+            self.__radiusDisplay.setText( f"{value:.3f}" )
 
     def enableNextChallenge( self ) -> None:
         """Show the Next Challenge button after question is answered"""
