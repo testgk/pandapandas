@@ -571,13 +571,13 @@ class GeoChallengeGame:
 
         # Difficulty multipliers — easier = more forgiving rings
         DIFFICULTY_MULTIPLIER: Dict[ DifficultyLevel, float ] = {
-            DifficultyLevel.EASY:   1.5,
-            DifficultyLevel.MEDIUM: 1.0,
-            DifficultyLevel.HARD:   0.65,
-            DifficultyLevel.EXPERT: 0.40,
+            DifficultyLevel.EASY:   2.5,
+            DifficultyLevel.MEDIUM: 1.8,
+            DifficultyLevel.HARD:   1.2,
+            DifficultyLevel.EXPERT: 0.75,
         }
 
-        MIN_THRESHOLD_KM = 80.0
+        MIN_THRESHOLD_KM = 200.0
         MAX_THRESHOLD_KM = 900.0
 
         areaKm2 = COUNTRY_AREA_KM2.get( challenge.country, 500_000 )
