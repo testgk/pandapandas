@@ -30,13 +30,14 @@ RING_SCALE_MULTIPLIER = 3.5
 EARTH_RADIUS_KM = 6371.0
 
 
-def createDisk(
+def createAnnulus(
     normal: Tuple[ float, float, float ],
     color: Tuple[ float, float, float, float ],
-    radius: float = 0.06,
+    innerRadius: float,
+    outerRadius: float,
     segments: int = DISK_SEGMENTS
 ) -> NodePath:
-    """Create a flat disk aligned to the globe surface at the given surface normal."""
+    """Create a flat annulus (ring band) aligned to the globe surface."""
     nx, ny, nz = normal
 
     up = ( 0.0, 1.0, 0.0 ) if abs( ny ) < 0.9 else ( 1.0, 0.0, 0.0 )
@@ -51,35 +52,41 @@ def createDisk(
     bz = nx * ty - ny * tx
 
     fmt = GeomVertexFormat.getV3n3()
-    vdata = GeomVertexData( "disk", fmt, Geom.UHStatic )
+    vdata = GeomVertexData( "annulus", fmt, Geom.UHStatic )
     vertexWriter = GeomVertexWriter( vdata, "vertex" )
     normalWriter = GeomVertexWriter( vdata, "normal" )
 
-    vertexWriter.addData3f( 0.0, 0.0, 0.0 )
-    normalWriter.addData3f( nx, ny, nz )
-
     for i in range( segments ):
         angle = ( i / segments ) * 2 * pi
-        px = ( tx * cos( angle ) + bx * sin( angle ) ) * radius
-        py = ( ty * cos( angle ) + by * sin( angle ) ) * radius
-        pz = ( tz * cos( angle ) + bz * sin( angle ) ) * radius
-        vertexWriter.addData3f( px, py, pz )
-        normalWriter.addData3f( nx, ny, nz )
+        cosA = cos( angle )
+        sinA = sin( angle )
+        for r in ( innerRadius, outerRadius ):
+            px = ( tx * cosA + bx * sinA ) * r
+            py = ( ty * cosA + by * sinA ) * r
+            pz = ( tz * cosA + bz * sinA ) * r
+            vertexWriter.addData3f( px, py, pz )
+            normalWriter.addData3f( nx, ny, nz )
 
     geom = Geom( vdata )
     tris = GeomTriangles( Geom.UHStatic )
     for i in range( segments ):
-        tris.addVertices( 0, i + 1, ( i + 1 ) % segments + 1 )
+        inner0 = i * 2
+        outer0 = i * 2 + 1
+        inner1 = ( ( i + 1 ) % segments ) * 2
+        outer1 = ( ( i + 1 ) % segments ) * 2 + 1
+        tris.addVertices( inner0, outer0, inner1 )
+        tris.closePrimitive()
+        tris.addVertices( outer0, outer1, inner1 )
         tris.closePrimitive()
     geom.addPrimitive( tris )
 
-    node = GeomNode( "disk" )
+    node = GeomNode( "annulus" )
     node.addGeom( geom )
-    diskPath = NodePath( node )
-    diskPath.setColor( *color )
-    diskPath.setTwoSided( True )
-    diskPath.setTransparency( TransparencyAttrib.MAlpha )
-    return diskPath
+    path = NodePath( node )
+    path.setColor( *color )
+    path.setTwoSided( True )
+    path.setTransparency( TransparencyAttrib.MAlpha )
+    return path
 
 
 def createTargetRings(
@@ -90,29 +97,21 @@ def createTargetRings(
     globeScale: float,
 ) -> List[ NodePath ]:
     """
-    Create 4 concentric scoring-zone disks centred on the answer location.
-    Drawn outermost→innermost so inner zones render on top.
-
-    Args:
-        normal:       surface normal at the answer point (unit vector, globe local space)
-        thresholdKm:  full scoring radius in km (maps to the outermost red ring)
-        parent:       NodePath to attach the disks to (the globe node)
-        pos:          disk centre position in globe local space
-        globeScale:   the globe's uniform scale factor (used to convert km → local units)
-    Returns:
-        list of NodePaths (one per zone, outermost first)
+    Create 4 equal-width concentric ring bands centred on the answer location.
+    Green (innermost) → yellow → orange → red (outermost).
     """
-    # km → globe local-space radius, then scale up so rings are clearly visible
     maxLocalRadius = ( thresholdKm / ( EARTH_RADIUS_KM * globeScale ) ) * RING_SCALE_MULTIPLIER
+    bandWidth = maxLocalRadius * 0.12   # fixed band width — same for all zones
 
     nodes: List[ NodePath ] = []
     for fraction, color, depthOffset in SCORING_ZONES:
-        radius = maxLocalRadius * fraction
-        disk = createDisk( normal, color, radius = radius )
-        disk.reparentTo( parent )
-        disk.setPos( *pos )
-        disk.setDepthOffset( depthOffset )
-        nodes.append( disk )
+        outerR = maxLocalRadius * fraction
+        innerR = max( 0.0, outerR - bandWidth )
+        ring = createAnnulus( normal, color, innerRadius = innerR, outerRadius = outerR )
+        ring.reparentTo( parent )
+        ring.setPos( *pos )
+        ring.setDepthOffset( depthOffset )
+        nodes.append( ring )
 
     return nodes
 
