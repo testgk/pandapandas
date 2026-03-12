@@ -16,11 +16,13 @@ DISK_SEGMENTS = 48
 
 # Scoring zones: outermost→innermost — ( fraction_of_threshold, RGBA, depth_offset )
 # Keep offsets LOW so the click X (depthOffset=20) always renders above them.
-SCORING_ZONES: List[ Tuple[ float, Tuple[ float, float, float, float ], int ] ] = [
-    ( 1.00, ( 1.0, 0.15, 0.0,  0.55 ), 1 ),   # red    — worst  (outer,  behind)
-    ( 0.75, ( 1.0, 0.55, 0.0,  0.60 ), 2 ),   # orange
-    ( 0.50, ( 1.0, 0.90, 0.0,  0.65 ), 3 ),   # yellow
-    ( 0.25, ( 0.1, 0.85, 0.15, 0.75 ), 4 ),   # green  — best   (inner,  on top)
+# Scoring zones: ( innerFraction, outerFraction, RGBA, depth_offset )
+# Rings get progressively wider outward: green narrow → red wide
+SCORING_ZONES: List[ Tuple[ float, float, Tuple[ float, float, float, float ], int ] ] = [
+    ( 0.00, 0.15, ( 0.1, 0.85, 0.15, 0.80 ), 4 ),   # green  — best   (innermost, narrow)
+    ( 0.15, 0.45, ( 1.0, 0.90, 0.0,  0.70 ), 3 ),   # yellow
+    ( 0.45, 0.80, ( 1.0, 0.55, 0.0,  0.60 ), 2 ),   # orange
+    ( 0.80, 1.20, ( 1.0, 0.15, 0.0,  0.55 ), 1 ),   # red    — worst  (outermost, widest)
 ]
 
 # Multiplier applied on top of the km→local conversion to make rings visually larger
@@ -101,12 +103,11 @@ def createTargetRings(
     Green (innermost) → yellow → orange → red (outermost).
     """
     maxLocalRadius = ( thresholdKm / ( EARTH_RADIUS_KM * globeScale ) ) * RING_SCALE_MULTIPLIER
-    bandWidth = maxLocalRadius * 0.12   # fixed band width — same for all zones
 
     nodes: List[ NodePath ] = []
-    for fraction, color, depthOffset in SCORING_ZONES:
-        outerR = maxLocalRadius * fraction
-        innerR = max( 0.0, outerR - bandWidth )
+    for innerFrac, outerFrac, color, depthOffset in SCORING_ZONES:
+        innerR = maxLocalRadius * innerFrac
+        outerR = maxLocalRadius * outerFrac
         ring = createAnnulus( normal, color, innerRadius = innerR, outerRadius = outerR )
         ring.reparentTo( parent )
         ring.setPos( *pos )
