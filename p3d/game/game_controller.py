@@ -24,7 +24,7 @@ DEFAULT_CAMERA_DIST = 14.6   # matches globe_app default camera distance
 # Approximate centre lat/lon for each continent
 CONTINENT_CENTRES = {
     "Europe":        ( 54.0,    4.0 ),    # calibrated H=16   → lon=4
-    "Asia":          ( 34.0,   28.0 ),    # calibrated H=352  → lon=28
+    "Asia":          ( 20.0,   78.0 ),    # India as centre of Asia
     "Africa":        (  0.0,   20.0 ),    # calibrated H=0    → lon=20
     "North America": ( 45.0, -132.0 ),   # calibrated H=152  → lon=-132
     "South America": (-15.0,  -60.0 ),   # calibrated H=80   → lon=-60
@@ -251,7 +251,7 @@ class GameController:
 
     def __focusOnCity( self, coords: Tuple[ float, float ] ) -> None:
         """Move camera above the answer city and zoom in."""
-        self.__animateGlobeFocus( coords, DEFAULT_CAMERA_DIST * 0.6, taskName = "focusCityTask" )
+        self.__animateGlobeFocus( coords, DEFAULT_CAMERA_DIST * 0.8, taskName = "focusCityTask" )
 
     def __focusOnContinent( self, continentName: str ) -> None:
         """Move camera above the continent centre and zoom out to default distance."""
@@ -267,7 +267,7 @@ class GameController:
         taskName: str = "focusTask",
         duration: float = 1.0,
     ) -> None:
-        """Move the camera above the target lat/lon point and look down at it."""
+        """Move the camera above the target lat/lon point and look down at it, north up."""
         from panda3d.core import LVector3f, LPoint3f
 
         lat, lon = coords
@@ -282,12 +282,30 @@ class GameController:
         )
         localDir.normalize()
 
-        # Transform to world space — accounts for globe rotation (HPR) and scale
+        # Globe north pole in local space is +Y
+        localNorth = LVector3f( 0, 1, 0 )
+
+        # Transform both to world space via globe transform matrix
         globeMat = self.__globe.getMat( self.__globe.getParent() )
         worldDir = globeMat.xformVec( localDir )
         worldDir.normalize()
+        worldNorth = globeMat.xformVec( localNorth )
+        worldNorth.normalize()
 
         targetCamPos = worldDir * targetCamDist
+
+        # Compute camera up vector: project worldNorth onto the plane perpendicular to worldDir
+        # up = worldNorth - (worldNorth·worldDir)*worldDir  → removes component along view axis
+        dot = worldNorth.dot( worldDir )
+        camUp = LVector3f(
+            worldNorth.x - dot * worldDir.x,
+            worldNorth.y - dot * worldDir.y,
+            worldNorth.z - dot * worldDir.z,
+        )
+        if camUp.length() < 1e-6:
+            # Looking straight down at pole — use arbitrary tangent as up
+            camUp = LVector3f( 1, 0, 0 )
+        camUp.normalize()
 
         startCamPos = self.__camera.getPos()
         elapsed = [ 0.0 ]
@@ -303,7 +321,7 @@ class GameController:
                 startCamPos.z + ( targetCamPos.z - startCamPos.z ) * t,
             )
             self.__camera.setPos( newPos )
-            self.__camera.lookAt( 0, 0, 0 )
+            self.__camera.lookAt( LPoint3f( 0, 0, 0 ), camUp )
 
             if t >= 1.0:
                 return task.done
