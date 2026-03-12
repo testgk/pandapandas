@@ -253,9 +253,7 @@ class GameController:
         camDirWorld.normalize()
 
         # Transform camera direction into current globe local space
-        # (inverse of globe world transform = transpose of rotation part)
-        globeQuat = LQuaternionf()
-        self.__globe.getQuat( globeQuat )
+        globeQuat = self.__globe.getQuat()
         globeQuatInv = LQuaternionf( globeQuat )
         globeQuatInv.invertInPlace()
         camDirLocal = globeQuatInv.xform( camDirWorld )
@@ -274,11 +272,12 @@ class GameController:
             arcQ.setFromAxisAngleRad( angle, cross )
 
         # Apply arc rotation on top of current globe rotation
-        targetQ = LQuaternionf()
         targetQ = globeQuat * arcQ
         targetQ.normalize()
 
-        startQ = LQuaternionf( globeQuat )
+        startQ = LQuaternionf(
+            globeQuat.getR(), globeQuat.getI(), globeQuat.getJ(), globeQuat.getK()
+        )
 
         # Camera zoom
         camDist = camPos.length()
