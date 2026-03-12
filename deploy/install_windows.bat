@@ -1,8 +1,19 @@
 @echo off
-REM 🌍 GeoChallenge - One-Line Windows Installer
+REM 🌍 GeoChallenge - Quick Windows Installer
 echo 🌍 GeoChallenge Game - Quick Installer
-echo Downloading installer...
-wget --show-progress -O install.py https://raw.githubusercontent.com/testgk/pandapandas/master/deploy/install.py
-echo Running installer...
-python install.py
+echo.
+
+echo 📦 Installing dependencies...
+pip install pandas geopandas panda3d pyinstaller --quiet
+
+echo 📥 Cloning repository...
+git clone https://github.com/testgk/pandapandas.git geochallenge-game
+
+echo 🔨 Building executable...
+cd geochallenge-game\p3d
+pyinstaller --onefile --noconsole --name GeoChallenge globe_launcher.py
+
+echo 🚀 Starting game...
+cd ..\dist
+start GeoChallenge.exe
 pause

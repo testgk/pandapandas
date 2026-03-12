@@ -1,7 +1,17 @@
 #!/bin/bash
-# 🌍 GeoChallenge - One-Line Linux/macOS Installer
+# 🌍 GeoChallenge - Quick Linux/macOS Installer
 echo "🌍 GeoChallenge Game - Quick Installer"
-echo "Downloading installer..."
-wget --show-progress -O install.py https://raw.githubusercontent.com/testgk/pandapandas/master/deploy/install.py
-echo "Running installer..."
-python3 install.py
+echo ""
+
+echo "📦 Installing dependencies..."
+pip3 install pandas geopandas panda3d pyinstaller --quiet
+
+echo "📥 Cloning repository..."
+git clone https://github.com/testgk/pandapandas.git geochallenge-game
+
+echo "🔨 Building executable..."
+cd geochallenge-game/p3d
+pyinstaller --onefile --name GeoChallenge globe_launcher.py
+
+echo "🚀 Starting game..."
+./dist/GeoChallenge
