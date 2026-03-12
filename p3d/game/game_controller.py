@@ -12,7 +12,7 @@ from panda3d.core import (
 )
 
 from game.geo_challenge_game import DifficultyLevel, GeoChallengeGame
-from game.game_markers import createDisk, createTargetRings, createXMark, createCityLabel
+from game.game_markers import createAnnulus, createTargetRings, createXMark, createCityLabel
 from gui.game_gui_controller import GameGuiController
 from world_data_manager import WorldDataManager
 
