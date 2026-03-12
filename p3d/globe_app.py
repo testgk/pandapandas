@@ -799,7 +799,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             elif attempt.accuracy_score >= 40:
                 result_analysis += "📚 Not bad, but there's room for improvement!"
             elif attempt.accuracy_score == 0:
-                result_analysis += "🚫 Too close to be realistic! Try clicking further away."
+                result_analysis += "🚫 Too far away! Try clicking closer to the target location."
             else:
                 result_analysis += "🗺️ Keep practicing! Geography takes time to master."
             

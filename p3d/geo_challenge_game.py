@@ -275,12 +275,12 @@ class GeoChallengeGame:
             (cities_expert, DifficultyLevel.EXPERT)
         ]:
             for name, coords, country, continent, hints in cities:
-                # Calculate max distance based on difficulty
+                # Calculate max distance based on difficulty (10x more forgiving)
                 max_distances = {
-                    DifficultyLevel.EASY: 1000,    # 1000km for easy
-                    DifficultyLevel.MEDIUM: 500,   # 500km for medium
-                    DifficultyLevel.HARD: 250,     # 250km for hard
-                    DifficultyLevel.EXPERT: 100    # 100km for expert
+                    DifficultyLevel.EASY: 10000,    # 10000km for easy (was 1000km)
+                    DifficultyLevel.MEDIUM: 5000,   # 5000km for medium (was 500km)
+                    DifficultyLevel.HARD: 2500,     # 2500km for hard (was 250km)
+                    DifficultyLevel.EXPERT: 1000    # 1000km for expert (was 100km)
                 }
                 
                 challenge = GameChallenge(
@@ -432,24 +432,24 @@ class GeoChallengeGame:
         # Calculate response time
         response_time = (datetime.now() - self.challenge_start_time).total_seconds()
         
-        # Distance thresholds - below this distance, score becomes 0
+        # Distance thresholds - above this distance, score becomes 0 (500km for all levels)
         distance_thresholds = {
-            DifficultyLevel.EASY: 50,      # 50km threshold for easy
-            DifficultyLevel.MEDIUM: 25,    # 25km threshold for medium  
-            DifficultyLevel.HARD: 15,      # 15km threshold for hard
-            DifficultyLevel.EXPERT: 10     # 10km threshold for expert
+            DifficultyLevel.EASY: 500,      # Above 500km = no score
+            DifficultyLevel.MEDIUM: 500,    # Above 500km = no score
+            DifficultyLevel.HARD: 500,      # Above 500km = no score
+            DifficultyLevel.EXPERT: 500     # Above 500km = no score
         }
         
         threshold_km = distance_thresholds[self.current_challenge.difficulty]
         
-        # If too close (unrealistic accuracy), score becomes 0
-        if distance_km < threshold_km:
+        # If too far away, score becomes 0
+        if distance_km > threshold_km:
             final_score = 0
-            print(f"🚫 Too close! Distance {distance_km:.1f}km < {threshold_km}km threshold. Score = 0%")
+            print(f"🚫 Too far! Distance {distance_km:.1f}km > {threshold_km}km threshold. Score = 0%")
         else:
-            # Advanced scoring algorithm
-            max_distance = self.current_challenge.max_distance_km
-            base_score = max(0, 1000 * (1 - (distance_km - threshold_km) / (max_distance - threshold_km)))
+            # Advanced scoring algorithm - distance within acceptable range
+            max_distance = threshold_km  # Use threshold as max distance for scoring
+            base_score = max(0, 1000 * (1 - distance_km / max_distance))
             
             # Bonus for quick responses
             time_bonus = max(0, 100 * (1 - response_time / 60))  # Bonus for sub-60 second responses
