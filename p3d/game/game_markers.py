@@ -188,9 +188,6 @@ def createCityLabel(
     textNode.setText( cityName )
     textNode.setAlign( TextNode.ACenter )
     textNode.setTextColor( 1.0, 1.0, 0.2, 1.0 )
-    textNode.setCardColor( 0.0, 0.0, 0.0, 0.7 )
-    textNode.setCardAsMargin( 0.2, 0.2, 0.1, 0.1 )
-    textNode.setCardDecal( True )
 
     labelNP = root.attachNewNode( textNode )
     labelNP.setPos( tipPos[ 0 ], tipPos[ 1 ], tipPos[ 2 ] )
