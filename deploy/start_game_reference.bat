@@ -11,19 +11,19 @@ set /p choice="Enter your choice (1-3): "
 
 if "%choice%"=="1" (
     echo 🚀 Starting 3D Globe Game...
-    cd /d "D:\geopandas\p3d"
+    cd /d "%~dp0..\p3d"
     python globe_launcher.py
 ) else if "%choice%"=="2" (
     echo 📝 Starting text-based game...
-    cd /d "D:\geopandas"
+    cd /d "%~dp0.."
     python run_geo_challenge.py
 ) else if "%choice%"=="3" (
     echo 🌐 Starting web-based game...
-    cd /d "D:\geopandas"
+    cd /d "%~dp0.."
     python run_web_game.py
 ) else (
     echo Invalid choice. Starting 3D Globe Game by default...
-    cd /d "D:\geopandas\p3d"
+    cd /d "%~dp0..\p3d"
     python globe_launcher.py
 )
 
