@@ -13,14 +13,17 @@ from panda3d.core import (
 
 DISK_SEGMENTS = 48
 
-# Scoring zones as fractions of the total threshold radius (outermost → innermost)
-# Each tuple: ( fraction_of_threshold, RGBA )
-SCORING_ZONES: List[ Tuple[ float, Tuple[ float, float, float, float ] ] ] = [
-    ( 1.00, ( 1.0, 0.15, 0.0,  0.55 ) ),   # red    — worst  (outer)
-    ( 0.75, ( 1.0, 0.55, 0.0,  0.60 ) ),   # orange
-    ( 0.50, ( 1.0, 0.90, 0.0,  0.65 ) ),   # yellow
-    ( 0.25, ( 0.1, 0.85, 0.15, 0.75 ) ),   # green  — best   (inner)
+# Scoring zones: outermost→innermost — ( fraction_of_threshold, RGBA, depth_offset )
+# Higher depth_offset = renders on top. Inner zones get higher values.
+SCORING_ZONES: List[ Tuple[ float, Tuple[ float, float, float, float ], int ] ] = [
+    ( 1.00, ( 1.0, 0.15, 0.0,  0.55 ), 1 ),   # red    — worst  (outer)
+    ( 0.75, ( 1.0, 0.55, 0.0,  0.60 ), 2 ),   # orange
+    ( 0.50, ( 1.0, 0.90, 0.0,  0.65 ), 3 ),   # yellow
+    ( 0.25, ( 0.1, 0.85, 0.15, 0.75 ), 4 ),   # green  — best   (inner)
 ]
+
+# Multiplier applied on top of the km→local conversion to make rings visually larger
+RING_SCALE_MULTIPLIER = 3.5
 
 # Earth radius in km — used to convert km distances to globe local-space units
 EARTH_RADIUS_KM = 6371.0
@@ -98,18 +101,16 @@ def createTargetRings(
     Returns:
         list of NodePaths (one per zone, outermost first)
     """
-    # km → globe local-space radius
-    # globe local unit sphere = 1.0 = EARTH_RADIUS_KM km (before globeScale is applied)
-    # but disks are children of the globe node which is already scaled,
-    # so we work in pre-scale units: local_r = km / (EARTH_RADIUS_KM * globeScale)
-    maxLocalRadius = thresholdKm / ( EARTH_RADIUS_KM * globeScale )
+    # km → globe local-space radius, then scale up so rings are clearly visible
+    maxLocalRadius = ( thresholdKm / ( EARTH_RADIUS_KM * globeScale ) ) * RING_SCALE_MULTIPLIER
 
     nodes: List[ NodePath ] = []
-    for fraction, color in SCORING_ZONES:
+    for fraction, color, depthOffset in SCORING_ZONES:
         radius = maxLocalRadius * fraction
         disk = createDisk( normal, color, radius = radius )
         disk.reparentTo( parent )
         disk.setPos( *pos )
+        disk.setDepthOffset( depthOffset )
         nodes.append( disk )
 
     return nodes

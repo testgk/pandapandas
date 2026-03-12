@@ -180,11 +180,12 @@ class GameController:
                 sy + surfaceNormal[ 1 ] * DISK_OFFSET,
                 sz + surfaceNormal[ 2 ] * DISK_OFFSET,
             )
-            # Small white dot to show exactly where the player clicked
-            clickDot = createDisk( surfaceNormal, ( 1.0, 1.0, 1.0, 1.0 ), radius = 0.015 )
-            clickDot.reparentTo( self.__globe )
-            clickDot.setPos( *diskPos )
-            self.__markers.append( clickDot )
+            # Small green X to mark exactly where the player clicked
+            clickMark = createXMark( surfaceNormal, ( 0.0, 1.0, 0.0, 1.0 ), size = 0.025, thickness = 3.0 )
+            clickMark.reparentTo( self.__globe )
+            clickMark.setPos( *diskPos )
+            clickMark.setDepthOffset( 10 )
+            self.__markers.append( clickMark )
 
             x, y, z = sx / sLen, sy / sLen, sz / sLen
             lat = math.degrees( math.asin( max( -1.0, min( 1.0, y ) ) ) )
@@ -263,6 +264,7 @@ class GameController:
             xMark = createXMark( normal, ( 0.0, 1.0, 0.0, 1.0 ) )
             xMark.reparentTo( self.__globe )
             xMark.setPos( *markerPos )
+            xMark.setDepthOffset( 10 )
             self.__markers.append( xMark )
 
         except Exception as e:
