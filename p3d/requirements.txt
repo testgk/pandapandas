@@ -3,3 +3,4 @@ geopandas>=0.13.0
 numpy>=1.21.0
 shapely>=2.0.0
 matplotlib>=3.5.0
+requests>=2.28.0
