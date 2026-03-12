@@ -775,12 +775,12 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             # Generate comprehensive result analysis
             result_analysis = (
                 f"🎯 CHALLENGE RESULT:\n"
-                f"���� Target: {self.__currentChallenge.location_name}\n"
+                f"📍 Target: {self.__currentChallenge.location_name}\n"
                 f"👆 You clicked: {clicked_coords[0]:.2f}°, {clicked_coords[1]:.2f}°\n"
                 f"🎯 Actual location: {self.__currentChallenge.actual_coordinates[0]:.2f}°, {self.__currentChallenge.actual_coordinates[1]:.2f}°\n"
                 f"📏 Distance off: {attempt.distance_km:.1f} km\n"
                 f"⚡ Response time: {attempt.response_time_seconds:.1f} seconds\n"
-                f"🏆 Score: {attempt.accuracy_score}/1000 points\n"
+                f"🏆 Score: {attempt.accuracy_score}% accuracy\n"
                 f"🎲 Difficulty: {self.__currentChallenge.difficulty.value}\n"
             )
             
@@ -789,15 +789,17 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
                 analytics = self.__geoGame.get_performance_analytics()
                 avg_score = analytics['overview']['average_score']
                 performance_trend = "📈 Improving" if attempt.accuracy_score > avg_score else "📉 Below average"
-                result_analysis += f"📊 Performance: {performance_trend} (Avg: {avg_score:.0f})\n"
-            
-            # Scoring feedback
-            if attempt.accuracy_score >= 900:
+                result_analysis += f"📊 Performance: {performance_trend} (Avg: {avg_score:.0f}%)\n"
+
+            # Scoring feedback (percentage-based thresholds)
+            if attempt.accuracy_score >= 90:
                 result_analysis += "🏆 EXCELLENT! You're a geography expert!"
-            elif attempt.accuracy_score >= 700:
+            elif attempt.accuracy_score >= 70:
                 result_analysis += "👍 GOOD! Nice geographical knowledge!"
-            elif attempt.accuracy_score >= 400:
+            elif attempt.accuracy_score >= 40:
                 result_analysis += "📚 Not bad, but there's room for improvement!"
+            elif attempt.accuracy_score == 0:
+                result_analysis += "🚫 Too close to be realistic! Try clicking further away."
             else:
                 result_analysis += "🗺️ Keep practicing! Geography takes time to master."
             
@@ -809,7 +811,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             self.__gameMode = False
             self.ignore("mouse1")
             
-            print(f"🎮 Challenge completed! Score: {attempt.accuracy_score}/1000, Distance: {attempt.distance_km:.1f}km")
+            print(f"🎮 Challenge completed! Score: {attempt.accuracy_score}%, Distance: {attempt.distance_km:.1f}km")
             
         except Exception as e:
             print(f"Error processing game attempt: {e}")

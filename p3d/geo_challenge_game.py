@@ -44,7 +44,7 @@ class PlayerAttempt:
     challenge_id: str
     clicked_coordinates: Tuple[float, float]  # (lat, lon)
     distance_km: float
-    accuracy_score: int  # 0-1000 points
+    accuracy_score: int  # 0-100 percentage score
     response_time_seconds: float
     timestamp: datetime
 
@@ -314,14 +314,14 @@ class GeoChallengeGame:
         return gdf
     
     def _initialize_statistics(self) -> Dict:
-        """Initialize game statistics tracking"""
+        """Initialize game statistics tracking (percentage-based scoring)"""
         return {
             'total_games': 0,
             'correct_guesses': 0,
             'total_score': 0,
             'average_distance': 0.0,
             'best_score': 0,
-            'worst_score': 1000,
+            'worst_score': 100,  # Start at 100% instead of 1000
             'difficulty_stats': {level.value: {'attempts': 0, 'successes': 0} for level in DifficultyLevel}
         }
     
@@ -382,18 +382,18 @@ class GeoChallengeGame:
         # Analyze recent performance (last 10 games)
         recent_games = self.player_history.tail(10)
         
-        # Calculate performance metrics using Pandas
+        # Calculate performance metrics using Pandas (percentage-based scores)
         avg_score = recent_games['accuracy_score'].mean()
-        success_rate = (recent_games['accuracy_score'] > 700).sum() / len(recent_games)
+        success_rate = (recent_games['accuracy_score'] > 70).sum() / len(recent_games)  # 70% success threshold
         avg_response_time = recent_games['response_time'].mean()
         
-        # Difficulty adjustment logic
-        if avg_score > 800 and success_rate > 0.7:
+        # Difficulty adjustment logic (percentage-based thresholds)
+        if avg_score > 80 and success_rate > 0.7:  # 80% average score
             if avg_response_time < 10:  # Fast and accurate = Expert
                 return DifficultyLevel.EXPERT
             else:
                 return DifficultyLevel.HARD
-        elif avg_score > 600 and success_rate > 0.5:
+        elif avg_score > 60 and success_rate > 0.5:  # 60% average score
             return DifficultyLevel.MEDIUM
         else:
             return DifficultyLevel.EASY
@@ -418,7 +418,7 @@ class GeoChallengeGame:
     
     def score_attempt(self, clicked_coordinates: Tuple[float, float]) -> PlayerAttempt:
         """
-        Score a player's attempt using advanced spatial analysis
+        Score a player's attempt using advanced spatial analysis with percentage-based scoring
         """
         if not self.current_challenge or not self.challenge_start_time:
             raise ValueError("No active challenge")
@@ -432,23 +432,45 @@ class GeoChallengeGame:
         # Calculate response time
         response_time = (datetime.now() - self.challenge_start_time).total_seconds()
         
-        # Advanced scoring algorithm
-        max_distance = self.current_challenge.max_distance_km
-        base_score = max(0, 1000 * (1 - distance_km / max_distance))
-        
-        # Bonus for quick responses
-        time_bonus = max(0, 100 * (1 - response_time / 60))  # Bonus for sub-60 second responses
-        
-        # Difficulty multiplier
-        difficulty_multipliers = {
-            DifficultyLevel.EASY: 1.0,
-            DifficultyLevel.MEDIUM: 1.2,
-            DifficultyLevel.HARD: 1.5,
-            DifficultyLevel.EXPERT: 2.0
+        # Distance thresholds - below this distance, score becomes 0
+        distance_thresholds = {
+            DifficultyLevel.EASY: 50,      # 50km threshold for easy
+            DifficultyLevel.MEDIUM: 25,    # 25km threshold for medium  
+            DifficultyLevel.HARD: 15,      # 15km threshold for hard
+            DifficultyLevel.EXPERT: 10     # 10km threshold for expert
         }
         
-        final_score = int((base_score + time_bonus) * difficulty_multipliers[self.current_challenge.difficulty])
-        final_score = max(0, min(1000, final_score))  # Clamp to 0-1000
+        threshold_km = distance_thresholds[self.current_challenge.difficulty]
+        
+        # If too close (unrealistic accuracy), score becomes 0
+        if distance_km < threshold_km:
+            final_score = 0
+            print(f"🚫 Too close! Distance {distance_km:.1f}km < {threshold_km}km threshold. Score = 0%")
+        else:
+            # Advanced scoring algorithm
+            max_distance = self.current_challenge.max_distance_km
+            base_score = max(0, 1000 * (1 - (distance_km - threshold_km) / (max_distance - threshold_km)))
+            
+            # Bonus for quick responses
+            time_bonus = max(0, 100 * (1 - response_time / 60))  # Bonus for sub-60 second responses
+            
+            # Difficulty multipliers for maximum achievable points
+            difficulty_multipliers = {
+                DifficultyLevel.EASY: 1.0,      # Max 1000 points
+                DifficultyLevel.MEDIUM: 1.2,    # Max 1200 points  
+                DifficultyLevel.HARD: 1.5,      # Max 1500 points
+                DifficultyLevel.EXPERT: 2.0     # Max 2000 points
+            }
+            
+            multiplier = difficulty_multipliers[self.current_challenge.difficulty]
+            max_achievable = int(1000 * multiplier + 100)  # Include time bonus in max
+            
+            # Calculate raw score
+            raw_score = int((base_score + time_bonus) * multiplier)
+            raw_score = max(0, min(max_achievable, raw_score))
+            
+            # Convert to percentage of achievable points
+            final_score = int((raw_score / max_achievable) * 100) if max_achievable > 0 else 0
         
         # Create attempt record
         attempt = PlayerAttempt(
@@ -482,12 +504,12 @@ class GeoChallengeGame:
         return attempt
     
     def _update_statistics(self, attempt: PlayerAttempt):
-        """Update game statistics using Pandas analytics"""
+        """Update game statistics using Pandas analytics (percentage-based scoring)"""
         stats = self.game_statistics
         stats['total_games'] += 1
         stats['total_score'] += attempt.accuracy_score
         
-        if attempt.accuracy_score > 700:  # Consider 700+ as "correct"
+        if attempt.accuracy_score > 70:  # Consider 70%+ as "correct"
             stats['correct_guesses'] += 1
         
         stats['best_score'] = max(stats['best_score'], attempt.accuracy_score)
@@ -496,7 +518,7 @@ class GeoChallengeGame:
         # Update difficulty-specific stats
         difficulty = self.current_challenge.difficulty.value
         stats['difficulty_stats'][difficulty]['attempts'] += 1
-        if attempt.accuracy_score > 700:
+        if attempt.accuracy_score > 70:  # 70% threshold for success
             stats['difficulty_stats'][difficulty]['successes'] += 1
         
         # Calculate running averages using Pandas
