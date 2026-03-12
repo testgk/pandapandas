@@ -201,6 +201,7 @@ class GameController:
         try:
             attempt = self.__geoGame.score_attempt( clickedCoords )
             self.__placeAnswerMarker()
+            self.__focusOnCity( self.__currentChallenge.actual_coordinates )
 
             resultText = (
                 f"🎯 CHALLENGE RESULT:\n"
@@ -229,6 +230,62 @@ class GameController:
 
         except Exception as e:
             self.__log( f"❌ Error scoring attempt: {e}" )
+
+    def __focusOnCity( self, coords: Tuple[ float, float ] ) -> None:
+        """Smoothly rotate the globe so the answer city faces the camera, and zoom in slightly."""
+        lat, lon = coords
+
+        # Target globe HPR: we want the city to face straight at the camera.
+        # Globe rotates around its own axes — H = -lon (left/right), P = -lat (up/down), R = 0
+        targetH = float( -lon )
+        targetP = float( -lat )
+        targetR = 0.0
+
+        startH = self.__globe.getH()
+        startP = self.__globe.getP()
+        startR = self.__globe.getR()
+
+        # Normalise difference to [-180, 180] for shortest rotation
+        def shortAngle( a: float, b: float ) -> float:
+            d = ( b - a ) % 360.0
+            if d > 180.0:
+                d -= 360.0
+            return d
+
+        dH = shortAngle( startH, targetH )
+        dP = shortAngle( startP, targetP )
+        dR = shortAngle( startR, targetR )
+
+        # Camera zoom
+        camPos = self.__camera.getPos()
+        camDist = camPos.length()
+        targetDist = max( camDist * 0.72, 8.0 )   # zoom in ~28%, min distance 8
+        camDir = camPos / camDist
+
+        DURATION = 1.0   # seconds
+        elapsed = [ 0.0 ]
+
+        def animateTask( task ):
+            elapsed[ 0 ] += globalClock.getDt()
+            t = min( elapsed[ 0 ] / DURATION, 1.0 )
+            # Smooth ease-in-out
+            t = t * t * ( 3.0 - 2.0 * t )
+
+            self.__globe.setHpr(
+                startH + dH * t,
+                startP + dP * t,
+                startR + dR * t,
+            )
+
+            newDist = camDist + ( targetDist - camDist ) * t
+            self.__camera.setPos( camDir * newDist )
+            self.__camera.lookAt( 0, 0, 0 )
+
+            if t >= 1.0:
+                return task.done
+            return task.cont
+
+        self.__taskManager.add( animateTask, "focusCityTask" )
 
     def __placeAnswerMarker( self ) -> None:
         """Place scoring rings + green X at the correct answer location."""
