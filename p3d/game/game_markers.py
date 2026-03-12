@@ -158,16 +158,17 @@ def createCityLabel(
     normal: Tuple[ float, float, float ],
     pos: Tuple[ float, float, float ],
     parent: NodePath,
-    offset: float = 0.12,
+    offset: float = 0.20,
 ) -> NodePath:
     """
-    Create a 3D text label floating above the answer rings, facing the camera,
+    Create a text label standing vertically on the globe surface like a sign,
     with a thin line connecting it down to the surface point.
     """
+    from panda3d.core import LVector3f, LPoint3f
+
     root = NodePath( "cityLabelRoot" )
     root.reparentTo( parent )
 
-    # ── Connector line ────────────────────────────────────────────────────────
     nx, ny, nz = normal
     tipPos = (
         pos[ 0 ] + nx * offset,
@@ -175,13 +176,13 @@ def createCityLabel(
         pos[ 2 ] + nz * offset,
     )
 
+    # ── Connector line ────────────────────────────────────────────────────────
     lines = LineSegs()
     lines.setThickness( 1.5 )
     lines.setColor( 1.0, 1.0, 0.3, 0.8 )
     lines.moveTo( pos[ 0 ], pos[ 1 ], pos[ 2 ] )
     lines.drawTo( tipPos[ 0 ], tipPos[ 1 ], tipPos[ 2 ] )
-    lineNode = lines.create()
-    lineNP = root.attachNewNode( lineNode )
+    lineNP = root.attachNewNode( lines.create() )
     lineNP.setDepthOffset( 18 )
 
     # ── Text label ────────────────────────────────────────────────────────────
@@ -189,14 +190,41 @@ def createCityLabel(
     textNode.setText( cityName )
     textNode.setAlign( TextNode.ACenter )
     textNode.setTextColor( 1.0, 1.0, 0.3, 1.0 )
-    textNode.setCardColor( 0.0, 0.0, 0.0, 0.6 )
-    textNode.setCardAsMargin( 0.1, 0.1, 0.05, 0.05 )
+    textNode.setCardColor( 0.0, 0.0, 0.0, 0.65 )
+    textNode.setCardAsMargin( 0.15, 0.15, 0.08, 0.08 )
     textNode.setCardDecal( True )
 
     labelNP = root.attachNewNode( textNode )
     labelNP.setPos( tipPos[ 0 ], tipPos[ 1 ], tipPos[ 2 ] )
-    labelNP.setScale( 0.06 )
+    labelNP.setScale( 0.10 )
     labelNP.setDepthOffset( 19 )
-    labelNP.setBillboardPointEye()
+
+    # Orient the sign to stand vertically on the globe:
+    # • forward (+Y in Panda3D model space) points along the surface normal (outward)
+    # • up     (+Z in Panda3D model space) points toward the globe's north pole tangent
+    nVec   = LVector3f( nx, ny, nz )
+    worldUp = LVector3f( 0, 1, 0 )   # globe Y = north pole direction
+
+    # right = normal × worldUp  (tangent running east-west)
+    right = nVec.cross( worldUp )
+    if right.lengthSquared() < 1e-6:
+        worldUp = LVector3f( 1, 0, 0 )
+        right = nVec.cross( worldUp )
+    right.normalize()
+
+    # up = right × normal  (tangent running south-north, truly upward on globe)
+    up = right.cross( nVec )
+    up.normalize()
+
+    # Build rotation matrix: right=X, normal=Y(forward), up=Z
+    from panda3d.core import LMatrix4f
+    mat = LMatrix4f(
+        right.x,  right.y,  right.z,  0,
+        nVec.x,   nVec.y,   nVec.z,   0,
+        up.x,     up.y,     up.z,     0,
+        0,        0,        0,        1,
+    )
+    labelNP.setMat( mat )
+    labelNP.setPos( tipPos[ 0 ], tipPos[ 1 ], tipPos[ 2 ] )   # restore pos after setMat
 
     return root
