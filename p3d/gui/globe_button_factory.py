@@ -1,8 +1,7 @@
 """
 Globe Button Factory - Creates and owns all DirectButton instances for the globe GUI
 """
-from direct.gui.DirectGui import DirectButton, DGG
-from panda3d.core import TextNode
+from direct.gui.DirectGui import DirectButton
 from typing import List, Callable, Optional
 
 from settings.gui_settings_manager import GuiSettingsManager
@@ -39,32 +38,32 @@ class GlobeButtonFactory:
     ) -> None:
         """Create the STEP label and +/- buttons"""
         DirectButton(
-            text="STEP",
-            pos=self.__settings.getButtonPosition( "increment", "label_position" ),
-            scale=self.__settings.getButtonScale( "increment" ),
-            frameColor=self.__settings.getButtonColor( "label", "background" ),
-            text_fg=self.__settings.getButtonColor( "label", "text" ),
-            relief=0
+            text = "STEP",
+            pos = self.__settings.getButtonPosition( "increment", "label_position" ),
+            scale = self.__settings.getButtonScale( "increment" ),
+            frameColor = self.__settings.getButtonColor( "label", "background" ),
+            text_fg = self.__settings.getButtonColor( "label", "text" ),
+            relief = 0
         )
 
         self.__incrementPlusBtn = DirectButton(
-            text="+",
-            pos=self.__settings.getButtonPosition( "increment", "plus_position" ),
-            scale=self.__settings.getButtonScale( "increment" ),
-            command=onIncrease,
-            frameColor=self.__settings.getButtonColor( "control", "background" ),
-            text_fg=self.__settings.getButtonColor( "control", "text" ),
-            pressEffect=1, relief=2
+            text = "+",
+            pos = self.__settings.getButtonPosition( "increment", "plus_position" ),
+            scale = self.__settings.getButtonScale( "increment" ),
+            command = onIncrease,
+            frameColor = self.__settings.getButtonColor( "control", "background" ),
+            text_fg = self.__settings.getButtonColor( "control", "text" ),
+            pressEffect = 1, relief = 2
         )
 
         self.__incrementMinusBtn = DirectButton(
-            text="-",
-            pos=self.__settings.getButtonPosition( "increment", "minus_position" ),
-            scale=self.__settings.getButtonScale( "increment" ),
-            command=onDecrease,
-            frameColor=self.__settings.getButtonColor( "control", "background" ),
-            text_fg=self.__settings.getButtonColor( "control", "text" ),
-            pressEffect=1, relief=2
+            text = "-",
+            pos = self.__settings.getButtonPosition( "increment", "minus_position" ),
+            scale = self.__settings.getButtonScale( "increment" ),
+            command = onDecrease,
+            frameColor = self.__settings.getButtonColor( "control", "background" ),
+            text_fg = self.__settings.getButtonColor( "control", "text" ),
+            pressEffect = 1, relief = 2
         )
 
     def buildZoomControls(
@@ -74,44 +73,44 @@ class GlobeButtonFactory:
     ) -> None:
         """Create the ZOOM label, IN and OUT buttons"""
         DirectButton(
-            text=self.__settings.getTextContent( "zoom_label" ),
-            pos=self.__settings.getButtonPosition( "zoom", "label_position" ),
-            scale=self.__settings.getButtonScale( "zoom" ),
-            frameColor=self.__settings.getButtonColor( "label", "background" ),
-            text_fg=self.__settings.getButtonColor( "label", "text" ),
-            relief=0
+            text = self.__settings.getTextContent( "zoom_label" ),
+            pos = self.__settings.getButtonPosition( "zoom", "label_position" ),
+            scale = self.__settings.getButtonScale( "zoom" ),
+            frameColor = self.__settings.getButtonColor( "label", "background" ),
+            text_fg = self.__settings.getButtonColor( "label", "text" ),
+            relief = 0
         )
 
         self.__zoomInBtn = DirectButton(
-            text="IN",
-            pos=self.__settings.getButtonPosition( "zoom", "in_position" ),
-            scale=self.__settings.getButtonScale( "zoom" ),
-            command=onZoomIn,
-            frameColor=self.__settings.getButtonColor( "control", "background" ),
-            text_fg=self.__settings.getButtonColor( "control", "text" ),
-            pressEffect=1, relief=2
+            text = "IN",
+            pos = self.__settings.getButtonPosition( "zoom", "in_position" ),
+            scale = self.__settings.getButtonScale( "zoom" ),
+            command = onZoomIn,
+            frameColor = self.__settings.getButtonColor( "control", "background" ),
+            text_fg = self.__settings.getButtonColor( "control", "text" ),
+            pressEffect = 1, relief = 2
         )
 
         self.__zoomOutBtn = DirectButton(
-            text="OUT",
-            pos=self.__settings.getButtonPosition( "zoom", "out_position" ),
-            scale=self.__settings.getButtonScale( "zoom" ),
-            command=onZoomOut,
-            frameColor=self.__settings.getButtonColor( "control", "background" ),
-            text_fg=self.__settings.getButtonColor( "control", "text" ),
-            pressEffect=1, relief=2
+            text = "OUT",
+            pos = self.__settings.getButtonPosition( "zoom", "out_position" ),
+            scale = self.__settings.getButtonScale( "zoom" ),
+            command = onZoomOut,
+            frameColor = self.__settings.getButtonColor( "control", "background" ),
+            text_fg = self.__settings.getButtonColor( "control", "text" ),
+            pressEffect = 1, relief = 2
         )
 
     def buildResetButton( self, onReset: Callable ) -> None:
         """Create the RESET VIEW button"""
         self.__resetBtn = DirectButton(
-            text="RESET VIEW",
-            pos=self.__settings.getButtonPosition( "reset", "position" ),
-            scale=self.__settings.getButtonScale( "reset" ),
-            command=onReset,
-            frameColor=self.__settings.getButtonColor( "control", "background" ),
-            text_fg=self.__settings.getButtonColor( "control", "text" ),
-            pressEffect=1, relief=2
+            text = "RESET VIEW",
+            pos = self.__settings.getButtonPosition( "reset", "position" ),
+            scale = self.__settings.getButtonScale( "reset" ),
+            command = onReset,
+            frameColor = self.__settings.getButtonColor( "control", "background" ),
+            text_fg = self.__settings.getButtonColor( "control", "text" ),
+            pressEffect = 1, relief = 2
         )
 
     def buildRotationButtons(
@@ -123,43 +122,43 @@ class GlobeButtonFactory:
     ) -> None:
         """Create the four directional rotation buttons"""
         self.__rotateUpBtn = DirectButton(
-            text="UP",
-            pos=self.__settings.getButtonPosition( "rotation", "up_position" ),
-            scale=self.__settings.getButtonScale( "rotation" ),
-            command=onUp,
-            frameColor=self.__settings.getButtonColor( "rotation", "background" ),
-            text_fg=self.__settings.getButtonColor( "rotation", "text" ),
-            pressEffect=1, relief=2
+            text = "UP",
+            pos = self.__settings.getButtonPosition( "rotation", "up_position" ),
+            scale = self.__settings.getButtonScale( "rotation" ),
+            command = onUp,
+            frameColor = self.__settings.getButtonColor( "rotation", "background" ),
+            text_fg = self.__settings.getButtonColor( "rotation", "text" ),
+            pressEffect = 1, relief = 2
         )
 
         self.__rotateDownBtn = DirectButton(
-            text="DOWN",
-            pos=self.__settings.getButtonPosition( "rotation", "down_position" ),
-            scale=self.__settings.getButtonScale( "rotation" ),
-            command=onDown,
-            frameColor=self.__settings.getButtonColor( "rotation", "background" ),
-            text_fg=self.__settings.getButtonColor( "rotation", "text" ),
-            pressEffect=1, relief=2
+            text = "DOWN",
+            pos = self.__settings.getButtonPosition( "rotation", "down_position" ),
+            scale = self.__settings.getButtonScale( "rotation" ),
+            command = onDown,
+            frameColor = self.__settings.getButtonColor( "rotation", "background" ),
+            text_fg = self.__settings.getButtonColor( "rotation", "text" ),
+            pressEffect = 1, relief = 2
         )
 
         self.__rotateLeftBtn = DirectButton(
-            text="LEFT",
-            pos=self.__settings.getButtonPosition( "rotation", "left_position" ),
-            scale=self.__settings.getButtonScale( "rotation" ),
-            command=onLeft,
-            frameColor=self.__settings.getButtonColor( "rotation", "background" ),
-            text_fg=self.__settings.getButtonColor( "rotation", "text" ),
-            pressEffect=1, relief=2
+            text = "LEFT",
+            pos = self.__settings.getButtonPosition( "rotation", "left_position" ),
+            scale = self.__settings.getButtonScale( "rotation" ),
+            command = onLeft,
+            frameColor = self.__settings.getButtonColor( "rotation", "background" ),
+            text_fg = self.__settings.getButtonColor( "rotation", "text" ),
+            pressEffect = 1, relief = 2
         )
 
         self.__rotateRightBtn = DirectButton(
-            text="RIGHT",
-            pos=self.__settings.getButtonPosition( "rotation", "right_position" ),
-            scale=self.__settings.getButtonScale( "rotation" ),
-            command=onRight,
-            frameColor=self.__settings.getButtonColor( "rotation", "background" ),
-            text_fg=self.__settings.getButtonColor( "rotation", "text" ),
-            pressEffect=1, relief=2
+            text = "RIGHT",
+            pos = self.__settings.getButtonPosition( "rotation", "right_position" ),
+            scale = self.__settings.getButtonScale( "rotation" ),
+            command = onRight,
+            frameColor = self.__settings.getButtonColor( "rotation", "background" ),
+            text_fg = self.__settings.getButtonColor( "rotation", "text" ),
+            pressEffect = 1, relief = 2
         )
 
     def buildPresetButtons( self, onPreset: Callable[ [ int ], None ] ) -> None:
@@ -170,13 +169,13 @@ class GlobeButtonFactory:
 
         for index, ( label, position ) in enumerate( zip( presetLabels, presetPositions ) ):
             btn = DirectButton(
-                text=label,
-                pos=position,
-                scale=presetScale,
-                command=lambda i=index: onPreset( i ),
-                frameColor=self.__settings.getButtonColor( "preset", "background" ),
-                text_fg=self.__settings.getButtonColor( "preset", "text" ),
-                pressEffect=1, relief=2
+                text = label,
+                pos = position,
+                scale = presetScale,
+                command = lambda i = index: onPreset( i ),
+                frameColor = self.__settings.getButtonColor( "preset", "background" ),
+                text_fg = self.__settings.getButtonColor( "preset", "text" ),
+                pressEffect = 1, relief = 2
             )
             btn.hide()
             self.__presetButtons.append( btn )
@@ -189,34 +188,34 @@ class GlobeButtonFactory:
     ) -> None:
         """Create game control buttons"""
         self.__startGameBtn = DirectButton(
-            text=self.__settings.getTextContent( "start_game" ),
-            pos=self.__settings.getButtonPosition( "game", "start_position" ),
-            scale=self.__settings.getButtonScale( "game" ),
-            command=onStartGame,
-            frameColor=self.__settings.getButtonColor( "control", "background" ),
-            text_fg=self.__settings.getButtonColor( "control", "text" ),
-            pressEffect=1, relief=2
+            text = self.__settings.getTextContent( "start_game" ),
+            pos = self.__settings.getButtonPosition( "game", "start_position" ),
+            scale = self.__settings.getButtonScale( "game" ),
+            command = onStartGame,
+            frameColor = self.__settings.getButtonColor( "control", "background" ),
+            text_fg = self.__settings.getButtonColor( "control", "text" ),
+            pressEffect = 1, relief = 2
         )
 
         self.__nextChallengeBtn = DirectButton(
-            text=self.__settings.getTextContent( "next_challenge" ),
-            pos=self.__settings.getButtonPosition( "game", "next_position" ),
-            scale=self.__settings.getButtonScale( "game" ),
-            command=onNextChallenge,
-            frameColor=self.__settings.getButtonColor( "control", "background" ),
-            text_fg=self.__settings.getButtonColor( "control", "text" ),
-            pressEffect=1, relief=2
+            text = self.__settings.getTextContent( "next_challenge" ),
+            pos = self.__settings.getButtonPosition( "game", "next_position" ),
+            scale = self.__settings.getButtonScale( "game" ),
+            command = onNextChallenge,
+            frameColor = self.__settings.getButtonColor( "control", "background" ),
+            text_fg = self.__settings.getButtonColor( "control", "text" ),
+            pressEffect = 1, relief = 2
         )
         self.__nextChallengeBtn.hide()
 
         self.__gameStatsBtn = DirectButton(
-            text=self.__settings.getTextContent( "game_stats" ),
-            pos=self.__settings.getButtonPosition( "game", "stats_position" ),
-            scale=self.__settings.getButtonScale( "game" ),
-            command=onGameStats,
-            frameColor=self.__settings.getButtonColor( "control", "background" ),
-            text_fg=self.__settings.getButtonColor( "control", "text" ),
-            pressEffect=1, relief=2
+            text = self.__settings.getTextContent( "game_stats" ),
+            pos = self.__settings.getButtonPosition( "game", "stats_position" ),
+            scale = self.__settings.getButtonScale( "game" ),
+            command = onGameStats,
+            frameColor = self.__settings.getButtonColor( "control", "background" ),
+            text_fg = self.__settings.getButtonColor( "control", "text" ),
+            pressEffect = 1, relief = 2
         )
 
     def buildRadiusControls(
@@ -227,34 +226,34 @@ class GlobeButtonFactory:
     ) -> None:
         """Create continent radius controls (hidden by default)"""
         radiusLabel = DirectButton(
-            text="RADIUS",
-            pos=( -0.75, 0, 0.58 ),
-            scale=0.04,
-            frameColor=self.__settings.getButtonColor( "label", "background" ),
-            text_fg=self.__settings.getButtonColor( "label", "text" ),
-            relief=0
+            text = "RADIUS",
+            pos = ( -0.75, 0, 0.58 ),
+            scale = 0.04,
+            frameColor = self.__settings.getButtonColor( "label", "background" ),
+            text_fg = self.__settings.getButtonColor( "label", "text" ),
+            relief = 0
         )
         radiusLabel.hide()
 
         self.__radiusPlusBtn = DirectButton(
-            text="+",
-            pos=( -0.57, 0, 0.58 ),
-            scale=0.04,
-            command=onIncrease,
-            frameColor=self.__settings.getButtonColor( "increment", "background" ),
-            text_fg=self.__settings.getButtonColor( "increment", "text" ),
-            pressEffect=1, relief=2
+            text = "+",
+            pos = ( -0.57, 0, 0.58 ),
+            scale = 0.04,
+            command = onIncrease,
+            frameColor = self.__settings.getButtonColor( "increment", "background" ),
+            text_fg = self.__settings.getButtonColor( "increment", "text" ),
+            pressEffect = 1, relief = 2
         )
         self.__radiusPlusBtn.hide()
 
         self.__radiusMinusBtn = DirectButton(
-            text="-",
-            pos=( -0.90, 0, 0.58 ),
-            scale=0.04,
-            command=onDecrease,
-            frameColor=self.__settings.getButtonColor( "increment", "background" ),
-            text_fg=self.__settings.getButtonColor( "increment", "text" ),
-            pressEffect=1, relief=2
+            text = "-",
+            pos = ( -0.90, 0, 0.58 ),
+            scale = 0.04,
+            command = onDecrease,
+            frameColor = self.__settings.getButtonColor( "increment", "background" ),
+            text_fg = self.__settings.getButtonColor( "increment", "text" ),
+            pressEffect = 1, relief = 2
         )
         self.__radiusMinusBtn.hide()
 
@@ -333,4 +332,3 @@ class GlobeButtonFactory:
             self.__radiusPlusBtn, self.__radiusMinusBtn,
         ] + self.__presetButtons
         return [ btn for btn in candidates if btn is not None ]
-

@@ -30,61 +30,61 @@ class GlobeGuiController:
     def __createGuiControls( self ) -> None:
         """Create all GUI buttons and text labels"""
         self.__buttonFactory.buildStepControls(
-            onIncrease=self.__onIncreaseRotationIncrement,
-            onDecrease=self.__onDecreaseRotationIncrement
+            onIncrease = self.__onIncreaseRotationIncrement,
+            onDecrease = self.__onDecreaseRotationIncrement
         )
         self.__buttonFactory.buildZoomControls(
-            onZoomIn=self.__onZoomIn,
-            onZoomOut=self.__onZoomOut
+            onZoomIn = self.__onZoomIn,
+            onZoomOut = self.__onZoomOut
         )
-        self.__buttonFactory.buildResetButton( onReset=self.__onResetView )
+        self.__buttonFactory.buildResetButton( onReset = self.__onResetView )
         self.__buttonFactory.buildRotationButtons(
-            onUp=self.__onRotateUp,
-            onDown=self.__onRotateDown,
-            onLeft=self.__onRotateLeft,
-            onRight=self.__onRotateRight
+            onUp = self.__onRotateUp,
+            onDown = self.__onRotateDown,
+            onLeft = self.__onRotateLeft,
+            onRight = self.__onRotateRight
         )
-        self.__buttonFactory.buildPresetButtons( onPreset=self.__onSetPresetView )
+        self.__buttonFactory.buildPresetButtons( onPreset = self.__onSetPresetView )
         self.__buttonFactory.buildGameControls(
-            onStartGame=self.__onStartGame,
-            onNextChallenge=self.__onNextChallenge,
-            onGameStats=self.__onGameStats
+            onStartGame = self.__onStartGame,
+            onNextChallenge = self.__onNextChallenge,
+            onGameStats = self.__onGameStats
         )
         self.__buttonFactory.buildRadiusControls(
-            onIncrease=self.__onIncreaseRadius,
-            onDecrease=self.__onDecreaseRadius,
-            initialValue=self.__globeApp.continentRadius
+            onIncrease = self.__onIncreaseRadius,
+            onDecrease = self.__onDecreaseRadius,
+            initialValue = self.__globeApp.continentRadius
         )
 
         # Challenge label — bottom-left, pale yellow
         challengeSettings = self.__settings.getChallengeTextSettings()
         self.__challengeDisplay = OnscreenText(
-            text="",
-            pos=challengeSettings[ "pos" ],
-            scale=challengeSettings[ "scale" ],
-            fg=self.__settings.getTextColor( "challenge" ),
-            wordwrap=challengeSettings[ "wordwrap" ],
-            align=TextNode.ALeft
+            text = "",
+            pos = challengeSettings[ "pos" ],
+            scale = challengeSettings[ "scale" ],
+            fg = self.__settings.getTextColor( "challenge" ),
+            wordwrap = challengeSettings[ "wordwrap" ],
+            align = TextNode.ALeft
         )
 
         # Debug label — bottom-right, gray
         debugSettings = self.__settings.getDebugTextSettings()
         self.__debugDisplay = OnscreenText(
-            text="",
-            pos=debugSettings[ "pos" ],
-            scale=debugSettings[ "scale" ],
-            fg=self.__settings.getTextColor( "debug" ),
-            wordwrap=debugSettings[ "wordwrap" ],
-            align=TextNode.ALeft
+            text = "",
+            pos = debugSettings[ "pos" ],
+            scale = debugSettings[ "scale" ],
+            fg = self.__settings.getTextColor( "debug" ),
+            wordwrap = debugSettings[ "wordwrap" ],
+            align = TextNode.ALeft
         )
 
         # Radius value display (hidden)
         self.__radiusDisplay = OnscreenText(
-            text=f"{ self.__globeApp.continentRadius:.2f }",
-            pos=( -0.75, 0.50 ),
-            scale=0.04,
-            fg=( 1.0, 1.0, 1.0, 1.0 ),
-            align=TextNode.ACenter
+            text = f"{ self.__globeApp.continentRadius:.2f }",
+            pos = ( -0.75, 0.50 ),
+            scale = 0.04,
+            fg = ( 1.0, 1.0, 1.0, 1.0 ),
+            align = TextNode.ACenter
         )
         self.__radiusDisplay.hide()
 
