@@ -62,24 +62,6 @@ class GameController:
         """Provide Panda3D accept/ignore wrappers from the ShowBase instance."""
         self.__acceptCallback = accept
         self.__ignoreCallback = ignore
-        accept( "d", self.__printDebugState )
-        accept( "f1", self.__printDebugState )
-        # Auto-print every 5 seconds so we always see state even if key doesn't fire
-        self.__taskManager.doMethodLater( 5.0, self.__autoDebugTask, "autoDebugTask" )
-
-    def __autoDebugTask( self, task ) -> int:
-        self.__printDebugState()
-        return task.again
-
-    def __printDebugState( self ) -> None:
-        camPos = self.__camera.getPos()
-        globeHpr = self.__globe.getHpr()
-        globeQ = self.__globe.getQuat()
-        import sys
-        print( f"[DEBUG] Globe HPR  = H={globeHpr.x:.2f}  P={globeHpr.y:.2f}  R={globeHpr.z:.2f}", flush = True )
-        print( f"[DEBUG] Globe Quat = R={globeQ.getR():.4f}  I={globeQ.getI():.4f}  J={globeQ.getJ():.4f}  K={globeQ.getK():.4f}", flush = True )
-        print( f"[DEBUG] Camera     = x={camPos.x:.3f}  y={camPos.y:.3f}  z={camPos.z:.3f}  dist={camPos.length():.3f}", flush = True )
-        sys.stdout.flush()
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -181,15 +163,6 @@ class GameController:
     def __handleClick( self ) -> None:
         """Convert a mouse click to globe coordinates and score the attempt."""
 
-        # ── DEBUG: always print globe & camera state on any click ──────────
-        camPos = self.__camera.getPos()
-        globeHpr = self.__globe.getHpr()
-        globeQdbg = self.__globe.getQuat()
-        print( f"[FOCUS DEBUG] Globe HPR   = H={globeHpr.x:.2f}  P={globeHpr.y:.2f}  R={globeHpr.z:.2f}" )
-        print( f"[FOCUS DEBUG] Globe Quat  = R={globeQdbg.getR():.4f}  I={globeQdbg.getI():.4f}  J={globeQdbg.getJ():.4f}  K={globeQdbg.getK():.4f}" )
-        print( f"[FOCUS DEBUG] Camera Pos  = x={camPos.x:.3f}  y={camPos.y:.3f}  z={camPos.z:.3f}  dist={camPos.length():.3f}" )
-        # ───────────────────────────────────────────────────────────────────
-
         if not self.__gameMode or not self.__currentChallenge:
             return
 
@@ -199,6 +172,7 @@ class GameController:
         mpos = self.__mouseWatcher.getMouse()
 
         pickerRay = CollisionRay()
+        pickerRay.setFromLens( self.__camNode, mpos.getX(), mpos.getY() )
 
         picker = CollisionTraverser()
         pq = CollisionHandlerQueue()
@@ -235,12 +209,7 @@ class GameController:
             lat = math.degrees( math.asin( max( -1.0, min( 1.0, y ) ) ) )
             lon = math.degrees( math.atan2( x, z ) )
 
-            print( f"[FOCUS DEBUG] Clicked lat={lat:.2f}  lon={lon:.2f}" )
-            if self.__currentChallenge:
-                tLat, tLon = self.__currentChallenge.actual_coordinates
-                print( f"[FOCUS DEBUG] Target  lat={tLat:.2f}  lon={tLon:.2f}  city={self.__currentChallenge.location_name}" )
-
-            self.__log( f"🔴 You clicked: {lat:.2f}°, {lon:.2f}°" )
+            self.__log( f"You clicked: {lat:.2f}, {lon:.2f}" )
             self.__scoreAttempt( ( lat, lon ) )
 
         pickerNP.removeNode()
@@ -347,7 +316,6 @@ class GameController:
             self.__camera.lookAt( 0, 0, 0 )
 
             if t >= 1.0:
-                print( f"[FOCUS DEBUG] Final HPR = H={self.__globe.getH():.1f} P={self.__globe.getP():.1f} (task={taskName})" )
                 return task.done
             return task.cont
 
