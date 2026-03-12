@@ -2,6 +2,7 @@
 Robust World Data Manager - Downloads and caches real world maps permanently
 """
 import os
+import sys
 import pickle
 import geopandas as gpd
 from pathlib import Path
@@ -24,7 +25,12 @@ os.environ['REQUESTS_CA_BUNDLE'] = ''
 
 class WorldDataManager:
     def __init__(self):
-        self.__dataDir = Path(__file__).parent / "world_data"
+        # Support both normal Python and PyInstaller bundle
+        if getattr(sys, 'frozen', False):
+            base = Path(sys._MEIPASS)
+        else:
+            base = Path(__file__).parent
+        self.__dataDir = base / "world_data"
         self.__dataDir.mkdir(exist_ok=True)
         self.__cacheFile = self.__dataDir / "world_continents.pkl"
         self.__rawFile = self.__dataDir / "countries.geojson"
