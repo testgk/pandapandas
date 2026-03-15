@@ -439,7 +439,26 @@ class GameController:
             return f"❌ Error generating stats: {e}"
 
     def __buildDbStatsReport( self ) -> str:
-        """Build a report of database scoring stats (leaderboard)."""
+        """Build a report of database scoring stats (leaderboard) plus current session stats."""
+        report = ""
+
+        # Add current game session stats first
+        if self.__geoGame and len( self.__geoGame.player_history ) > 0:
+            try:
+                a = self.__geoGame.get_performance_analytics()
+                report += "CURRENT SESSION\n\n"
+                report += f"Games Played: {a[ 'overview' ][ 'total_games' ]}\n"
+                report += f"Avg Score: {a[ 'overview' ][ 'average_score' ]:.1f}%\n"
+                report += f"Best Score: {a[ 'overview' ][ 'best_score' ]}%\n"
+                report += f"Avg Distance: {a[ 'distance_analysis' ][ 'average_distance_km' ]:.1f} km\n"
+                report += f"Avg Time: {a[ 'time_analysis' ][ 'average_response_time' ]:.1f}s\n"
+                report += "\n"
+            except Exception:
+                pass
+        else:
+            report += "CURRENT SESSION\n\nNo games played yet.\n\n"
+
+        # Add database leaderboard
         try:
             import sys
             from pathlib import Path
@@ -473,20 +492,21 @@ class GameController:
             """
             totals = db.execute_one( totals_query )
 
+            report += "LEADERBOARD\n\n"
             if not leaderboard:
-                return "LEADERBOARD\n\nNo scores recorded yet.\nPlay some games to see stats!"
+                report += "No scores recorded yet.\n"
+            else:
+                report += f"Total Games: {totals[ 'total_games' ]}\n"
+                report += f"Avg Score: {totals[ 'avg_points' ]:.0f} pts\n"
+                report += f"Best Score: {totals[ 'best_score' ]} pts\n"
+                report += f"Avg Accuracy: {totals[ 'avg_accuracy' ]:.1f}%\n"
+                report += "\n--- TOP SCORES ---\n"
 
-            report = "LEADERBOARD\n\n"
-            report += f"Total Games: {totals[ 'total_games' ]}\n"
-            report += f"Avg Score: {totals[ 'avg_points' ]:.0f} pts\n"
-            report += f"Best Score: {totals[ 'best_score' ]} pts\n"
-            report += f"Avg Accuracy: {totals[ 'avg_accuracy' ]:.1f}%\n"
-            report += "\n--- TOP SCORES ---\n"
-
-            for i, entry in enumerate( leaderboard, 1 ):
-                report += f"#{i} {entry[ 'username' ]}: {entry[ 'points' ]} pts\n"
+                for i, entry in enumerate( leaderboard, 1 ):
+                    report += f"#{i} {entry[ 'username' ]}: {entry[ 'points' ]} pts\n"
 
             return report
 
         except Exception as e:
-            return f"DB Stats Error: {e}\n\nMake sure PostgreSQL is running:\ndocker-compose up -d"
+            report += f"LEADERBOARD\n\nDB Error: {e}\n\nMake sure PostgreSQL is running:\ndocker-compose up -d"
+            return report

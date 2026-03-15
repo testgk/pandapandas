@@ -58,7 +58,7 @@ class UserRepository:
         """
         
         result = self.db.execute_one(query, (username, email, password_hash))
-        return self._row_to_user(result)
+        return self._row_to_user(result) if result is not None else None
     
     def get_by_id(self, user_id: int) -> Optional[User]:
         """Get a user by their ID."""
