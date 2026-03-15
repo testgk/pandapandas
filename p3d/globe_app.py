@@ -33,6 +33,8 @@ MAX_ZOOM_DISTANCE = 80.0
 ZOOM_IN_FACTOR = 0.8
 ZOOM_OUT_FACTOR = 1.25
 CAMERA_SCALE_FACTOR = 15.0 / 21.0
+SMOOTH_ROTATION_SPEED = 120.0   # degrees per second for smooth rotation
+SMOOTH_ROTATION_TASK = "smooth_globe_rotation"
 
 
 
@@ -93,9 +95,13 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         # Initialize private fields with proper typing
         self.__continents: Dict = {}
         self.__globe: Optional[NodePath] = None
-        self.__globeRotationX: int = DEFAULT_ROTATION_X
-        self.__globeRotationY: int = DEFAULT_ROTATION_Y
-        self.__globeRotationZ: int = DEFAULT_ROTATION_Z
+        self.__globeRotationX: float = DEFAULT_ROTATION_X
+        self.__globeRotationY: float = DEFAULT_ROTATION_Y
+        self.__globeRotationZ: float = DEFAULT_ROTATION_Z
+        # Target rotation (smooth movement destination)
+        self.__targetRotationX: float = DEFAULT_ROTATION_X
+        self.__targetRotationY: float = DEFAULT_ROTATION_Y
+        self.__targetRotationZ: float = DEFAULT_ROTATION_Z
         self.__rotationIncrement: int = DEFAULT_ROTATION_INCREMENT
         self.__defaultCameraPos: Tuple[float, float, float] = (6.320225, -12.64045, 4.2134833)
 
@@ -118,6 +124,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.__loadWorldData()
         self.__createGlobe()
         self.__setupCamera()
+        self.taskMgr.add( self.__smoothRotationTask, SMOOTH_ROTATION_TASK )
 
         # Globe navigation GUI — always present
         isGameMode: bool = self.__appMode == AppMode.GAME
@@ -169,17 +176,17 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             raise ValueError(f"Rotation increment must be between {MIN_ROTATION_INCREMENT} and {MAX_ROTATION_INCREMENT} degrees")
 
     @property
-    def globeRotationX(self) -> int:
+    def globeRotationX(self) -> float:
         """Get globe X rotation in degrees"""
         return self.__globeRotationX
 
     @property
-    def globeRotationY(self) -> int:
+    def globeRotationY(self) -> float:
         """Get globe Y rotation in degrees"""
         return self.__globeRotationY
 
     @property
-    def globeRotationZ(self) -> int:
+    def globeRotationZ(self) -> float:
         """Get globe Z rotation in degrees"""
         return self.__globeRotationZ
 
@@ -390,6 +397,41 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         print(f"Camera setup: Position {pos}, Distance: {distance:.1f}")
         print("Mouse controls disabled to prevent camera interference")
 
+    # ��─ Smooth rotation task ────��─────────────────────────────────────────────
+
+    @staticmethod
+    def __lerpAngle( current: float, target: float, speed: float, dt: float ) -> float:
+        """Step current angle toward target at given speed (deg/s), shortest arc."""
+        diff = target - current
+        # Normalise to [-180, 180]
+        diff = ( diff + 180 ) % 360 - 180
+        maxStep = speed * dt
+        if abs( diff ) <= maxStep:
+            return target
+        return current + maxStep * ( 1.0 if diff > 0 else -1.0 )
+
+    def __smoothRotationTask( self, task ) -> int:
+        """Per-frame task: smoothly move globe rotation toward target values."""
+        if self.__globe is None:
+            return task.cont
+
+        dt = globalClock.getDt()  # type: ignore[name-defined]
+        speed = SMOOTH_ROTATION_SPEED
+
+        self.__globeRotationX = self.__lerpAngle(
+            self.__globeRotationX, self.__targetRotationX, speed, dt )
+        self.__globeRotationY = self.__lerpAngle(
+            self.__globeRotationY, self.__targetRotationY, speed, dt )
+        self.__globeRotationZ = self.__lerpAngle(
+            self.__globeRotationZ, self.__targetRotationZ, speed, dt )
+
+        self.__globe.setHpr(
+            self.__globeRotationZ,
+            self.__globeRotationX,
+            self.__globeRotationY
+        )
+        return task.cont
+
     # Public methods for GUI to call
     def zoomIn(self) -> None:
         """Move camera closer to globe center"""
@@ -466,38 +508,33 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.camera.setPos(*self.__defaultCameraPos)
         self.camera.lookAt(0, 0, 0)
 
-        self.__globeRotationX = DEFAULT_ROTATION_X
-        self.__globeRotationY = DEFAULT_ROTATION_Y
-        self.__globeRotationZ = DEFAULT_ROTATION_Z
-        self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
+        self.__targetRotationX = DEFAULT_ROTATION_X
+        self.__targetRotationY = DEFAULT_ROTATION_Y
+        self.__targetRotationZ = DEFAULT_ROTATION_Z
 
         pos = self.camera.getPos()
         distance = pos.length()
         self.__guiController.addDebugMessage(f"RESET: Distance {distance:.1f} | Rotation X={DEFAULT_ROTATION_X}° Y={DEFAULT_ROTATION_Y}° Z={DEFAULT_ROTATION_Z}°")
 
     def rotateUp(self) -> None:
-        """Rotate globe up by increment amount"""
-        self.__globeRotationX += self.__rotationIncrement
-        self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-        self.__guiController.addDebugMessage(f"UP: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+        """Rotate globe up by increment amount (smooth)"""
+        self.__targetRotationX += self.__rotationIncrement
+        self.__guiController.addDebugMessage(f"UP: target X={self.__targetRotationX:.1f}°")
 
     def rotateDown(self) -> None:
-        """Rotate globe down by increment amount"""
-        self.__globeRotationX -= self.__rotationIncrement
-        self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-        self.__guiController.addDebugMessage(f"DOWN: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+        """Rotate globe down by increment amount (smooth)"""
+        self.__targetRotationX -= self.__rotationIncrement
+        self.__guiController.addDebugMessage(f"DOWN: target X={self.__targetRotationX:.1f}°")
 
     def rotateLeft(self) -> None:
-        """Rotate globe left by increment amount"""
-        self.__globeRotationZ -= self.__rotationIncrement
-        self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-        self.__guiController.addDebugMessage(f"LEFT: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+        """Rotate globe left by increment amount (smooth)"""
+        self.__targetRotationZ -= self.__rotationIncrement
+        self.__guiController.addDebugMessage(f"LEFT: target Z={self.__targetRotationZ:.1f}°")
 
     def rotateRight(self) -> None:
-        """Rotate globe right by increment amount"""
-        self.__globeRotationZ += self.__rotationIncrement
-        self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-        self.__guiController.addDebugMessage(f"RIGHT: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+        """Rotate globe right by increment amount (smooth)"""
+        self.__targetRotationZ += self.__rotationIncrement
+        self.__guiController.addDebugMessage(f"RIGHT: target Z={self.__targetRotationZ:.1f}°")
 
     def increaseRotationIncrement(self) -> None:
         """Increase rotation increment by 1 degree (max 30)"""
@@ -516,12 +553,11 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             self.__guiController.addDebugMessage(f"Minimum rotation increment reached ({MIN_ROTATION_INCREMENT}°)")
 
     def setPresetView(self, index: int) -> None:
-        """Set the globe to a specific preset view"""
+        """Set the globe to a specific preset view (smooth transition)"""
         if 0 <= index < len(self.__presetViews):
             chosenView = self.__presetViews[index]
-            self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY = chosenView["rotation"]
-            self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-            self.__guiController.addDebugMessage(f"{chosenView['name']}: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+            self.__targetRotationZ, self.__targetRotationX, self.__targetRotationY = chosenView["rotation"]
+            self.__guiController.addDebugMessage(f"{chosenView['name']}: target X={self.__targetRotationX}° Y={self.__targetRotationY}° Z={self.__targetRotationZ}°")
 
     @property
     def continentRadius( self ) -> float:
