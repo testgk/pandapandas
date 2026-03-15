@@ -1,0 +1,4 @@
+# Ignore all APKs in the output directory, but keep the directory itself
+*.apk
+*.aab
+

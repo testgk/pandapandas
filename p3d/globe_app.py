@@ -450,7 +450,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
     def __debugMessage( self, message: str ) -> None:
         """Route a debug/status message to whichever controller is active."""
         if self.__guiController is not None:
-            self.__debugMessage( message )
+            self.__guiController.addDebugMessage( message )
         elif self.__androidController is not None:
             self.__androidController.setStatusText( message )
 

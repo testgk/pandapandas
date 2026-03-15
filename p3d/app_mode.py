@@ -5,6 +5,7 @@ from enum import Enum
 
 
 class AppMode( Enum ):
-    GLOBE = "globe"   # pure globe viewer, no game
-    GAME  = "game"    # full GeoChallenge game mode
+    GLOBE   = "globe"    # pure globe viewer, no game
+    GAME    = "game"     # full GeoChallenge game mode
+    ANDROID = "android"  # touch-optimised Android/mobile mode
 

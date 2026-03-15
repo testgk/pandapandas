@@ -1,0 +1,38 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GeoChallenge Android APK Builder
+#
+# Usage:
+#   docker compose build            # build the image (downloads SDK / NDK once)
+#   docker compose run --rm apk     # produce the APK in ./output/
+#
+# The finished APK lands at:
+#   build/android/output/geochallenge.apk
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  apk:
+    build:
+      context: ../../           # repo root — so COPY can reach p3d/ and build/
+      dockerfile: build/android/Dockerfile
+
+    container_name: geochallenge-android-builder
+
+    environment:
+      # Override at runtime if needed:
+      #   APP_NAME=geochallenge
+      #   APP_VERSION=1.0
+      #   ANDROID_MODE=android
+      - APP_NAME=${APP_NAME:-geochallenge}
+      - APP_VERSION=${APP_VERSION:-1.0}
+      - APP_PACKAGE=${APP_PACKAGE:-com.geochallenge.game}
+      - ANDROID_MODE=${ANDROID_MODE:-android}
+
+    volumes:
+      # Mount output directory so the APK is accessible on the host
+      - ./output:/app/output
+
+    # Remove container automatically after build finishes
+    restart: "no"
+
