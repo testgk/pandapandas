@@ -176,3 +176,8 @@ Thumbs.db
 *.geojson.cache
 *.shp.cache
 world_data/cache/
+
+# Docker
+docker-compose.override.yml
+.docker/
+postgres_data/

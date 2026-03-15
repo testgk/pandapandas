@@ -441,6 +441,13 @@ class GameController:
     def __buildDbStatsReport( self ) -> str:
         """Build a report of database scoring stats (leaderboard)."""
         try:
+            import sys
+            from pathlib import Path
+            # Add parent directory to path so db module can be found
+            parent_dir = str( Path( __file__ ).resolve().parent.parent.parent )
+            if parent_dir not in sys.path:
+                sys.path.insert( 0, parent_dir )
+            
             from db.connection import get_db_connection
             db = get_db_connection()
             db.connect()
