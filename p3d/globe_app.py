@@ -11,6 +11,7 @@ from typing import Dict, Tuple, List, Optional
 from world_data_manager import WorldDataManager
 from gui.globe_gui_controller import GlobeGuiController
 from gui.game_gui_controller import GameGuiController
+from gui.android_controller import AndroidController
 from interfaces.i_globe_application import IGlobeApplication
 from game.game_controller import GameController
 from game.game_app_delegate import GameAppDelegate
@@ -129,11 +130,20 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.__setupCamera()
         self.taskMgr.add( self.__smoothRotationTask, SMOOTH_ROTATION_TASK )
 
-        # Globe navigation GUI — always present
+        # Globe navigation GUI — always present (desktop modes)
         isGameMode: bool = self.__appMode == AppMode.GAME
-        self.__guiController: GlobeGuiController = GlobeGuiController( self )
+        isAndroidMode: bool = self.__appMode == AppMode.ANDROID
 
-        # Game GUI + logic — game mode only
+        self.__androidController: Optional[ AndroidController ] = None
+
+        if isAndroidMode:
+            # Android mode: single touch-optimised controller handles everything
+            self.__androidController = AndroidController( self )
+            self.__guiController: Optional[ GlobeGuiController ] = None
+        else:
+            self.__guiController: Optional[ GlobeGuiController ] = GlobeGuiController( self )
+
+        # Game GUI + logic — game mode only (desktop)
         self.__gameDelegate: Optional[ GameAppDelegate ] = None
         if isGameMode:
             gameGui = GameGuiController(
@@ -164,6 +174,9 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         if isGameMode:
             print("Auto-starting GeoChallenge for immediate play...")
             self.__gameDelegate.startGame()
+
+        if isAndroidMode:
+            print("Android mode active — touch controls enabled")
 
     # Properties for controlled access to private fields
     @property
@@ -432,16 +445,25 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         )
         return task.cont
 
+    # ── Internal helpers ──────────────────────────────────────────────────────
+
+    def __debugMessage( self, message: str ) -> None:
+        """Route a debug/status message to whichever controller is active."""
+        if self.__guiController is not None:
+            self.__debugMessage( message )
+        elif self.__androidController is not None:
+            self.__androidController.setStatusText( message )
+
     # Public methods for GUI to call
     def zoomIn(self) -> None:
         """Move camera closer to globe center"""
         currentPos = self.camera.getPos()
         currentDistance = currentPos.length()
 
-        self.__guiController.addDebugMessage(f"ZOOM IN - Distance: {currentDistance:.1f}")
+        self.__debugMessage(f"ZOOM IN - Distance: {currentDistance:.1f}")
 
         if currentDistance < 0.1:
-            self.__guiController.addDebugMessage("Camera reset to default position")
+            self.__debugMessage("Camera reset to default position")
             self.camera.setPos(*self.__defaultCameraPos)
             self.camera.lookAt(0, 0, 0)
             return
@@ -449,7 +471,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         targetDistance = max(currentDistance * ZOOM_IN_FACTOR, MIN_ZOOM_DISTANCE)
 
         if targetDistance >= currentDistance - 0.1:
-            self.__guiController.addDebugMessage("Already at minimum zoom distance")
+            self.__debugMessage("Already at minimum zoom distance")
             return
 
         directionX = currentPos.x / currentDistance
@@ -466,17 +488,17 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.camera.lookAt(0, 0, 0)
 
         verifyDistance = self.camera.getPos().length()
-        self.__guiController.addDebugMessage(f"Zoomed in to distance: {verifyDistance:.1f}")
+        self.__debugMessage(f"Zoomed in to distance: {verifyDistance:.1f}")
 
     def zoomOut(self) -> None:
         """Move camera further from globe center"""
         currentPos = self.camera.getPos()
         currentDistance = currentPos.length()
 
-        self.__guiController.addDebugMessage(f"ZOOM OUT - Distance: {currentDistance:.1f}")
+        self.__debugMessage(f"ZOOM OUT - Distance: {currentDistance:.1f}")
 
         if currentDistance < 0.1:
-            self.__guiController.addDebugMessage("Camera reset to default position")
+            self.__debugMessage("Camera reset to default position")
             self.camera.setPos(*self.__defaultCameraPos)
             self.camera.lookAt(0, 0, 0)
             return
@@ -484,7 +506,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         targetDistance = min(currentDistance * ZOOM_OUT_FACTOR, MAX_ZOOM_DISTANCE)
 
         if targetDistance <= currentDistance + 0.1:
-            self.__guiController.addDebugMessage("Already at maximum zoom distance")
+            self.__debugMessage("Already at maximum zoom distance")
             return
 
         directionX = currentPos.x / currentDistance
@@ -501,7 +523,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.camera.lookAt(0, 0, 0)
 
         verifyDistance = self.camera.getPos().length()
-        self.__guiController.addDebugMessage(f"Zoomed out to distance: {verifyDistance:.1f}")
+        self.__debugMessage(f"Zoomed out to distance: {verifyDistance:.1f}")
 
     def resetView(self) -> None:
         """Reset camera position and globe rotation to default, killing all spin."""
@@ -518,43 +540,43 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
 
         pos = self.camera.getPos()
         distance = pos.length()
-        self.__guiController.addDebugMessage(f"RESET: Distance {distance:.1f} | X={DEFAULT_ROTATION_X}° Z={DEFAULT_ROTATION_Z}°")
+        self.__debugMessage(f"RESET: Distance {distance:.1f} | X={DEFAULT_ROTATION_X}° Z={DEFAULT_ROTATION_Z}°")
 
     def rotateUp(self) -> None:
         """Apply upward spin impulse."""
         self.__velocityX = min( self.__velocityX + ROTATION_IMPULSE, MAX_ROTATION_VELOCITY )
-        self.__guiController.addDebugMessage(f"UP: vX={self.__velocityX:.1f} deg/s")
+        self.__debugMessage(f"UP: vX={self.__velocityX:.1f} deg/s")
 
     def rotateDown(self) -> None:
         """Apply downward spin impulse."""
         self.__velocityX = max( self.__velocityX - ROTATION_IMPULSE, -MAX_ROTATION_VELOCITY )
-        self.__guiController.addDebugMessage(f"DOWN: vX={self.__velocityX:.1f} deg/s")
+        self.__debugMessage(f"DOWN: vX={self.__velocityX:.1f} deg/s")
 
     def rotateLeft(self) -> None:
         """Apply leftward spin impulse."""
         self.__velocityZ = max( self.__velocityZ - ROTATION_IMPULSE, -MAX_ROTATION_VELOCITY )
-        self.__guiController.addDebugMessage(f"LEFT: vZ={self.__velocityZ:.1f} deg/s")
+        self.__debugMessage(f"LEFT: vZ={self.__velocityZ:.1f} deg/s")
 
     def rotateRight(self) -> None:
         """Apply rightward spin impulse."""
         self.__velocityZ = min( self.__velocityZ + ROTATION_IMPULSE, MAX_ROTATION_VELOCITY )
-        self.__guiController.addDebugMessage(f"RIGHT: vZ={self.__velocityZ:.1f} deg/s")
+        self.__debugMessage(f"RIGHT: vZ={self.__velocityZ:.1f} deg/s")
 
     def increaseRotationIncrement(self) -> None:
         """Increase rotation increment by 1 degree (max 30)"""
         if self.__rotationIncrement < MAX_ROTATION_INCREMENT:
             self.__rotationIncrement += 1
-            self.__guiController.addDebugMessage(f"Rotation increment increased to {self.__rotationIncrement}°")
+            self.__debugMessage(f"Rotation increment increased to {self.__rotationIncrement}°")
         else:
-            self.__guiController.addDebugMessage(f"Maximum rotation increment reached ({MAX_ROTATION_INCREMENT}°)")
+            self.__debugMessage(f"Maximum rotation increment reached ({MAX_ROTATION_INCREMENT}°)")
 
     def decreaseRotationIncrement(self) -> None:
         """Decrease rotation increment by 1 degree (min 1)"""
         if self.__rotationIncrement > MIN_ROTATION_INCREMENT:
             self.__rotationIncrement -= 1
-            self.__guiController.addDebugMessage(f"Rotation increment decreased to {self.__rotationIncrement}°")
+            self.__debugMessage(f"Rotation increment decreased to {self.__rotationIncrement}°")
         else:
-            self.__guiController.addDebugMessage(f"Minimum rotation increment reached ({MIN_ROTATION_INCREMENT}°)")
+            self.__debugMessage(f"Minimum rotation increment reached ({MIN_ROTATION_INCREMENT}°)")
 
     def setPresetView(self, index: int) -> None:
         """Snap the globe to a preset view and kill all spin."""
@@ -567,7 +589,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             self.__globeRotationY = float( y )
             self.__globeRotationZ = float( z )
             self.__globe.setHpr( z, x, y )
-            self.__guiController.addDebugMessage(f"{chosenView['name']}: X={x}° Y={y}° Z={z}°")
+            self.__debugMessage(f"{chosenView['name']}: X={x}° Y={y}° Z={z}°")
 
     @property
     def continentRadius( self ) -> float:
