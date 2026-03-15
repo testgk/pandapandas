@@ -20,6 +20,7 @@ class GameGuiController:
         onGameStats: Callable,
         onHint: Callable,
         taskManager,
+        onDbStats: Callable = None,
     ):
         self.__settings: GuiSettingsManager = GuiSettingsManager()
         self.__taskManager = taskManager
@@ -28,10 +29,11 @@ class GameGuiController:
         self.__startGameBtn: Optional[ DirectButton ] = None
         self.__nextChallengeBtn: Optional[ DirectButton ] = None
         self.__gameStatsBtn: Optional[ DirectButton ] = None
+        self.__dbStatsBtn: Optional[ DirectButton ] = None
         self.__hintBtn: Optional[ DirectButton ] = None
         self.__challengeDisplay: Optional[ OnscreenText ] = None
 
-        self.__buildButtons( onStartGame, onNextChallenge, onGameStats, onHint )
+        self.__buildButtons( onStartGame, onNextChallenge, onGameStats, onHint, onDbStats )
         self.__buildChallengeDisplay()
 
     # ── Build ─────────────────────────────────────────────────────────────────
@@ -42,6 +44,7 @@ class GameGuiController:
         onNextChallenge: Callable,
         onGameStats: Callable,
         onHint: Callable,
+        onDbStats: Callable = None,
     ) -> None:
         self.__startGameBtn = DirectButton(
             text = self.__settings.getTextContent( "start_game" ),
@@ -73,6 +76,17 @@ class GameGuiController:
             text_fg = self.__settings.getButtonColor( "control", "text" ),
             pressEffect = 1, relief = 2
         )
+
+        if onDbStats:
+            self.__dbStatsBtn = DirectButton(
+                text = self.__settings.getTextContent( "db_stats" ),
+                pos = self.__settings.getButtonPosition( "game", "db_stats_position" ),
+                scale = self.__settings.getButtonScale( "game" ),
+                command = lambda: ( self.__applyButtonEffect( self.__dbStatsBtn ), onDbStats() ),
+                frameColor = self.__settings.getButtonColor( "control", "background" ),
+                text_fg = self.__settings.getButtonColor( "control", "text" ),
+                pressEffect = 1, relief = 2
+            )
 
         self.__hintBtn = DirectButton(
             text = self.__settings.getTextContent( "hint" ),

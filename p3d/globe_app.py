@@ -142,6 +142,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
                 onGameStats = lambda: self.__gameDelegate.showGameStats(),
                 onHint = lambda: self.__gameDelegate.onHint(),
                 taskManager = self.taskMgr,
+                onDbStats = lambda: self.__gameDelegate.showDbStats(),
             )
             gameController = GameController(
                 globeNodePath = self.__globe,

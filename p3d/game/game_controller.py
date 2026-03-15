@@ -134,6 +134,10 @@ class GameController:
         """Display performance analytics in the challenge log."""
         self.__log( self.__buildStatsReport() )
 
+    def showDbStats( self ) -> None:
+        """Display database scoring stats (leaderboard) in the challenge log."""
+        self.__log( self.__buildDbStatsReport() )
+
     # ── Private helpers ───────────────────────────────────────────────────────
 
     @staticmethod
@@ -433,3 +437,49 @@ class GameController:
             return report
         except Exception as e:
             return f"❌ Error generating stats: {e}"
+
+    def __buildDbStatsReport( self ) -> str:
+        """Build a report of database scoring stats (leaderboard)."""
+        try:
+            from db.connection import get_db_connection
+            db = get_db_connection()
+            db.connect()
+
+            # Get leaderboard data
+            leaderboard_query = """
+                SELECT u.username, s.points, s.accuracy, s.game_mode, s.achieved_at
+                FROM scores s
+                JOIN users u ON s.user_id = u.id
+                ORDER BY s.points DESC
+                LIMIT 10
+            """
+            leaderboard = db.execute( leaderboard_query )
+
+            # Get total stats
+            totals_query = """
+                SELECT 
+                    COUNT(*) as total_games,
+                    COALESCE(AVG(points), 0) as avg_points,
+                    COALESCE(MAX(points), 0) as best_score,
+                    COALESCE(AVG(accuracy), 0) as avg_accuracy
+                FROM scores
+            """
+            totals = db.execute_one( totals_query )
+
+            if not leaderboard:
+                return "LEADERBOARD\n\nNo scores recorded yet.\nPlay some games to see stats!"
+
+            report = "LEADERBOARD\n\n"
+            report += f"Total Games: {totals[ 'total_games' ]}\n"
+            report += f"Avg Score: {totals[ 'avg_points' ]:.0f} pts\n"
+            report += f"Best Score: {totals[ 'best_score' ]} pts\n"
+            report += f"Avg Accuracy: {totals[ 'avg_accuracy' ]:.1f}%\n"
+            report += "\n--- TOP SCORES ---\n"
+
+            for i, entry in enumerate( leaderboard, 1 ):
+                report += f"#{i} {entry[ 'username' ]}: {entry[ 'points' ]} pts\n"
+
+            return report
+
+        except Exception as e:
+            return f"DB Stats Error: {e}\n\nMake sure PostgreSQL is running:\ndocker-compose up -d"
