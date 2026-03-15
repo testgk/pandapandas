@@ -15,6 +15,7 @@ lib64/
 parts/
 sdist/
 var/
+launch/game/
 wheels/
 pip-wheel-metadata/
 share/python-wheels/
@@ -177,7 +178,14 @@ Thumbs.db
 *.shp.cache
 world_data/cache/
 
-# Docker
+# Docker (moved to geochallenge-backend project)
+docker-compose.yml
 docker-compose.override.yml
 .docker/
 postgres_data/
+
+# Backend project (lives in ../geochallenge-backend)
+db/
+entities/
+services/
+

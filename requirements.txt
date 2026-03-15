@@ -5,8 +5,7 @@ pyproj>=3.6.0
 fiona>=1.9.0
 rtree>=1.3.0
 
-# Database
+# Optional - database leaderboard (requires geochallenge-backend running)
 psycopg2-binary>=2.9.9
-bcrypt>=4.1.0
 python-dotenv>=1.0.0
 

@@ -462,11 +462,11 @@ class GameController:
         try:
             import sys
             from pathlib import Path
-            # Add parent directory to path so db module can be found
-            parent_dir = str( Path( __file__ ).resolve().parent.parent.parent )
-            if parent_dir not in sys.path:
-                sys.path.insert( 0, parent_dir )
-            
+            # db module lives in the sibling geochallenge-backend project
+            backend_dir = str( Path( __file__ ).resolve().parent.parent.parent.parent / "geochallenge-backend" )
+            if backend_dir not in sys.path:
+                sys.path.insert( 0, backend_dir )
+
             from db.connection import get_db_connection
             db = get_db_connection()
             db.connect()
