@@ -33,6 +33,12 @@ MAX_ZOOM_DISTANCE = 80.0
 ZOOM_IN_FACTOR = 0.8
 ZOOM_OUT_FACTOR = 1.25
 CAMERA_SCALE_FACTOR = 15.0 / 21.0
+SMOOTH_ROTATION_SPEED = 120.0   # degrees per second for smooth rotation  (kept for reference)
+SMOOTH_ROTATION_TASK = "smooth_globe_rotation"
+ROTATION_IMPULSE = 90.0         # deg/s added to velocity per button press
+ROTATION_DAMPING = 2.8          # friction constant  (velocity *= e^(-k*dt) each frame)
+MAX_ROTATION_VELOCITY = 400.0   # cap so rapid clicks don't spin too wildly
+MIN_VELOCITY_THRESHOLD = 0.05   # deg/s — treat as stopped below this
 
 
 
@@ -93,9 +99,12 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         # Initialize private fields with proper typing
         self.__continents: Dict = {}
         self.__globe: Optional[NodePath] = None
-        self.__globeRotationX: int = DEFAULT_ROTATION_X
-        self.__globeRotationY: int = DEFAULT_ROTATION_Y
-        self.__globeRotationZ: int = DEFAULT_ROTATION_Z
+        self.__globeRotationX: float = DEFAULT_ROTATION_X
+        self.__globeRotationY: float = DEFAULT_ROTATION_Y
+        self.__globeRotationZ: float = DEFAULT_ROTATION_Z
+        # Angular velocity for inertia-based rotation (deg/s)
+        self.__velocityX: float = 0.0
+        self.__velocityZ: float = 0.0
         self.__rotationIncrement: int = DEFAULT_ROTATION_INCREMENT
         self.__defaultCameraPos: Tuple[float, float, float] = (6.320225, -12.64045, 4.2134833)
 
@@ -118,6 +127,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.__loadWorldData()
         self.__createGlobe()
         self.__setupCamera()
+        self.taskMgr.add( self.__smoothRotationTask, SMOOTH_ROTATION_TASK )
 
         # Globe navigation GUI — always present
         isGameMode: bool = self.__appMode == AppMode.GAME
@@ -169,17 +179,17 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             raise ValueError(f"Rotation increment must be between {MIN_ROTATION_INCREMENT} and {MAX_ROTATION_INCREMENT} degrees")
 
     @property
-    def globeRotationX(self) -> int:
+    def globeRotationX(self) -> float:
         """Get globe X rotation in degrees"""
         return self.__globeRotationX
 
     @property
-    def globeRotationY(self) -> int:
+    def globeRotationY(self) -> float:
         """Get globe Y rotation in degrees"""
         return self.__globeRotationY
 
     @property
-    def globeRotationZ(self) -> int:
+    def globeRotationZ(self) -> float:
         """Get globe Z rotation in degrees"""
         return self.__globeRotationZ
 
@@ -390,6 +400,37 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         print(f"Camera setup: Position {pos}, Distance: {distance:.1f}")
         print("Mouse controls disabled to prevent camera interference")
 
+    # ── Inertia rotation task ─────────────────────────────────────────────────
+
+    def __smoothRotationTask( self, task ) -> int:
+        """Per-frame: apply angular velocity with exponential friction (ball-throw feel)."""
+        if self.__globe is None:
+            return task.cont
+
+        dt: float = globalClock.getDt()  # type: ignore[name-defined]
+
+        # Friction: velocity decays exponentially — strong at first, coasts to a stop
+        decay: float = math.exp( -ROTATION_DAMPING * dt )
+        self.__velocityX *= decay
+        self.__velocityZ *= decay
+
+        # Snap to zero when negligible so globe truly stops
+        if abs( self.__velocityX ) < MIN_VELOCITY_THRESHOLD:
+            self.__velocityX = 0.0
+        if abs( self.__velocityZ ) < MIN_VELOCITY_THRESHOLD:
+            self.__velocityZ = 0.0
+
+        # Integrate velocity into current angles
+        self.__globeRotationX += self.__velocityX * dt
+        self.__globeRotationZ += self.__velocityZ * dt
+
+        self.__globe.setHpr(
+            self.__globeRotationZ,
+            self.__globeRotationX,
+            self.__globeRotationY
+        )
+        return task.cont
+
     # Public methods for GUI to call
     def zoomIn(self) -> None:
         """Move camera closer to globe center"""
@@ -462,42 +503,41 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         self.__guiController.addDebugMessage(f"Zoomed out to distance: {verifyDistance:.1f}")
 
     def resetView(self) -> None:
-        """Reset camera position and globe rotation to default"""
+        """Reset camera position and globe rotation to default, killing all spin."""
         self.camera.setPos(*self.__defaultCameraPos)
         self.camera.lookAt(0, 0, 0)
 
+        # Kill momentum and snap straight to default
+        self.__velocityX = 0.0
+        self.__velocityZ = 0.0
         self.__globeRotationX = DEFAULT_ROTATION_X
         self.__globeRotationY = DEFAULT_ROTATION_Y
         self.__globeRotationZ = DEFAULT_ROTATION_Z
-        self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
+        self.__globe.setHpr( DEFAULT_ROTATION_Z, DEFAULT_ROTATION_X, DEFAULT_ROTATION_Y )
 
         pos = self.camera.getPos()
         distance = pos.length()
-        self.__guiController.addDebugMessage(f"RESET: Distance {distance:.1f} | Rotation X={DEFAULT_ROTATION_X}° Y={DEFAULT_ROTATION_Y}° Z={DEFAULT_ROTATION_Z}°")
+        self.__guiController.addDebugMessage(f"RESET: Distance {distance:.1f} | X={DEFAULT_ROTATION_X}° Z={DEFAULT_ROTATION_Z}°")
 
     def rotateUp(self) -> None:
-        """Rotate globe up by increment amount"""
-        self.__globeRotationX += self.__rotationIncrement
-        self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-        self.__guiController.addDebugMessage(f"UP: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+        """Apply upward spin impulse."""
+        self.__velocityX = min( self.__velocityX + ROTATION_IMPULSE, MAX_ROTATION_VELOCITY )
+        self.__guiController.addDebugMessage(f"UP: vX={self.__velocityX:.1f} deg/s")
 
     def rotateDown(self) -> None:
-        """Rotate globe down by increment amount"""
-        self.__globeRotationX -= self.__rotationIncrement
-        self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-        self.__guiController.addDebugMessage(f"DOWN: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+        """Apply downward spin impulse."""
+        self.__velocityX = max( self.__velocityX - ROTATION_IMPULSE, -MAX_ROTATION_VELOCITY )
+        self.__guiController.addDebugMessage(f"DOWN: vX={self.__velocityX:.1f} deg/s")
 
     def rotateLeft(self) -> None:
-        """Rotate globe left by increment amount"""
-        self.__globeRotationZ -= self.__rotationIncrement
-        self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-        self.__guiController.addDebugMessage(f"LEFT: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+        """Apply leftward spin impulse."""
+        self.__velocityZ = max( self.__velocityZ - ROTATION_IMPULSE, -MAX_ROTATION_VELOCITY )
+        self.__guiController.addDebugMessage(f"LEFT: vZ={self.__velocityZ:.1f} deg/s")
 
     def rotateRight(self) -> None:
-        """Rotate globe right by increment amount"""
-        self.__globeRotationZ += self.__rotationIncrement
-        self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-        self.__guiController.addDebugMessage(f"RIGHT: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+        """Apply rightward spin impulse."""
+        self.__velocityZ = min( self.__velocityZ + ROTATION_IMPULSE, MAX_ROTATION_VELOCITY )
+        self.__guiController.addDebugMessage(f"RIGHT: vZ={self.__velocityZ:.1f} deg/s")
 
     def increaseRotationIncrement(self) -> None:
         """Increase rotation increment by 1 degree (max 30)"""
@@ -516,12 +556,17 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
             self.__guiController.addDebugMessage(f"Minimum rotation increment reached ({MIN_ROTATION_INCREMENT}°)")
 
     def setPresetView(self, index: int) -> None:
-        """Set the globe to a specific preset view"""
+        """Snap the globe to a preset view and kill all spin."""
         if 0 <= index < len(self.__presetViews):
             chosenView = self.__presetViews[index]
-            self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY = chosenView["rotation"]
-            self.__globe.setHpr(self.__globeRotationZ, self.__globeRotationX, self.__globeRotationY)
-            self.__guiController.addDebugMessage(f"{chosenView['name']}: X={self.__globeRotationX}° Y={self.__globeRotationY}° Z={self.__globeRotationZ}°")
+            z, x, y = chosenView["rotation"]
+            self.__velocityX = 0.0
+            self.__velocityZ = 0.0
+            self.__globeRotationX = float( x )
+            self.__globeRotationY = float( y )
+            self.__globeRotationZ = float( z )
+            self.__globe.setHpr( z, x, y )
+            self.__guiController.addDebugMessage(f"{chosenView['name']}: X={x}° Y={y}° Z={z}°")
 
     @property
     def continentRadius( self ) -> float:
