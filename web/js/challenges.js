@@ -3,7 +3,7 @@
  * All game logic is handled by the backend API.
  */
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = 'https://geochallenge-api.onrender.com/api';
 
 /**
  * Fetch challenges from the backend API.
