@@ -241,8 +241,8 @@ class GameController:
             if len( self.__geoGame.player_history ) > 1:
                 analytics = self.__geoGame.get_performance_analytics()
                 avgScore = analytics[ 'overview' ][ 'average_score' ]
-                trend = "📈 Improving" if attempt.accuracy_score > avgScore else "📉 Below average"
-                resultText += f"📊 {trend} (Avg: {avgScore:.0f}%)\n"
+                trend = "Improving" if attempt.accuracy_score > avgScore else "Below average"
+                resultText += f"[STATS] {trend} (Avg: {avgScore:.0f}%)\n"
 
             resultText += self.__scoreFeedback( attempt.accuracy_score )
 
@@ -423,11 +423,11 @@ class GameController:
 
     def __buildStatsReport( self ) -> str:
         if not self.__geoGame or len( self.__geoGame.player_history ) == 0:
-            return "📊 No statistics yet. Play some challenges first!"
+            return "[STATS] No statistics yet. Play some challenges first!"
         try:
             a = self.__geoGame.get_performance_analytics()
             report = (
-                f"📊 GEOCHALLENGE STATS\n"
+                f"[STATS] GEOCHALLENGE STATS\n"
                 f"🎮 Games: {a[ 'overview' ][ 'total_games' ]}\n"
                 f"🏆 Avg Score: {a[ 'overview' ][ 'average_score' ]:.1f}%\n"
                 f"🎯 Best: {a[ 'overview' ][ 'best_score' ]}%\n"
