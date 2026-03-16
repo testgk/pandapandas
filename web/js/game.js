@@ -7,6 +7,7 @@
 const gameState = {
     globe: null,
     currentChallenge: null,
+    guessSubmitted: false,
     score: 0,
     streak: 0,
     challengeNumber: 0,
@@ -106,6 +107,7 @@ async function nextChallenge() {
         
         gameState.challengeNumber++;
         gameState.hintIndex = 0;
+        gameState.guessSubmitted = false; // Allow new guess
         
         // Update UI
         document.getElementById('challenge-number').textContent = `Challenge ${gameState.challengeNumber}`;
@@ -144,6 +146,9 @@ async function nextChallenge() {
  */
 async function handleGlobeClick({ lat, lng }) {
     if (!gameState.currentChallenge) return;
+    if (gameState.guessSubmitted) return; // Prevent multiple submissions
+    
+    gameState.guessSubmitted = true;
     
     try {
         // Submit guess to API
@@ -333,13 +338,42 @@ function showResult(result) {
 }
 
 /**
- * Show additional hints
+ * Show additional hints and zoom near the target location
  */
 function showHint() {
     if (!gameState.currentChallenge) return;
     
     gameState.hintIndex++;
     updateHints();
+    
+    // Zoom near the target location with random offset (like Panda3D)
+    zoomToHint();
+}
+
+/**
+ * Zoom camera near the challenge target with a random offset (doesn't reveal exact location)
+ */
+function zoomToHint() {
+    if (!gameState.currentChallenge) return;
+    
+    // Challenge uses latitude/longitude directly
+    const actualLat = gameState.currentChallenge.latitude;
+    const actualLng = gameState.currentChallenge.longitude;
+    
+    // Random offset: 15-25 degrees in a random direction (same as Panda3D)
+    const offsetDist = 15 + Math.random() * 10; // 15-25 degrees
+    const offsetAngle = Math.random() * 360;
+    
+    let hintLat = actualLat + offsetDist * Math.cos(offsetAngle * Math.PI / 180);
+    let hintLng = actualLng + offsetDist * Math.sin(offsetAngle * Math.PI / 180);
+    
+    // Clamp latitude to valid range
+    hintLat = Math.max(-85, Math.min(85, hintLat));
+    
+    console.log(`Hint zoom: actual (${actualLat}, ${actualLng}) -> hint (${hintLat.toFixed(2)}, ${hintLng.toFixed(2)})`);
+    
+    // Animate camera to the hint location (zoomed in)
+    gameState.globe.pointOfView({ lat: hintLat, lng: hintLng, altitude: 0.8 }, 1000);
 }
 
 /**
