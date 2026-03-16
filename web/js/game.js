@@ -44,6 +44,12 @@ function initGlobe() {
         .height(container.clientHeight)
         .pointOfView({ lat: 30, lng: 0, altitude: 2.5 })
         .onGlobeClick(handleGlobeClick)
+        // Configure polygon layer for country borders
+        .polygonsData([])
+        .polygonCapColor(() => 'rgba(255, 255, 100, 0.15)')
+        .polygonSideColor(() => 'rgba(255, 255, 100, 0.1)')
+        .polygonStrokeColor(() => '#ffff00')
+        .polygonAltitude(0.01)
         (container);
     
     // Handle window resize
@@ -130,7 +136,11 @@ async function nextChallenge() {
         gameState.globe
             .pointsData([])
             .pathsData([])
-            .arcsData([]);
+            .arcsData([])
+            .polygonsData([]);
+        
+        // Fetch and display country border
+        displayCountryBorder(gameState.currentChallenge.country);
         
         // Focus camera on continent
         focusOnContinent(gameState.currentChallenge.continent);
@@ -230,6 +240,25 @@ function showResultMarkers(guessLat, guessLng, actualLat, actualLng) {
         .arcDashLength(0.5)
         .arcDashGap(0.1)
         .arcDashAnimateTime(2000);
+}
+
+/**
+ * Fetch and display country border on the globe
+ */
+async function displayCountryBorder(countryName) {
+    try {
+        const boundary = await getCountryBoundary(countryName);
+        if (!boundary || !boundary.geometry) {
+            console.warn('No boundary data for:', countryName);
+            return;
+        }
+        
+        // Convert GeoJSON Feature to the format Globe.GL expects
+        gameState.globe.polygonsData([boundary]);
+        
+    } catch (error) {
+        console.warn('Error displaying country border:', error);
+    }
 }
 
 /**

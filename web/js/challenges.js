@@ -84,6 +84,20 @@ async function getGlobalScoringZones() {
     return await response.json();
 }
 
+/**
+ * Fetch country boundary GeoJSON for displaying borders on the globe.
+ */
+async function getCountryBoundary(countryName) {
+    try {
+        const response = await fetch(`${API_BASE}/boundaries/country/${encodeURIComponent(countryName)}`);
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (error) {
+        console.warn('Failed to fetch country boundary:', error);
+        return null;
+    }
+}
+
 // Legacy compatibility - these now call the API
 const CHALLENGES = [];
 
