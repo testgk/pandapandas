@@ -364,7 +364,8 @@ async function drawScoringZones(challengeId, centerLat, centerLng) {
             .pathStroke(2.5)
             .pathDashLength(1)
             .pathDashGap(0)
-            .pathDashAnimateTime(0);
+            .pathDashAnimateTime(0)
+            .pathPointAlt(0.03);  // Render above country polygon
             
     } catch (error) {
         console.error('Error drawing scoring zones:', error);
