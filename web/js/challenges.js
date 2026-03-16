@@ -65,6 +65,25 @@ async function submitGuess(challengeId, guessedLat, guessedLng) {
     return await response.json();
 }
 
+/**
+ * Fetch scoring zones for a challenge (for drawing rings).
+ */
+async function getScoringZones(challengeId) {
+    const response = await fetch(`${API_BASE}/challenges/${challengeId}/scoring-zones`);
+    if (!response.ok) throw new Error('Failed to get scoring zones');
+    return await response.json();
+}
+
+/**
+ * Fetch global scoring zone boundaries (single source of truth).
+ * Zone fractions are the same for all challenges.
+ */
+async function getGlobalScoringZones() {
+    const response = await fetch(`${API_BASE}/scoring/zones`);
+    if (!response.ok) throw new Error('Failed to get scoring zones');
+    return await response.json();
+}
+
 // Legacy compatibility - these now call the API
 const CHALLENGES = [];
 

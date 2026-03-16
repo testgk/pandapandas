@@ -1,9 +1,11 @@
 """
 Game Markers — Panda3D geometry helpers for placing visual feedback on the globe.
 Creates disk, X-mark, scoring-ring and city-label nodes aligned to the globe surface.
+Scoring zone configuration is fetched from the backend API (single source of truth).
 """
 from math import cos, sin, pi
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Dict
+import requests
 
 from panda3d.core import (
     Geom, GeomNode, GeomTriangles, GeomVertexData,
@@ -14,22 +16,79 @@ from panda3d.core import (
 
 DISK_SEGMENTS = 48
 
-# Scoring zones: outermost→innermost — ( fraction_of_threshold, RGBA, depth_offset )
-# Keep offsets LOW so the click X (depthOffset=20) always renders above them.
-# Scoring zones: ( innerFraction, outerFraction, RGBA, depth_offset )
-# Rings get progressively wider outward: green narrow → red wide
-SCORING_ZONES: List[ Tuple[ float, float, Tuple[ float, float, float, float ], int ] ] = [
-    ( 0.00, 0.15, ( 0.1, 0.85, 0.15, 0.80 ), 4 ),   # green  — best   (innermost, narrow)
-    ( 0.15, 0.45, ( 1.0, 0.90, 0.0,  0.70 ), 3 ),   # yellow
-    ( 0.45, 0.80, ( 1.0, 0.55, 0.0,  0.60 ), 2 ),   # orange
-    ( 0.80, 1.20, ( 1.0, 0.15, 0.0,  0.55 ), 1 ),   # red    — worst  (outermost, widest)
-]
+# Visual styling for zones (rendering-engine specific, not boundaries)
+ZONE_COLORS: Dict[str, Tuple[float, float, float, float]] = {
+    "green": ( 0.1, 0.85, 0.15, 0.80 ),
+    "yellow": ( 1.0, 0.90, 0.0, 0.70 ),
+    "orange": ( 1.0, 0.55, 0.0, 0.60 ),
+    "red": ( 1.0, 0.15, 0.0, 0.55 ),
+}
+
+# Depth offsets for z-ordering (higher = renders on top)
+ZONE_DEPTH_OFFSETS: Dict[str, int] = {
+    "green": 4,
+    "yellow": 3,
+    "orange": 2,
+    "red": 1,
+}
 
 # Multiplier applied on top of the km→local conversion to make rings visually larger
-RING_SCALE_MULTIPLIER = 3.5
+RING_SCALE_MULTIPLIER = 4.5
 
 # Earth radius in km — used to convert km distances to globe local-space units
 EARTH_RADIUS_KM = 6371.0
+
+# Backend API base URL
+API_BASE_URL = "http://localhost:8000/api"
+
+# Cached zone boundaries from API (fractions are global, only fetch once)
+_cachedZoneBoundaries: Optional[List[Dict]] = None
+
+
+def fetchZoneBoundariesFromAPI() -> Optional[List[Dict]]:
+    """
+    Fetch zone boundaries from the backend API.
+    Note: Zone fractions are GLOBAL (same for all challenges).
+    Backend is THE single source of truth.
+    """
+    global _cachedZoneBoundaries
+    
+    # Return cached if available
+    if _cachedZoneBoundaries:
+        return _cachedZoneBoundaries
+    
+    try:
+        response = requests.get(f"{API_BASE_URL}/scoring/zones", timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            _cachedZoneBoundaries = data.get("zones", None)
+            return _cachedZoneBoundaries
+    except Exception as e:
+        print(f"Warning: Could not fetch scoring zones from API: {e}")
+    return None
+
+
+def getZonesConfig() -> List[Tuple[float, float, Tuple[float, float, float, float], int]]:
+    """
+    Get scoring zones configuration from the backend API.
+    Backend defines the boundaries; we add visual styling (colors, depth).
+    """
+    apiZones = fetchZoneBoundariesFromAPI()
+    if not apiZones:
+        print("Warning: No scoring zones available from API")
+        return []
+    
+    # Convert API response to our rendering tuple format
+    zones = []
+    for zone in apiZones:
+        inner = zone["inner"]
+        outer = zone["outer"]
+        colorName = zone["color"]
+        color = ZONE_COLORS.get(colorName, (1.0, 1.0, 1.0, 0.5))
+        depth = ZONE_DEPTH_OFFSETS.get(colorName, 0)
+        zones.append((inner, outer, color, depth))
+    
+    return zones
 
 
 def createAnnulus(
@@ -99,13 +158,17 @@ def createTargetRings(
     globeScale: float,
 ) -> List[ NodePath ]:
     """
-    Create 4 equal-width concentric ring bands centred on the answer location.
+    Create concentric ring bands centred on the answer location.
+    Zone boundaries are fetched from the backend API (single source of truth).
     Green (innermost) → yellow → orange → red (outermost).
     """
     maxLocalRadius = ( thresholdKm / ( EARTH_RADIUS_KM * globeScale ) ) * RING_SCALE_MULTIPLIER
 
+    # Get zone boundaries from backend API (global, same for all challenges)
+    zones = getZonesConfig()
+    
     nodes: List[ NodePath ] = []
-    for innerFrac, outerFrac, color, depthOffset in SCORING_ZONES:
+    for innerFrac, outerFrac, color, depthOffset in zones:
         innerR = maxLocalRadius * innerFrac
         outerR = maxLocalRadius * outerFrac
         ring = createAnnulus( normal, color, innerRadius = innerR, outerRadius = outerR )

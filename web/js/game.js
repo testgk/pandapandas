@@ -124,8 +124,11 @@ async function nextChallenge() {
         document.getElementById('hint-btn').classList.remove('hidden');
         document.getElementById('challenge-info').classList.add('hidden');
         
-        // Clear markers
-        gameState.globe.pointsData([]);
+        // Clear markers and paths
+        gameState.globe
+            .pointsData([])
+            .pathsData([])
+            .arcsData([]);
         
         // Focus camera on continent
         focusOnContinent(gameState.currentChallenge.continent);
@@ -154,7 +157,7 @@ async function handleGlobeClick({ lat, lng }) {
         gameState.completedChallengeIds.push(gameState.currentChallenge.id);
         
         // Update score
-        gameState.score += result.points_earned;
+        gameState.score += result.score;
         
         if (result.is_correct) {
             gameState.streak++;
@@ -166,6 +169,9 @@ async function handleGlobeClick({ lat, lng }) {
         
         // Show markers
         showResultMarkers(lat, lng, result.actual_lat, result.actual_lng);
+        
+        // Draw scoring zone circles around the target
+        drawScoringZones(gameState.currentChallenge.id, result.actual_lat, result.actual_lng);
         
         // Show result panel
         showResult(result);
@@ -222,6 +228,79 @@ function showResultMarkers(guessLat, guessLng, actualLat, actualLng) {
 }
 
 /**
+ * Generate circle coordinates around a center point
+ */
+function generateCircleCoords(centerLat, centerLng, radiusKm, segments = 64) {
+    const coords = [];
+    const earthRadiusKm = 6371;
+    
+    for (let i = 0; i <= segments; i++) {
+        const angle = (i / segments) * 2 * Math.PI;
+        
+        // Calculate point at distance radiusKm from center
+        const latRad = centerLat * Math.PI / 180;
+        const lngRad = centerLng * Math.PI / 180;
+        const angularDist = radiusKm / earthRadiusKm;
+        
+        const newLatRad = Math.asin(
+            Math.sin(latRad) * Math.cos(angularDist) +
+            Math.cos(latRad) * Math.sin(angularDist) * Math.cos(angle)
+        );
+        const newLngRad = lngRad + Math.atan2(
+            Math.sin(angle) * Math.sin(angularDist) * Math.cos(latRad),
+            Math.cos(angularDist) - Math.sin(latRad) * Math.sin(newLatRad)
+        );
+        
+        coords.push([newLngRad * 180 / Math.PI, newLatRad * 180 / Math.PI]);
+    }
+    
+    return coords;
+}
+
+/**
+ * Draw scoring zone circles around the target
+ */
+async function drawScoringZones(challengeId, centerLat, centerLng) {
+    try {
+        const zonesData = await getScoringZones(challengeId);
+        const paths = [];
+        
+        // Zone colors matching desktop app
+        const zoneColors = {
+            'green': 'rgba(25, 217, 38, 0.9)',
+            'yellow': 'rgba(255, 230, 0, 0.85)',
+            'orange': 'rgba(255, 140, 0, 0.8)',
+            'red': 'rgba(255, 38, 0, 0.75)'
+        };
+        
+        for (const zone of zonesData.zones) {
+            // Draw outer boundary circle for each zone
+            const radiusKm = zone.outer_km;
+            const coords = generateCircleCoords(centerLat, centerLng, radiusKm);
+            
+            paths.push({
+                coords: coords,
+                color: zoneColors[zone.color] || 'white'
+            });
+        }
+        
+        gameState.globe
+            .pathsData(paths)
+            .pathPoints('coords')
+            .pathPointLat(p => p[1])
+            .pathPointLng(p => p[0])
+            .pathColor('color')
+            .pathStroke(2.5)
+            .pathDashLength(1)
+            .pathDashGap(0)
+            .pathDashAnimateTime(0);
+            
+    } catch (error) {
+        console.error('Error drawing scoring zones:', error);
+    }
+}
+
+/**
  * Show the result panel
  */
 function showResult(result) {
@@ -232,7 +311,7 @@ function showResult(result) {
     if (result.is_correct) {
         icon.textContent = '✓';
         icon.style.color = '#4ecdc4';
-        title.textContent = result.accuracy_percent > 80 ? 'Excellent!' : 'Good job!';
+        title.textContent = result.score > 80 ? 'Excellent!' : 'Good job!';
     } else {
         icon.textContent = '✗';
         icon.style.color = '#ff6b6b';
@@ -240,8 +319,8 @@ function showResult(result) {
     }
     
     document.getElementById('result-distance').textContent = result.distance_km.toLocaleString();
-    document.getElementById('result-accuracy').textContent = result.accuracy_percent.toFixed(1);
-    document.getElementById('result-points').textContent = `+${result.points_earned}`;
+    document.getElementById('result-accuracy').textContent = result.score;
+    document.getElementById('result-points').textContent = `+${result.score}`;
     
     // Show challenge info
     document.getElementById('info-country').textContent = gameState.currentChallenge.country;
@@ -349,7 +428,7 @@ function endGame() {
  * Update statistics
  */
 function updateStats(result) {
-    gameState.stats.totalAccuracy += result.accuracy_percent;
+    gameState.stats.totalAccuracy += result.score;
     gameState.stats.guessCount++;
     if (gameState.streak > gameState.stats.bestStreak) {
         gameState.stats.bestStreak = gameState.streak;
