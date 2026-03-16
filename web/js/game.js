@@ -139,9 +139,6 @@ async function nextChallenge() {
             .arcsData([])
             .polygonsData([]);
         
-        // Fetch and display country border
-        displayCountryBorder(gameState.currentChallenge.country);
-        
         // Focus camera on continent
         focusOnContinent(gameState.currentChallenge.continent);
         
@@ -185,8 +182,20 @@ async function handleGlobeClick({ lat, lng }) {
         // Show markers
         showResultMarkers(lat, lng, result.actual_lat, result.actual_lng);
         
-        // Draw scoring zone circles around the target
-        drawScoringZones(gameState.currentChallenge.id, result.actual_lat, result.actual_lng);
+        // Check if guess was inside the country
+        const isInsideCountry = result.scoring_zone !== 'outside';
+        
+        // Show country border with appropriate style
+        displayCountryBorder(
+            gameState.currentChallenge.country,
+            result.is_correct,  // green if correct
+            isInsideCountry     // glow only if inside
+        );
+        
+        // Only draw scoring zone circles if guess was inside the country
+        if (isInsideCountry) {
+            drawScoringZones(gameState.currentChallenge.id, result.actual_lat, result.actual_lng);
+        }
         
         // Show result panel
         showResult(result);
@@ -244,8 +253,11 @@ function showResultMarkers(guessLat, guessLng, actualLat, actualLng) {
 
 /**
  * Fetch and display country border on the globe
+ * @param {string} countryName - Name of the country
+ * @param {boolean} isCorrect - Whether the guess was correct (for color)
+ * @param {boolean} isInsideCountry - Whether click was inside the country
  */
-async function displayCountryBorder(countryName) {
+async function displayCountryBorder(countryName, isCorrect = false, isInsideCountry = true) {
     try {
         const boundary = await getCountryBoundary(countryName);
         if (!boundary || !boundary.geometry) {
@@ -253,8 +265,33 @@ async function displayCountryBorder(countryName) {
             return;
         }
         
-        // Convert GeoJSON Feature to the format Globe.GL expects
-        gameState.globe.polygonsData([boundary]);
+        // Configure border colors based on result
+        let strokeColor, capColor, sideColor;
+        
+        if (isCorrect) {
+            // Green glowing border for correct answer
+            strokeColor = '#00ff00';
+            capColor = 'rgba(0, 255, 0, 0.15)';
+            sideColor = 'rgba(0, 255, 0, 0.2)';
+        } else if (!isInsideCountry) {
+            // Red border for outside country
+            strokeColor = '#ff4444';
+            capColor = 'rgba(255, 68, 68, 0.1)';
+            sideColor = 'rgba(255, 68, 68, 0.15)';
+        } else {
+            // Orange/yellow border for inside but not correct
+            strokeColor = '#ffaa00';
+            capColor = 'rgba(255, 170, 0, 0.12)';
+            sideColor = 'rgba(255, 170, 0, 0.15)';
+        }
+        
+        // Configure polygon layer with appropriate colors
+        gameState.globe
+            .polygonCapColor(() => capColor)
+            .polygonSideColor(() => sideColor)
+            .polygonStrokeColor(() => strokeColor)
+            .polygonAltitude(isCorrect ? 0.02 : 0.01)  // Raise for glow effect
+            .polygonsData([boundary]);
         
     } catch (error) {
         console.warn('Error displaying country border:', error);
