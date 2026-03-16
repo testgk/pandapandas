@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoChallenge - Geography Quiz Game</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Globe.GL from CDN -->
+    <script src="https://unpkg.com/globe.gl"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Globe Container -->
+        <div id="globe-container"></div>
+
+        <!-- Game UI Overlay -->
+        <div id="game-ui">
+            <!-- Header -->
+            <div id="header">
+                <h1>🌍 GeoChallenge</h1>
+                <div id="score-display">
+                    <span id="current-score">Score: 0</span>
+                    <span id="streak">Streak: 0</span>
+                </div>
+            </div>
+
+            <!-- Challenge Panel -->
+            <div id="challenge-panel" class="panel">
+                <div id="challenge-header">
+                    <span id="difficulty-badge" class="badge easy">Easy</span>
+                    <span id="challenge-number">Challenge 1</span>
+                </div>
+                <div id="challenge-content">
+                    <h2 id="challenge-title">Welcome to GeoChallenge!</h2>
+                    <p id="challenge-description">Click "Start Game" to begin your geography adventure.</p>
+                    <div id="hints-container" class="hidden">
+                        <h4>Hints:</h4>
+                        <ul id="hints-list"></ul>
+                    </div>
+                </div>
+                <div id="challenge-info" class="hidden">
+                    <p><strong>Country:</strong> <span id="info-country"></span></p>
+                    <p><strong>Continent:</strong> <span id="info-continent"></span></p>
+                </div>
+            </div>
+
+            <!-- Control Buttons -->
+            <div id="controls-panel" class="panel">
+                <button id="start-btn" class="btn btn-primary">Start Game</button>
+                <button id="next-btn" class="btn btn-secondary hidden">Next Challenge</button>
+                <button id="hint-btn" class="btn btn-info hidden">Show Hint</button>
+                <button id="stats-btn" class="btn btn-outline">View Stats</button>
+                
+                <div id="difficulty-selector">
+                    <label>Difficulty:</label>
+                    <select id="difficulty-select">
+                        <option value="random">Random</option>
+                        <option value="Easy" selected>Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
+                        <option value="Expert">Expert</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Result Panel (shown after guess) -->
+            <div id="result-panel" class="panel hidden">
+                <div id="result-header">
+                    <span id="result-icon">✓</span>
+                    <h3 id="result-title">Great Guess!</h3>
+                </div>
+                <div id="result-details">
+                    <p>Distance: <span id="result-distance">0</span> km</p>
+                    <p>Accuracy: <span id="result-accuracy">0</span>%</p>
+                    <p>Points: <span id="result-points">+0</span></p>
+                </div>
+            </div>
+
+            <!-- Stats Modal -->
+            <div id="stats-modal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="close-btn">&times;</span>
+                    <h2>Game Statistics</h2>
+                    <div id="stats-content">
+                        <div class="stat-row">
+                            <span>Total Games:</span>
+                            <span id="stat-total-games">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Total Score:</span>
+                            <span id="stat-total-score">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Average Accuracy:</span>
+                            <span id="stat-avg-accuracy">0%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Best Score:</span>
+                            <span id="stat-best-score">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Current Streak:</span>
+                            <span id="stat-streak">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Best Streak:</span>
+                            <span id="stat-best-streak">0</span>
+                        </div>
+                    </div>
+                    <h3>By Difficulty</h3>
+                    <div id="difficulty-stats"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Target Marker (shown at actual location after guess) -->
+        <div id="target-marker" class="hidden">
+            <div class="marker-ring"></div>
+            <div class="marker-center"></div>
+        </div>
+    </div>
+
+    <script src="js/challenges.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
