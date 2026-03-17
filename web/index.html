@@ -35,14 +35,24 @@
                 </div>
                 <div id="challenge-content">
                     <h2 id="challenge-title">Welcome to GeoChallenge!</h2>
+                    <p id="challenge-location" class="hidden"></p>
                     <p id="challenge-description">Click "Start Game" to begin your geography adventure.</p>
                     <div id="hints-container" class="hidden">
                         <h4>Hints:</h4>
                         <ul id="hints-list"></ul>
                     </div>
                 </div>
-                <div id="challenge-info" class="hidden">
-                    <p class="location-info"><span id="info-country"></span> | <span id="info-continent"></span></p>
+                <div id="result-area" class="hidden">
+                    <div id="result-info">
+                        <span id="result-icon">✓</span>
+                        <span id="result-title">Great!</span>
+                        <span id="result-distance">0km</span>
+                        <span id="result-points">+0</span>
+                    </div>
+                    <div id="result-buttons">
+                        <button id="next-btn-result" class="btn btn-primary">Next</button>
+                        <button id="stats-btn-result" class="btn btn-outline">Stats</button>
+                    </div>
                 </div>
             </div>
 
@@ -62,20 +72,6 @@
                         <option value="Hard">Hard</option>
                         <option value="Expert">Expert</option>
                     </select>
-                </div>
-            </div>
-
-            <!-- Result Panel (shown after guess) -->
-            <div id="result-panel" class="hidden">
-                <div id="result-buttons">
-                    <button id="next-btn-result" class="btn btn-primary">Next</button>
-                    <button id="stats-btn-result" class="btn btn-outline">Stats</button>
-                </div>
-                <div id="result-info">
-                    <span id="result-icon">✓</span>
-                    <span id="result-title">Great!</span>
-                    <span id="result-distance">0km</span>
-                    <span id="result-points">+0</span>
                 </div>
             </div>
 

@@ -296,75 +296,31 @@ body {
     border-color: #60a5fa;
 }
 
-/* Result Panel */
-#result-panel {
-    position: absolute;
-    bottom: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(15, 23, 42, 0.9);
-    border: 1px solid rgba(100, 150, 255, 0.2);
-    border-radius: 10px;
-    padding: 10px 15px;
-    animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-}
-
-#result-buttons {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-}
-
-#next-btn-result {
-    flex: 2;
+/* Challenge Location (shown after guess) */
+#challenge-location {
     font-size: 0.85rem;
-    padding: 8px 15px;
+    color: #60a5fa;
+    margin-bottom: 10px;
 }
 
-#stats-btn-result {
-    flex: 1;
-    font-size: 0.8rem;
-    padding: 8px 10px;
+/* Result Area (inside challenge panel) */
+#result-area {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 #result-info {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: #94a3b8;
+    margin-bottom: 10px;
 }
 
 #result-icon {
     font-size: 1.1rem;
-}
-
-#result-icon.success {
-    color: #4ade80;
-}
-
-#result-icon.close {
-    color: #fbbf24;
-}
-
-#result-icon.far {
-    color: #f97316;
-}
-
-#result-icon.miss {
-    color: #ef4444;
 }
 
 #result-title {
@@ -381,10 +337,21 @@ body {
     color: #60a5fa;
 }
 
-.location-info {
-    font-size: 0.9rem;
-    color: #94a3b8;
-    margin-top: 5px;
+#result-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+#next-btn-result {
+    flex: 2;
+    font-size: 0.85rem;
+    padding: 8px 15px;
+}
+
+#stats-btn-result {
+    flex: 1;
+    font-size: 0.8rem;
+    padding: 8px 10px;
 }
 
 /* Stats Modal */

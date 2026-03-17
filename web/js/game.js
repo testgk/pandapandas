@@ -128,11 +128,11 @@ async function nextChallenge() {
         // Show first hint
         updateHints();
         
-        // Hide result panel, show hint button
-        document.getElementById('result-panel').classList.add('hidden');
+        // Hide result area, show hint button
+        document.getElementById('result-area').classList.add('hidden');
         document.getElementById('next-btn').classList.add('hidden');
         document.getElementById('hint-btn').classList.remove('hidden');
-        document.getElementById('challenge-info').classList.add('hidden');
+        document.getElementById('challenge-location').classList.add('hidden');
         
         // Show challenge description (hidden when result was shown)
         document.getElementById('challenge-description').classList.remove('hidden');
@@ -190,8 +190,8 @@ async function handleGlobeClick({ lat, lng }) {
         // Check if guess was inside the country
         const isInsideCountry = result.scoring_zone !== 'outside';
         
-        // Show country border with appropriate style
-        displayCountryBorder(
+        // Show country border with appropriate style (await to finish before showing result)
+        await displayCountryBorder(
             gameState.currentChallenge.country,
             result.is_correct,  // green if correct
             isInsideCountry     // glow only if inside
@@ -202,7 +202,7 @@ async function handleGlobeClick({ lat, lng }) {
             drawScoringZones(gameState.currentChallenge.id, result.actual_lat, result.actual_lng);
         }
         
-        // Show result panel
+        // Show result panel (after map is updated)
         showResult(result);
         
         // Update stats
@@ -381,7 +381,7 @@ async function drawScoringZones(challengeId, centerLat, centerLng) {
  * Show the result panel
  */
 function showResult(result) {
-    const panel = document.getElementById('result-panel');
+    const resultArea = document.getElementById('result-area');
     const icon = document.getElementById('result-icon');
     const title = document.getElementById('result-title');
     
@@ -389,7 +389,7 @@ function showResult(result) {
     if (result.scoring_zone === 'outside') {
         icon.textContent = '✗';
         icon.style.color = '#ff4444';
-        title.textContent = 'Outside the country!';
+        title.textContent = 'Outside!';
     } else if (result.score >= 100) {
         icon.textContent = '🎯';
         icon.style.color = '#00ff00';
@@ -401,7 +401,7 @@ function showResult(result) {
     } else if (result.score >= 50) {
         icon.textContent = '✓';
         icon.style.color = '#4ecdc4';
-        title.textContent = 'Good job!';
+        title.textContent = 'Good!';
     } else if (result.score >= 20) {
         icon.textContent = '~';
         icon.style.color = '#ffaa00';
@@ -409,24 +409,25 @@ function showResult(result) {
     } else {
         icon.textContent = '✗';
         icon.style.color = '#ff6b6b';
-        title.textContent = 'Keep practicing!';
+        title.textContent = 'Try again!';
     }
     
     document.getElementById('result-distance').textContent = `${result.distance_km.toLocaleString()}km`;
     document.getElementById('result-points').textContent = `+${result.score}`;
     
-    // Show challenge info
-    document.getElementById('info-country').textContent = gameState.currentChallenge.country;
-    document.getElementById('info-continent').textContent = gameState.currentChallenge.continent;
-    document.getElementById('challenge-info').classList.remove('hidden');
+    // Show location info inline under title
+    const challenge = gameState.currentChallenge;
+    const locationEl = document.getElementById('challenge-location');
+    locationEl.textContent = `${challenge.city}, ${challenge.country}, ${challenge.continent}`;
+    locationEl.classList.remove('hidden');
     
-    // Hide hints and description to make room for result panel on mobile
+    // Hide hints and description to make room
     document.getElementById('hints-container').classList.add('hidden');
     document.getElementById('challenge-description').classList.add('hidden');
     
-    panel.classList.remove('hidden');
+    resultArea.classList.remove('hidden');
     document.getElementById('hint-btn').classList.add('hidden');
-    document.getElementById('next-btn').classList.add('hidden');  // Hide controls panel next btn
+    document.getElementById('next-btn').classList.add('hidden');
 }
 
 /**
