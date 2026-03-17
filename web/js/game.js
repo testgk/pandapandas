@@ -173,7 +173,7 @@ async function handleGlobeClick({ lat, lng }) {
         // Add to completed challenges
         gameState.completedChallengeIds.push(gameState.currentChallenge.id);
         
-        // Update score
+        // Update score (stored, but not displayed yet)
         gameState.score += result.score;
         
         if (result.is_correct) {
@@ -181,8 +181,6 @@ async function handleGlobeClick({ lat, lng }) {
         } else {
             gameState.streak = 0;
         }
-        
-        updateScoreDisplay();
         
         // Show markers
         showResultMarkers(lat, lng, result.actual_lat, result.actual_lng);
@@ -201,6 +199,9 @@ async function handleGlobeClick({ lat, lng }) {
         if (isInsideCountry) {
             drawScoringZones(gameState.currentChallenge.id, result.actual_lat, result.actual_lng);
         }
+        
+        // Now update the score display (after map is updated)
+        updateScoreDisplay();
         
         // Show result panel (after map is updated)
         showResult(result);
