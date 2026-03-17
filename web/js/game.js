@@ -133,6 +133,9 @@ async function nextChallenge() {
         document.getElementById('hint-btn').classList.remove('hidden');
         document.getElementById('challenge-info').classList.add('hidden');
         
+        // Show challenge description (hidden when result was shown)
+        document.getElementById('challenge-description').classList.remove('hidden');
+        
         // Clear markers and paths
         gameState.globe
             .pointsData([])
@@ -416,6 +419,10 @@ function showResult(result) {
     document.getElementById('info-country').textContent = gameState.currentChallenge.country;
     document.getElementById('info-continent').textContent = gameState.currentChallenge.continent;
     document.getElementById('challenge-info').classList.remove('hidden');
+    
+    // Hide hints and description to make room for result panel on mobile
+    document.getElementById('hints-container').classList.add('hidden');
+    document.getElementById('challenge-description').classList.add('hidden');
     
     panel.classList.remove('hidden');
     document.getElementById('hint-btn').classList.add('hidden');
