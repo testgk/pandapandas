@@ -198,15 +198,25 @@ body {
     color: #e2e8f0;
 }
 
-/* Control Buttons Panel */
-#controls-panel {
-    position: absolute;
-    top: 80px;
-    right: 20px;
-    width: 200px;
+/* Game Controls (inside challenge panel) */
+#game-controls {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    align-items: center;
+}
+
+#game-controls .btn {
+    padding: 8px 15px;
+    font-size: 0.85rem;
+}
+
+#game-controls #difficulty-select {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 0.85rem;
 }
 
 .btn {
@@ -493,35 +503,9 @@ body {
         padding: 15px;
     }
 
-    #controls-panel {
-        top: auto;
-        bottom: 20px;
-        right: 10px;
-        left: 10px;
-        width: auto;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
     .btn {
         padding: 10px 15px;
         font-size: 0.85rem;
-    }
-
-    #difficulty-selector {
-        width: 100%;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-    }
-
-    #result-panel {
-        bottom: 15px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 90%;
-        max-width: 320px;
     }
 }
 
@@ -571,68 +555,17 @@ body {
         font-size: 0.9rem;
     }
 
-    #controls-panel {
-        bottom: 10px;
-        left: 5px;
-        right: 5px;
-        padding: 10px;
-        gap: 8px;
-    }
-
     .btn {
-        padding: 12px 16px;
-        font-size: 0.9rem;
-        min-height: 44px;
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        min-height: 40px;
         touch-action: manipulation;
     }
 
-    #difficulty-selector {
-        width: 100%;
-        margin-top: 5px;
-    }
-
-    #difficulty-selector label {
-        font-size: 0.85rem;
-    }
-
     #difficulty-select {
-        padding: 8px 12px;
-        min-height: 40px;
-        font-size: 0.9rem;
-    }
-
-    #result-panel {
-        bottom: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 92%;
-        max-width: 300px;
-        padding: 8px 12px;
-        z-index: 20;
-    }
-
-    #result-buttons {
-        gap: 6px;
-        margin-bottom: 6px;
-    }
-
-    #next-btn-result {
-        padding: 6px 12px;
-        font-size: 0.8rem;
-    }
-
-    #stats-btn-result {
-        padding: 6px 10px;
-        font-size: 0.75rem;
-    }
-
-    #result-info {
-        font-size: 0.75rem;
-        gap: 6px;
-    }
-
-    #result-icon {
-        font-size: 1rem;
+        padding: 8px 10px;
+        min-height: 36px;
+        font-size: 0.85rem;
     }
 
     #hints-container {
@@ -687,21 +620,6 @@ body {
         top: 45px;
         max-height: 40vh;
         width: 45%;
-    }
-
-    #controls-panel {
-        top: 45px;
-        bottom: auto;
-        right: 10px;
-        left: auto;
-        width: 45%;
-    }
-
-    #result-panel {
-        bottom: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 50%;
     }
 }
 

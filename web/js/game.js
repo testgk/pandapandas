@@ -65,11 +65,8 @@ function initGlobe() {
  */
 function setupEventListeners() {
     document.getElementById('start-btn').addEventListener('click', startGame);
-    document.getElementById('next-btn').addEventListener('click', nextChallenge);
-    document.getElementById('next-btn-result').addEventListener('click', nextChallenge);  // Next button inside result panel
+    document.getElementById('next-btn-result').addEventListener('click', nextChallenge);
     document.getElementById('hint-btn').addEventListener('click', showHint);
-    document.getElementById('stats-btn').addEventListener('click', showStatsModal);
-    document.getElementById('stats-btn-result').addEventListener('click', showStatsModal);  // Stats button inside result panel
     document.querySelector('.close-btn').addEventListener('click', hideStatsModal);
     
     // Close modal when clicking outside
@@ -130,7 +127,6 @@ async function nextChallenge() {
         
         // Hide result area, show hint button
         document.getElementById('result-area').classList.add('hidden');
-        document.getElementById('next-btn').classList.add('hidden');
         document.getElementById('hint-btn').classList.remove('hidden');
         document.getElementById('challenge-location').classList.add('hidden');
         
@@ -428,7 +424,6 @@ function showResult(result) {
     
     resultArea.classList.remove('hidden');
     document.getElementById('hint-btn').classList.add('hidden');
-    document.getElementById('next-btn').classList.add('hidden');
 }
 
 /**
@@ -548,7 +543,6 @@ function endGame() {
     
     document.getElementById('start-btn').classList.remove('hidden');
     document.getElementById('start-btn').textContent = 'Play Again';
-    document.getElementById('next-btn').classList.add('hidden');
     document.getElementById('hint-btn').classList.add('hidden');
 }
 
