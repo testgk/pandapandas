@@ -412,7 +412,7 @@ function showResult(result) {
         title.textContent = 'Keep practicing!';
     }
     
-    document.getElementById('result-distance').textContent = result.distance_km.toLocaleString();
+    document.getElementById('result-distance').textContent = `${result.distance_km.toLocaleString()}km`;
     document.getElementById('result-points').textContent = `+${result.score}`;
     
     // Show challenge info
