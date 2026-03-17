@@ -42,8 +42,7 @@
                     </div>
                 </div>
                 <div id="challenge-info" class="hidden">
-                    <p><strong>Country:</strong> <span id="info-country"></span></p>
-                    <p><strong>Continent:</strong> <span id="info-continent"></span></p>
+                    <p class="location-info"><span id="info-country"></span> | <span id="info-continent"></span></p>
                 </div>
             </div>
 
@@ -74,10 +73,12 @@
                 </div>
                 <div id="result-details">
                     <p>Distance: <span id="result-distance">0</span> km</p>
-                    <p>Accuracy: <span id="result-accuracy">0</span>%</p>
                     <p>Points: <span id="result-points">+0</span></p>
                 </div>
-                <button id="next-btn-result" class="btn btn-primary">Next Challenge</button>
+                <div id="result-buttons">
+                    <button id="next-btn-result" class="btn btn-primary">Next Challenge</button>
+                    <button id="stats-btn-result" class="btn btn-outline">Stats</button>
+                </div>
             </div>
 
             <!-- Stats Modal -->

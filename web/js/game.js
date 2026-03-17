@@ -69,6 +69,7 @@ function setupEventListeners() {
     document.getElementById('next-btn-result').addEventListener('click', nextChallenge);  // Next button inside result panel
     document.getElementById('hint-btn').addEventListener('click', showHint);
     document.getElementById('stats-btn').addEventListener('click', showStatsModal);
+    document.getElementById('stats-btn-result').addEventListener('click', showStatsModal);  // Stats button inside result panel
     document.querySelector('.close-btn').addEventListener('click', hideStatsModal);
     
     // Close modal when clicking outside
@@ -412,7 +413,6 @@ function showResult(result) {
     }
     
     document.getElementById('result-distance').textContent = result.distance_km.toLocaleString();
-    document.getElementById('result-accuracy').textContent = result.score;
     document.getElementById('result-points').textContent = `+${result.score}`;
     
     // Show challenge info

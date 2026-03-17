@@ -299,12 +299,13 @@ body {
 /* Result Panel */
 #result-panel {
     position: absolute;
-    bottom: 30px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
     min-width: 280px;
     animation: slideUp 0.3s ease;
+    background: rgba(15, 23, 42, 0.85);
 }
 
 @keyframes slideUp {
@@ -374,11 +375,28 @@ body {
     color: #60a5fa !important;
 }
 
+#result-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
 #next-btn-result {
-    margin-top: 20px;
-    width: 100%;
-    font-size: 1.1rem;
-    padding: 12px 24px;
+    flex: 2;
+    font-size: 1rem;
+    padding: 10px 20px;
+}
+
+#stats-btn-result {
+    flex: 1;
+    font-size: 0.9rem;
+    padding: 10px 15px;
+}
+
+.location-info {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    margin-top: 5px;
 }
 
 /* Stats Modal */
@@ -544,18 +562,18 @@ body {
     }
 
     #result-panel {
-        bottom: auto;
-        top: 50%;
+        bottom: 15px;
         left: 50%;
-        transform: translate(-50%, -50%);
+        transform: translateX(-50%);
         width: 90%;
         max-width: 320px;
         min-width: auto;
     }
 
     #result-details {
-        flex-direction: column;
-        gap: 5px;
+        flex-direction: row;
+        gap: 15px;
+        justify-content: center;
     }
 }
 
@@ -636,19 +654,19 @@ body {
     }
 
     #result-panel {
-        bottom: auto;
-        top: 50%;
+        bottom: 10px;
+        top: auto;
         left: 50%;
         right: auto;
-        transform: translate(-50%, -50%);
-        width: 85%;
-        max-width: 300px;
-        padding: 15px;
+        transform: translateX(-50%);
+        width: 92%;
+        max-width: 320px;
+        padding: 12px;
         z-index: 20;
     }
 
     #result-header {
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
 
     #result-header h3 {
@@ -656,22 +674,33 @@ body {
     }
 
     #result-icon {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
     }
 
     #result-details {
         font-size: 0.85rem;
-        gap: 3px;
+        flex-direction: row;
+        gap: 15px;
+        justify-content: center;
     }
 
     #result-details p {
         margin: 2px 0;
     }
 
+    #result-buttons {
+        margin-top: 10px;
+        gap: 8px;
+    }
+
     #next-btn-result {
-        margin-top: 12px;
-        padding: 10px 20px;
-        font-size: 0.95rem;
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+
+    #stats-btn-result {
+        padding: 8px 12px;
+        font-size: 0.85rem;
     }
 
     #hints-container {
