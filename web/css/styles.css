@@ -374,6 +374,13 @@ body {
     color: #60a5fa !important;
 }
 
+#next-btn-result {
+    margin-top: 20px;
+    width: 100%;
+    font-size: 1.1rem;
+    padding: 12px 24px;
+}
+
 /* Stats Modal */
 .modal {
     position: fixed;

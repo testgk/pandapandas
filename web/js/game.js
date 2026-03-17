@@ -66,6 +66,7 @@ function initGlobe() {
 function setupEventListeners() {
     document.getElementById('start-btn').addEventListener('click', startGame);
     document.getElementById('next-btn').addEventListener('click', nextChallenge);
+    document.getElementById('next-btn-result').addEventListener('click', nextChallenge);  // Next button inside result panel
     document.getElementById('hint-btn').addEventListener('click', showHint);
     document.getElementById('stats-btn').addEventListener('click', showStatsModal);
     document.querySelector('.close-btn').addEventListener('click', hideStatsModal);
@@ -380,10 +381,27 @@ function showResult(result) {
     const icon = document.getElementById('result-icon');
     const title = document.getElementById('result-title');
     
-    if (result.is_correct) {
+    // Determine message based on score ranges
+    if (result.scoring_zone === 'outside') {
+        icon.textContent = '✗';
+        icon.style.color = '#ff4444';
+        title.textContent = 'Outside the country!';
+    } else if (result.score >= 100) {
+        icon.textContent = '🎯';
+        icon.style.color = '#00ff00';
+        title.textContent = 'Perfect!';
+    } else if (result.score >= 80) {
         icon.textContent = '✓';
         icon.style.color = '#4ecdc4';
-        title.textContent = result.score > 80 ? 'Excellent!' : 'Good job!';
+        title.textContent = 'Excellent!';
+    } else if (result.score >= 50) {
+        icon.textContent = '✓';
+        icon.style.color = '#4ecdc4';
+        title.textContent = 'Good job!';
+    } else if (result.score >= 20) {
+        icon.textContent = '~';
+        icon.style.color = '#ffaa00';
+        title.textContent = 'Not bad!';
     } else {
         icon.textContent = '✗';
         icon.style.color = '#ff6b6b';
@@ -401,7 +419,7 @@ function showResult(result) {
     
     panel.classList.remove('hidden');
     document.getElementById('hint-btn').classList.add('hidden');
-    document.getElementById('next-btn').classList.remove('hidden');
+    document.getElementById('next-btn').classList.add('hidden');  // Hide controls panel next btn
 }
 
 /**
