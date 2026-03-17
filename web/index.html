@@ -37,9 +37,11 @@
                     <h2 id="challenge-title">Welcome to GeoChallenge!</h2>
                     <p id="challenge-location" class="hidden"></p>
                     <p id="challenge-description">Click "Start Game" to begin your geography adventure.</p>
-                    <div id="hints-container" class="hidden">
-                        <h4>Hints:</h4>
-                        <ul id="hints-list"></ul>
+                    <div id="hints-area" class="hidden">
+                        <div id="hints-container">
+                            <ul id="hints-list"></ul>
+                        </div>
+                        <button id="hint-btn" class="btn btn-info">More Hints</button>
                     </div>
                 </div>
                 <div id="result-area" class="hidden">
@@ -51,12 +53,18 @@
                     </div>
                     <div id="result-buttons">
                         <button id="next-btn-result" class="btn btn-primary">Next</button>
+                        <select id="difficulty-select">
+                            <option value="random">Random</option>
+                            <option value="Easy" selected>Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                            <option value="Expert">Expert</option>
+                        </select>
                     </div>
                 </div>
                 <div id="game-controls">
                     <button id="start-btn" class="btn btn-primary">Start Game</button>
-                    <button id="hint-btn" class="btn btn-info hidden">Hint</button>
-                    <select id="difficulty-select">
+                    <select id="difficulty-select-start">
                         <option value="random">Random</option>
                         <option value="Easy" selected>Easy</option>
                         <option value="Medium">Medium</option>

@@ -69,6 +69,14 @@ function setupEventListeners() {
     document.getElementById('hint-btn').addEventListener('click', showHint);
     document.querySelector('.close-btn').addEventListener('click', hideStatsModal);
     
+    // Sync difficulty selects
+    document.getElementById('difficulty-select-start').addEventListener('change', (e) => {
+        document.getElementById('difficulty-select').value = e.target.value;
+    });
+    document.getElementById('difficulty-select').addEventListener('change', (e) => {
+        document.getElementById('difficulty-select-start').value = e.target.value;
+    });
+    
     // Close modal when clicking outside
     document.getElementById('stats-modal').addEventListener('click', (e) => {
         if (e.target.id === 'stats-modal') hideStatsModal();
@@ -125,9 +133,10 @@ async function nextChallenge() {
         // Show first hint
         updateHints();
         
-        // Hide result area, show hint button
+        // Hide result area, show hints area (with hint button)
         document.getElementById('result-area').classList.add('hidden');
-        document.getElementById('hint-btn').classList.remove('hidden');
+        document.getElementById('game-controls').classList.add('hidden');
+        document.getElementById('hints-area').classList.remove('hidden');
         document.getElementById('challenge-location').classList.add('hidden');
         
         // Show challenge description (hidden when result was shown)
@@ -418,12 +427,11 @@ function showResult(result) {
     locationEl.textContent = `${challenge.city}, ${challenge.country}, ${challenge.continent}`;
     locationEl.classList.remove('hidden');
     
-    // Hide hints and description to make room
-    document.getElementById('hints-container').classList.add('hidden');
+    // Hide hints area and description to make room
+    document.getElementById('hints-area').classList.add('hidden');
     document.getElementById('challenge-description').classList.add('hidden');
     
     resultArea.classList.remove('hidden');
-    document.getElementById('hint-btn').classList.add('hidden');
 }
 
 /**
@@ -543,7 +551,8 @@ function endGame() {
     
     document.getElementById('start-btn').classList.remove('hidden');
     document.getElementById('start-btn').textContent = 'Play Again';
-    document.getElementById('hint-btn').classList.add('hidden');
+    document.getElementById('game-controls').classList.remove('hidden');
+    document.getElementById('hints-area').classList.add('hidden');
 }
 
 /**

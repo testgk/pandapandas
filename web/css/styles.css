@@ -153,15 +153,23 @@ body {
     margin-bottom: 15px;
 }
 
-#hints-container {
+#hints-area {
     margin-top: 15px;
     padding-top: 15px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-#hints-container h4 {
-    color: #fbbf24;
-    margin-bottom: 8px;
+#hints-container {
+    flex: 1;
+}
+
+#hints-area #hint-btn {
+    align-self: flex-start;
+    padding: 6px 12px;
+    font-size: 0.8rem;
 }
 
 #hints-list {
@@ -213,10 +221,26 @@ body {
     font-size: 0.85rem;
 }
 
-#game-controls #difficulty-select {
+#game-controls select,
+#result-buttons select {
     flex: 1;
     padding: 8px 10px;
     font-size: 0.85rem;
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(100, 150, 255, 0.3);
+    border-radius: 6px;
+    color: #e2e8f0;
+    cursor: pointer;
+}
+
+#result-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+#result-buttons .btn {
+    flex: 2;
 }
 
 .btn {
@@ -345,23 +369,6 @@ body {
 #result-points {
     font-weight: 700;
     color: #60a5fa;
-}
-
-#result-buttons {
-    display: flex;
-    gap: 8px;
-}
-
-#next-btn-result {
-    flex: 2;
-    font-size: 0.85rem;
-    padding: 8px 15px;
-}
-
-#stats-btn-result {
-    flex: 1;
-    font-size: 0.8rem;
-    padding: 8px 10px;
 }
 
 /* Stats Modal */
