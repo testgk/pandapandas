@@ -839,6 +839,7 @@ function showStatsModal() {
     }
     
     document.getElementById('stats-modal').classList.remove('hidden');
+    document.getElementById('center-action').classList.add('hidden');
 }
 
 /**
@@ -846,6 +847,7 @@ function showStatsModal() {
  */
 function hideStatsModal() {
     document.getElementById('stats-modal').classList.add('hidden');
+    updateCenterButtons();
 }
 
 // ============================================
@@ -968,6 +970,7 @@ function returnToGame() {
  */
 function showHelpModal() {
     document.getElementById('help-modal').classList.remove('hidden');
+    document.getElementById('center-action').classList.add('hidden');
 }
 
 /**
@@ -975,6 +978,7 @@ function showHelpModal() {
  */
 function hideHelpModal() {
     document.getElementById('help-modal').classList.add('hidden');
+    updateCenterButtons();
 }
 
 /**
@@ -983,6 +987,7 @@ function hideHelpModal() {
 function showAboutModal() {
     hideMenu();
     document.getElementById('about-modal').classList.remove('hidden');
+    document.getElementById('center-action').classList.add('hidden');
 }
 
 /**
@@ -990,6 +995,7 @@ function showAboutModal() {
  */
 function hideAboutModal() {
     document.getElementById('about-modal').classList.add('hidden');
+    updateCenterButtons();
 }
 
 // ============================================
@@ -1059,6 +1065,9 @@ function deleteCookie(name) {
 function showSignInModal() {
     hideMenu();
     
+    // Hide center buttons to avoid z-index conflicts
+    document.getElementById('center-action').classList.add('hidden');
+    
     // Pre-fill form if Remember me was checked
     const savedEmail = getCookie('geochallenge_email');
     const savedPassword = getCookie('geochallenge_password');
@@ -1079,6 +1088,7 @@ function showSignInModal() {
 function hideSignInModal() {
     document.getElementById('signin-modal').classList.add('hidden');
     document.getElementById('signin-form').reset();
+    updateCenterButtons();  // Restore center buttons
 }
 
 /**
@@ -1086,6 +1096,8 @@ function hideSignInModal() {
  */
 function showSignUpModal() {
     hideMenu();
+    // Hide center buttons to avoid z-index conflicts
+    document.getElementById('center-action').classList.add('hidden');
     document.getElementById('signup-modal').classList.remove('hidden');
 }
 
@@ -1095,6 +1107,7 @@ function showSignUpModal() {
 function hideSignUpModal() {
     document.getElementById('signup-modal').classList.add('hidden');
     document.getElementById('signup-form').reset();
+    updateCenterButtons();  // Restore center buttons
 }
 
 /**
@@ -1266,6 +1279,7 @@ async function showLeaderboard() {
     }
     
     document.getElementById('leaderboard-modal').classList.remove('hidden');
+    document.getElementById('center-action').classList.add('hidden');
 }
 
 /**
@@ -1273,4 +1287,5 @@ async function showLeaderboard() {
  */
 function hideLeaderboard() {
     document.getElementById('leaderboard-modal').classList.add('hidden');
+    updateCenterButtons();
 }
