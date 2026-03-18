@@ -1282,29 +1282,27 @@ async function submitScore() {
  */
 async function showLeaderboard() {
     hideMenu();
-    
     const scores = getSubmittedScores();
     const tbody = document.getElementById('leaderboard-body');
-    
     if (scores.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="no-scores">No scores submitted yet. Play a game and submit your score!</td></tr>';
     } else {
         // Sort by score descending
         const sorted = [...scores].sort((a, b) => b.score - a.score);
-        
         tbody.innerHTML = sorted.slice(0, 20).map((entry, idx) => {
             const date = new Date(entry.date).toLocaleDateString();
             const rankEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`;
+            // Use username if present, otherwise email prefix
+            let playerName = entry.username || (entry.email ? entry.email.split('@')[0] : 'Player');
             return `<tr>
                 <td>${rankEmoji}</td>
-                <td>${entry.player}${entry.isGuest ? ' (Guest)' : ''}</td>
+                <td>${playerName}${entry.isGuest ? ' (Guest)' : ''}</td>
                 <td>${entry.score}</td>
                 <td>${entry.challenges}</td>
                 <td>${date}</td>
             </tr>`;
         }).join('');
     }
-    
     document.getElementById('leaderboard-modal').classList.remove('hidden');
     document.getElementById('center-action').classList.add('hidden');
 }
