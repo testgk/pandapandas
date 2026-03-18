@@ -25,6 +25,21 @@
                     <span id="current-score">Score: 0</span>
                     <span id="streak">Streak: 0</span>
                 </div>
+                <div id="header-buttons">
+                    <button id="submit-score-btn" class="btn btn-success btn-sm">Submit Score</button>
+                    <button id="help-btn" class="btn btn-outline btn-sm">?</button>
+                    <button id="menu-btn" class="btn btn-outline btn-sm">☰ Menu</button>
+                </div>
+            </div>
+
+            <!-- Menu Dropdown -->
+            <div id="menu-dropdown" class="dropdown hidden">
+                <button id="menu-signin-btn" class="dropdown-item">Sign In</button>
+                <button id="menu-signup-btn" class="dropdown-item">Sign Up</button>
+                <button id="menu-signout-btn" class="dropdown-item hidden">Sign Out</button>
+                <hr class="dropdown-divider">
+                <button id="menu-stats-btn" class="dropdown-item">My Stats</button>
+                <button id="menu-leaderboard-btn" class="dropdown-item">Leaderboard</button>
             </div>
 
             <!-- Challenge Panel -->
@@ -111,6 +126,88 @@
                     </div>
                     <h3>By Difficulty</h3>
                     <div id="difficulty-stats"></div>
+                </div>
+            </div>
+
+            <!-- Help/Rules Modal -->
+            <div id="help-modal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="close-btn" id="help-close-btn">&times;</span>
+                    <h2>🌍 How to Play</h2>
+                    <div class="help-section">
+                        <h3>Objective</h3>
+                        <p>Find locations on the globe! Click where you think the city/landmark is located.</p>
+                    </div>
+                    <div class="help-section">
+                        <h3>Scoring</h3>
+                        <ul>
+                            <li><strong>🟢 Green Zone (0-50km):</strong> 80-100 points</li>
+                            <li><strong>🟡 Yellow Zone (50-150km):</strong> 50-80 points</li>
+                            <li><strong>🟠 Orange Zone (150-300km):</strong> 20-50 points</li>
+                            <li><strong>🔴 Red Zone (300-500km):</strong> 1-20 points</li>
+                            <li><strong>❌ Outside Country:</strong> -80% penalty</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <h3>Hint Penalties</h3>
+                        <ul>
+                            <li><strong>Country (-20%):</strong> Reveals the country name</li>
+                            <li><strong>Hint (-10%):</strong> Shows a text hint (can use multiple)</li>
+                            <li><strong>Zoom In! (-50%):</strong> Camera zooms near the target</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <h3>Tips</h3>
+                        <ul>
+                            <li>Use the continent info shown at the start</li>
+                            <li>Hints stack - using all hints = -80% total</li>
+                            <li>Build streaks for bonus points!</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sign In Modal -->
+            <div id="signin-modal" class="modal hidden">
+                <div class="modal-content modal-sm">
+                    <span class="close-btn" id="signin-close-btn">&times;</span>
+                    <h2>Sign In</h2>
+                    <form id="signin-form">
+                        <div class="form-group">
+                            <label for="signin-email">Email</label>
+                            <input type="email" id="signin-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signin-password">Password</label>
+                            <input type="password" id="signin-password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+                    </form>
+                    <p class="form-footer">Don't have an account? <a href="#" id="goto-signup">Sign Up</a></p>
+                </div>
+            </div>
+
+            <!-- Sign Up Modal -->
+            <div id="signup-modal" class="modal hidden">
+                <div class="modal-content modal-sm">
+                    <span class="close-btn" id="signup-close-btn">&times;</span>
+                    <h2>Sign Up</h2>
+                    <form id="signup-form">
+                        <div class="form-group">
+                            <label for="signup-username">Username</label>
+                            <input type="text" id="signup-username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-email">Email</label>
+                            <input type="email" id="signup-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-password">Password</label>
+                            <input type="password" id="signup-password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">Sign Up</button>
+                    </form>
+                    <p class="form-footer">Already have an account? <a href="#" id="goto-signin">Sign In</a></p>
                 </div>
             </div>
         </div>

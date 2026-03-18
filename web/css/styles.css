@@ -323,6 +323,150 @@ body {
     padding: 8px 10px;
 }
 
+/* Header Buttons */
+#header-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-sm {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+}
+
+/* Menu Dropdown */
+#menu-dropdown {
+    position: absolute;
+    top: 60px;
+    right: 25px;
+    background: rgba(15, 23, 42, 0.98);
+    border: 1px solid rgba(100, 150, 255, 0.3);
+    border-radius: 12px;
+    padding: 8px 0;
+    min-width: 160px;
+    z-index: 200;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    color: #e2e8f0;
+    font-size: 0.95rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+    background: rgba(100, 150, 255, 0.15);
+}
+
+.dropdown-divider {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 8px 0;
+}
+
+/* Help Modal */
+.help-section {
+    margin-bottom: 20px;
+}
+
+.help-section h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    padding-top: 0;
+    border-top: none;
+    color: #60a5fa;
+    font-size: 1.1rem;
+}
+
+.help-section p {
+    color: #cbd5e1;
+    line-height: 1.6;
+}
+
+.help-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.help-section li {
+    padding: 8px 0;
+    color: #cbd5e1;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.help-section li:last-child {
+    border-bottom: none;
+}
+
+/* Auth Modal Forms */
+.modal-sm {
+    max-width: 360px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid rgba(100, 150, 255, 0.3);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    color: #ffffff;
+    font-size: 1rem;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #60a5fa;
+    box-shadow: 0 0 10px rgba(96, 165, 250, 0.2);
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.form-footer {
+    text-align: center;
+    margin-top: 20px;
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+.form-footer a {
+    color: #60a5fa;
+    text-decoration: none;
+}
+
+.form-footer a:hover {
+    text-decoration: underline;
+}
+
 .btn-outline {
     background: transparent;
     border: 2px solid #60a5fa;

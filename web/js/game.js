@@ -74,6 +74,31 @@ function setupEventListeners() {
     document.getElementById('zoom-btn').addEventListener('click', zoomHint);
     document.querySelector('.close-btn').addEventListener('click', hideStatsModal);
     
+    // Header buttons
+    document.getElementById('submit-score-btn').addEventListener('click', submitScore);
+    document.getElementById('help-btn').addEventListener('click', showHelpModal);
+    document.getElementById('menu-btn').addEventListener('click', toggleMenu);
+    
+    // Menu items
+    document.getElementById('menu-signin-btn').addEventListener('click', showSignInModal);
+    document.getElementById('menu-signup-btn').addEventListener('click', showSignUpModal);
+    document.getElementById('menu-signout-btn').addEventListener('click', signOut);
+    document.getElementById('menu-stats-btn').addEventListener('click', () => { hideMenu(); showStatsModal(); });
+    document.getElementById('menu-leaderboard-btn').addEventListener('click', showLeaderboard);
+    
+    // Modal close buttons
+    document.getElementById('help-close-btn').addEventListener('click', hideHelpModal);
+    document.getElementById('signin-close-btn').addEventListener('click', hideSignInModal);
+    document.getElementById('signup-close-btn').addEventListener('click', hideSignUpModal);
+    
+    // Auth form links
+    document.getElementById('goto-signup').addEventListener('click', (e) => { e.preventDefault(); hideSignInModal(); showSignUpModal(); });
+    document.getElementById('goto-signin').addEventListener('click', (e) => { e.preventDefault(); hideSignUpModal(); showSignInModal(); });
+    
+    // Auth forms
+    document.getElementById('signin-form').addEventListener('submit', handleSignIn);
+    document.getElementById('signup-form').addEventListener('submit', handleSignUp);
+    
     // Sync difficulty selects
     document.getElementById('difficulty-select-start').addEventListener('change', (e) => {
         document.getElementById('difficulty-select').value = e.target.value;
@@ -82,10 +107,31 @@ function setupEventListeners() {
         document.getElementById('difficulty-select-start').value = e.target.value;
     });
     
-    // Close modal when clicking outside
+    // Close modals when clicking outside
     document.getElementById('stats-modal').addEventListener('click', (e) => {
         if (e.target.id === 'stats-modal') hideStatsModal();
     });
+    document.getElementById('help-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'help-modal') hideHelpModal();
+    });
+    document.getElementById('signin-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'signin-modal') hideSignInModal();
+    });
+    document.getElementById('signup-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'signup-modal') hideSignUpModal();
+    });
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        const menu = document.getElementById('menu-dropdown');
+        const menuBtn = document.getElementById('menu-btn');
+        if (!menu.classList.contains('hidden') && !menu.contains(e.target) && e.target !== menuBtn) {
+            hideMenu();
+        }
+    });
+    
+    // Update auth UI on load
+    updateAuthUI();
 }
 
 /**
@@ -699,4 +745,225 @@ function showStatsModal() {
  */
 function hideStatsModal() {
     document.getElementById('stats-modal').classList.add('hidden');
+}
+
+// ============================================
+// Menu Functions
+// ============================================
+
+/**
+ * Toggle menu dropdown visibility
+ */
+function toggleMenu() {
+    const menu = document.getElementById('menu-dropdown');
+    menu.classList.toggle('hidden');
+}
+
+/**
+ * Hide menu dropdown
+ */
+function hideMenu() {
+    document.getElementById('menu-dropdown').classList.add('hidden');
+}
+
+// ============================================
+// Help Modal Functions
+// ============================================
+
+/**
+ * Show help/rules modal
+ */
+function showHelpModal() {
+    document.getElementById('help-modal').classList.remove('hidden');
+}
+
+/**
+ * Hide help modal
+ */
+function hideHelpModal() {
+    document.getElementById('help-modal').classList.add('hidden');
+}
+
+// ============================================
+// Auth Functions
+// ============================================
+
+// Auth state
+const authState = {
+    isSignedIn: false,
+    user: null
+};
+
+/**
+ * Update UI based on auth state
+ */
+function updateAuthUI() {
+    const saved = localStorage.getItem('geochallenge_user');
+    if (saved) {
+        authState.user = JSON.parse(saved);
+        authState.isSignedIn = true;
+    }
+    
+    const signinBtn = document.getElementById('menu-signin-btn');
+    const signupBtn = document.getElementById('menu-signup-btn');
+    const signoutBtn = document.getElementById('menu-signout-btn');
+    
+    if (authState.isSignedIn) {
+        signinBtn.classList.add('hidden');
+        signupBtn.classList.add('hidden');
+        signoutBtn.classList.remove('hidden');
+        signoutBtn.textContent = `Sign Out (${authState.user.username})`;
+    } else {
+        signinBtn.classList.remove('hidden');
+        signupBtn.classList.remove('hidden');
+        signoutBtn.classList.add('hidden');
+    }
+}
+
+/**
+ * Show sign in modal
+ */
+function showSignInModal() {
+    hideMenu();
+    document.getElementById('signin-modal').classList.remove('hidden');
+}
+
+/**
+ * Hide sign in modal
+ */
+function hideSignInModal() {
+    document.getElementById('signin-modal').classList.add('hidden');
+    document.getElementById('signin-form').reset();
+}
+
+/**
+ * Show sign up modal
+ */
+function showSignUpModal() {
+    hideMenu();
+    document.getElementById('signup-modal').classList.remove('hidden');
+}
+
+/**
+ * Hide sign up modal
+ */
+function hideSignUpModal() {
+    document.getElementById('signup-modal').classList.add('hidden');
+    document.getElementById('signup-form').reset();
+}
+
+/**
+ * Handle sign in form submission
+ */
+async function handleSignIn(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('signin-email').value;
+    const password = document.getElementById('signin-password').value;
+    
+    // TODO: Replace with actual API call
+    // For now, simulate sign in
+    try {
+        // Simulated auth - in production, call your auth API
+        authState.user = {
+            username: email.split('@')[0],
+            email: email
+        };
+        authState.isSignedIn = true;
+        localStorage.setItem('geochallenge_user', JSON.stringify(authState.user));
+        
+        hideSignInModal();
+        updateAuthUI();
+        alert('Signed in successfully!');
+    } catch (error) {
+        alert('Sign in failed. Please try again.');
+    }
+}
+
+/**
+ * Handle sign up form submission
+ */
+async function handleSignUp(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('signup-username').value;
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+    
+    // TODO: Replace with actual API call
+    // For now, simulate sign up
+    try {
+        // Simulated auth - in production, call your auth API
+        authState.user = {
+            username: username,
+            email: email
+        };
+        authState.isSignedIn = true;
+        localStorage.setItem('geochallenge_user', JSON.stringify(authState.user));
+        
+        hideSignUpModal();
+        updateAuthUI();
+        alert('Account created successfully!');
+    } catch (error) {
+        alert('Sign up failed. Please try again.');
+    }
+}
+
+/**
+ * Sign out
+ */
+function signOut() {
+    authState.user = null;
+    authState.isSignedIn = false;
+    localStorage.removeItem('geochallenge_user');
+    hideMenu();
+    updateAuthUI();
+    alert('Signed out successfully!');
+}
+
+// ============================================
+// Score Submission
+// ============================================
+
+/**
+ * Submit current score to database
+ */
+async function submitScore() {
+    if (gameState.score === 0) {
+        alert('Play some challenges first to build up your score!');
+        return;
+    }
+    
+    if (!authState.isSignedIn) {
+        alert('Please sign in to submit your score to the leaderboard.');
+        showSignInModal();
+        return;
+    }
+    
+    try {
+        // TODO: Replace with actual API call
+        // await fetch(`${API_BASE}/scores`, {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify({
+        //         user_id: authState.user.id,
+        //         score: gameState.score,
+        //         challenges_completed: gameState.challengeNumber
+        //     })
+        // });
+        
+        alert(`Score submitted: ${gameState.score} points!\n(${gameState.challengeNumber} challenges completed)`);
+    } catch (error) {
+        alert('Failed to submit score. Please try again.');
+    }
+}
+
+/**
+ * Show leaderboard
+ */
+async function showLeaderboard() {
+    hideMenu();
+    
+    // TODO: Replace with actual API call to fetch leaderboard
+    alert('Leaderboard coming soon!\nThis will show top scores from all players.');
 }
