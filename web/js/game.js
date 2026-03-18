@@ -13,6 +13,9 @@ const gameState = {
     challengeNumber: 0,
     completedChallengeIds: [],
     hintIndex: 0,
+    hintPenalty: 0.0,  // Accumulated penalty (0.0 to 1.0)
+    usedShowCountry: false,
+    usedZoomHint: false,
     stats: {
         totalGames: 0,
         totalScore: 0,
@@ -67,6 +70,8 @@ function setupEventListeners() {
     document.getElementById('start-btn').addEventListener('click', startGame);
     document.getElementById('next-btn-result').addEventListener('click', nextChallenge);
     document.getElementById('hint-btn').addEventListener('click', showHint);
+    document.getElementById('country-btn').addEventListener('click', showCountry);
+    document.getElementById('zoom-btn').addEventListener('click', zoomHint);
     document.querySelector('.close-btn').addEventListener('click', hideStatsModal);
     
     // Sync difficulty selects
@@ -120,6 +125,9 @@ async function nextChallenge() {
         
         gameState.challengeNumber++;
         gameState.hintIndex = 0;
+        gameState.hintPenalty = 0.0;  // Reset penalties
+        gameState.usedShowCountry = false;
+        gameState.usedZoomHint = false;
         gameState.guessSubmitted = false; // Allow new guess
         
         // Update UI
@@ -128,12 +136,12 @@ async function nextChallenge() {
         document.getElementById('difficulty-badge').className = `badge ${gameState.currentChallenge.difficulty.toLowerCase()}`;
         document.getElementById('challenge-title').textContent = `Find: ${gameState.currentChallenge.location_name}`;
         document.getElementById('challenge-description').textContent = 
-            `Country: ${gameState.currentChallenge.country} | Continent: ${gameState.currentChallenge.continent}`;
+            `Continent: ${gameState.currentChallenge.continent}`;
         
-        // Show first hint
-        updateHints();
+        // Update hints display (without auto-showing first hint)
+        updateHintsArea();
         
-        // Hide result area, show hints area (with hint button)
+        // Hide result area, show hints area (with hint buttons)
         document.getElementById('result-area').classList.add('hidden');
         document.getElementById('game-controls').classList.add('hidden');
         document.getElementById('hints-area').classList.remove('hidden');
@@ -178,8 +186,16 @@ async function handleGlobeClick({ lat, lng }) {
         // Add to completed challenges
         gameState.completedChallengeIds.push(gameState.currentChallenge.id);
         
-        // Update score (stored, but not displayed yet)
-        gameState.score += result.score;
+        // Apply hint penalties to score
+        const baseScore = result.score;
+        const penaltyAmount = Math.floor(baseScore * gameState.hintPenalty);
+        const finalScore = Math.max(0, baseScore - penaltyAmount);
+        result.baseScore = baseScore;
+        result.penaltyAmount = penaltyAmount;
+        result.finalScore = finalScore;
+        
+        // Update score with penalty applied
+        gameState.score += finalScore;
         
         if (result.is_correct) {
             gameState.streak++;
@@ -391,24 +407,26 @@ function showResult(result) {
     const icon = document.getElementById('result-icon');
     const title = document.getElementById('result-title');
     
+    const finalScore = result.finalScore;
+    
     // Determine message based on score ranges
     if (result.scoring_zone === 'outside') {
         icon.textContent = '✗';
         icon.style.color = '#ff4444';
-        title.textContent = 'Outside!';
-    } else if (result.score >= 100) {
+        title.textContent = 'Outside Country!';
+    } else if (finalScore >= 100) {
         icon.textContent = '🎯';
         icon.style.color = '#00ff00';
         title.textContent = 'Perfect!';
-    } else if (result.score >= 80) {
+    } else if (finalScore >= 80) {
         icon.textContent = '✓';
         icon.style.color = '#4ecdc4';
         title.textContent = 'Excellent!';
-    } else if (result.score >= 50) {
+    } else if (finalScore >= 50) {
         icon.textContent = '✓';
         icon.style.color = '#4ecdc4';
         title.textContent = 'Good!';
-    } else if (result.score >= 20) {
+    } else if (finalScore >= 20) {
         icon.textContent = '~';
         icon.style.color = '#ffaa00';
         title.textContent = 'Not bad!';
@@ -419,7 +437,14 @@ function showResult(result) {
     }
     
     document.getElementById('result-distance').textContent = `${result.distance_km.toLocaleString()}km`;
-    document.getElementById('result-points').textContent = `+${result.score}`;
+    
+    // Show score with penalty info if applicable
+    if (result.penaltyAmount > 0) {
+        document.getElementById('result-points').innerHTML = 
+            `+${result.finalScore} <small style="color:#ff6b6b">(base: ${result.baseScore}, penalty: -${result.penaltyAmount})</small>`;
+    } else {
+        document.getElementById('result-points').textContent = `+${result.finalScore}`;
+    }
     
     // Show location info inline under title
     const challenge = gameState.currentChallenge;
@@ -435,15 +460,80 @@ function showResult(result) {
 }
 
 /**
- * Show additional hints and zoom near the target location
+ * Show country (-20% penalty)
+ */
+function showCountry() {
+    if (!gameState.currentChallenge) return;
+    if (gameState.usedShowCountry) return; // Already used
+    
+    gameState.usedShowCountry = true;
+    gameState.hintPenalty = Math.min(1.0, gameState.hintPenalty + 0.20);
+    
+    // Show country in the hints area
+    const hintsContainer = document.getElementById('hints-container');
+    const countryHint = document.createElement('li');
+    countryHint.innerHTML = `<strong>Country: ${gameState.currentChallenge.country}</strong> <span style="color:#ff6b6b">(-20%)</span>`;
+    countryHint.style.color = '#4ecdc4';
+    document.getElementById('hints-list').insertBefore(countryHint, document.getElementById('hints-list').firstChild);
+    hintsContainer.classList.remove('hidden');
+    
+    // Disable button
+    document.getElementById('country-btn').disabled = true;
+    document.getElementById('country-btn').style.opacity = '0.5';
+}
+
+/**
+ * Show additional text hints (-10% per hint)
  */
 function showHint() {
     if (!gameState.currentChallenge) return;
     
-    gameState.hintIndex++;
-    updateHints();
+    const hints = gameState.currentChallenge.hints;
+    if (!hints || gameState.hintIndex >= hints.length) return;
     
-    // Zoom near the target location with random offset (like Panda3D)
+    // Add 10% penalty per hint
+    gameState.hintPenalty = Math.min(1.0, gameState.hintPenalty + 0.10);
+    
+    const hint = hints[gameState.hintIndex];
+    gameState.hintIndex++;
+    
+    // Show hint in the list
+    const list = document.getElementById('hints-list');
+    const li = document.createElement('li');
+    li.innerHTML = `${hint} <span style="color:#ff6b6b">(-10%)</span>`;
+    list.appendChild(li);
+    document.getElementById('hints-container').classList.remove('hidden');
+    
+    // Hide hint button if all hints shown
+    if (gameState.hintIndex >= hints.length) {
+        document.getElementById('hint-btn').disabled = true;
+        document.getElementById('hint-btn').style.opacity = '0.5';
+    }
+}
+
+/**
+ * Zoom near target location (-50% penalty)
+ */
+function zoomHint() {
+    if (!gameState.currentChallenge) return;
+    if (gameState.usedZoomHint) return; // Already used
+    
+    gameState.usedZoomHint = true;
+    gameState.hintPenalty = Math.min(1.0, gameState.hintPenalty + 0.50);
+    
+    // Show zoom message
+    const list = document.getElementById('hints-list');
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>Zooming near location...</strong> <span style="color:#ff6b6b">(-50%)</span>`;
+    li.style.color = '#ffd93d';
+    list.appendChild(li);
+    document.getElementById('hints-container').classList.remove('hidden');
+    
+    // Disable button
+    document.getElementById('zoom-btn').disabled = true;
+    document.getElementById('zoom-btn').style.opacity = '0.5';
+    
+    // Zoom to hint location
     zoomToHint();
 }
 
@@ -474,32 +564,34 @@ function zoomToHint() {
 }
 
 /**
- * Update hints display
+ * Initialize hints area for a new challenge (clears previous hints, enables buttons)
  */
-function updateHints() {
-    const hints = gameState.currentChallenge.hints;
+function updateHintsArea() {
     const container = document.getElementById('hints-container');
     const list = document.getElementById('hints-list');
     
-    if (!hints || hints.length === 0) {
-        container.classList.add('hidden');
-        return;
-    }
-    
+    // Clear previous hints
     list.innerHTML = '';
-    const visibleHints = hints.slice(0, gameState.hintIndex + 1);
+    container.classList.add('hidden');
     
-    visibleHints.forEach(hint => {
-        const li = document.createElement('li');
-        li.textContent = hint;
-        list.appendChild(li);
-    });
+    // Reset buttons
+    const countryBtn = document.getElementById('country-btn');
+    const hintBtn = document.getElementById('hint-btn');
+    const zoomBtn = document.getElementById('zoom-btn');
     
-    container.classList.remove('hidden');
+    countryBtn.disabled = false;
+    countryBtn.style.opacity = '1';
+    hintBtn.disabled = false;
+    hintBtn.style.opacity = '1';
+    zoomBtn.disabled = false;
+    zoomBtn.style.opacity = '1';
     
-    // Hide hint button if all hints shown
-    if (gameState.hintIndex >= hints.length - 1) {
-        document.getElementById('hint-btn').classList.add('hidden');
+    // Show hint button only if hints exist
+    const hints = gameState.currentChallenge?.hints;
+    if (!hints || hints.length === 0) {
+        hintBtn.classList.add('hidden');
+    } else {
+        hintBtn.classList.remove('hidden');
     }
 }
 
