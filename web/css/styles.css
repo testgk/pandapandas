@@ -390,7 +390,7 @@ body {
 }
 
 /* Header Buttons */
-#header-buttons {
+#header-left {
     display: flex;
     gap: 10px;
     align-items: center;
@@ -418,6 +418,9 @@ body {
     transform: translate(-50%, -50%);
     z-index: 150;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .btn-lg {
@@ -426,6 +429,14 @@ body {
     border-radius: 16px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
     animation: pulse-glow 2s infinite;
+}
+
+.btn-lg.btn-danger {
+    animation: none;
+}
+
+.btn-lg.btn-success {
+    animation: none;
 }
 
 @keyframes pulse-glow {

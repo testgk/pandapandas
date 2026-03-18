@@ -28,15 +28,14 @@
         <div id="game-ui">
             <!-- Header -->
             <div id="header">
+                <div id="header-left">
+                    <button id="menu-btn" class="btn btn-outline btn-sm">☰ Menu</button>
+                    <button id="help-btn" class="btn btn-outline btn-sm">?</button>
+                </div>
                 <h1>🌍 GeoChallenge</h1>
                 <div id="score-display">
                     <span id="current-score">Score: 0</span>
                     <span id="streak">Streak: 0</span>
-                </div>
-                <div id="header-buttons">
-                    <button id="submit-score-btn" class="btn btn-success btn-sm">Submit Score</button>
-                    <button id="help-btn" class="btn btn-outline btn-sm">?</button>
-                    <button id="menu-btn" class="btn btn-outline btn-sm">☰ Menu</button>
                 </div>
             </div>
 
@@ -56,6 +55,8 @@
             <div id="center-action" class="center-action">
                 <button id="center-start-btn" class="btn btn-primary btn-lg">▶ Start Game</button>
                 <button id="center-return-btn" class="btn btn-primary btn-lg hidden">↩ Return to Game</button>
+                <button id="center-end-btn" class="btn btn-danger btn-lg hidden">■ End Game</button>
+                <button id="center-submit-btn" class="btn btn-success btn-lg hidden">🏆 Submit Score</button>
             </div>
 
             <!-- Challenge Panel -->
@@ -97,16 +98,6 @@
                             <option value="Expert">Expert</option>
                         </select>
                     </div>
-                </div>
-                <div id="game-controls">
-                    <button id="start-btn" class="btn btn-primary">Start Game</button>
-                    <select id="difficulty-select-start">
-                        <option value="random">Random</option>
-                        <option value="Easy" selected>Easy</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Hard">Hard</option>
-                        <option value="Expert">Expert</option>
-                    </select>
                 </div>
             </div>
 

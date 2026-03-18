@@ -78,7 +78,6 @@ function initGlobe() {
  * Set up event listeners for UI elements
  */
 function setupEventListeners() {
-    document.getElementById('start-btn').addEventListener('click', startGame);
     document.getElementById('next-btn-result').addEventListener('click', nextChallenge);
     document.getElementById('hint-btn').addEventListener('click', showHint);
     document.getElementById('country-btn').addEventListener('click', showCountry);
@@ -86,7 +85,6 @@ function setupEventListeners() {
     document.querySelector('.close-btn').addEventListener('click', hideStatsModal);
     
     // Header buttons
-    document.getElementById('submit-score-btn').addEventListener('click', submitScore);
     document.getElementById('help-btn').addEventListener('click', showHelpModal);
     document.getElementById('menu-btn').addEventListener('click', toggleMenu);
     
@@ -101,6 +99,8 @@ function setupEventListeners() {
     // Center action buttons
     document.getElementById('center-start-btn').addEventListener('click', startGameFromCenter);
     document.getElementById('center-return-btn').addEventListener('click', returnToGame);
+    document.getElementById('center-end-btn').addEventListener('click', endGameFromCenter);
+    document.getElementById('center-submit-btn').addEventListener('click', submitScoreFromCenter);
     
     // Panel close button
     document.getElementById('panel-close-btn').addEventListener('click', hidePanel);
@@ -166,8 +166,6 @@ async function startGame() {
     
     updateScoreDisplay();
     
-    document.getElementById('start-btn').classList.add('hidden');
-    
     await nextChallenge();
 }
 
@@ -212,7 +210,6 @@ async function nextChallenge() {
         
         // Hide result area, show hints area (with hint buttons)
         document.getElementById('result-area').classList.add('hidden');
-        document.getElementById('game-controls').classList.add('hidden');
         document.getElementById('hints-area').classList.remove('hidden');
         document.getElementById('challenge-location').classList.add('hidden');
         
@@ -750,10 +747,10 @@ function endGame() {
     
     saveStats();
     
-    document.getElementById('start-btn').classList.remove('hidden');
-    document.getElementById('start-btn').textContent = 'Play Again';
-    document.getElementById('game-controls').classList.remove('hidden');
+    // Hide panel and show center buttons
+    document.getElementById('challenge-panel').classList.add('hidden');
     document.getElementById('hints-area').classList.add('hidden');
+    updateCenterButtons();
 }
 
 /**
@@ -863,24 +860,38 @@ function hideMenu() {
 function updateCenterButtons() {
     const startBtn = document.getElementById('center-start-btn');
     const returnBtn = document.getElementById('center-return-btn');
+    const endBtn = document.getElementById('center-end-btn');
+    const submitBtn = document.getElementById('center-submit-btn');
     const centerAction = document.getElementById('center-action');
     
     const panel = document.getElementById('challenge-panel');
     const gameActive = gameState.currentChallenge !== null;
+    const hasScore = gameState.score > 0;
     const panelHidden = panel.classList.contains('hidden');
     
-    if (!gameActive) {
-        // No game active - show Start Game
+    // Hide all by default
+    startBtn.classList.add('hidden');
+    returnBtn.classList.add('hidden');
+    endBtn.classList.add('hidden');
+    submitBtn.classList.add('hidden');
+    
+    if (!gameActive && !hasScore) {
+        // No game active, no score - show Start Game only
         startBtn.classList.remove('hidden');
-        returnBtn.classList.add('hidden');
+        centerAction.classList.remove('hidden');
+    } else if (!gameActive && hasScore) {
+        // Game ended with score - show Start Game and Submit Score
+        startBtn.classList.remove('hidden');
+        submitBtn.classList.remove('hidden');
         centerAction.classList.remove('hidden');
     } else if (panelHidden) {
-        // Game active but panel hidden - show Return to Game
-        startBtn.classList.add('hidden');
+        // Game active but panel hidden - show Return, End, Submit
         returnBtn.classList.remove('hidden');
+        endBtn.classList.remove('hidden');
+        if (hasScore) submitBtn.classList.remove('hidden');
         centerAction.classList.remove('hidden');
     } else {
-        // Game active and panel visible - hide both
+        // Game active and panel visible - hide all
         centerAction.classList.add('hidden');
     }
 }
@@ -907,6 +918,24 @@ function showPanel() {
 function startGameFromCenter() {
     showPanel();
     startGame();
+}
+
+/**
+ * End game from center button
+ */
+function endGameFromCenter() {
+    hideMenu();
+    // End the current game
+    gameState.currentChallenge = null;
+    document.getElementById('challenge-panel').classList.add('hidden');
+    updateCenterButtons();
+}
+
+/**
+ * Submit score from center button
+ */
+function submitScoreFromCenter() {
+    submitScore();
 }
 
 /**
