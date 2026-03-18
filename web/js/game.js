@@ -895,15 +895,17 @@ function updateCenterButtons() {
         startBtn.classList.remove('hidden');
         centerAction.classList.remove('hidden');
     } else if (!gameActive && hasScore) {
-        // Game ended with score - show Start Game and Submit Score
+        // Game ended with score - show Start Game and Submit Score (only if signed in)
         startBtn.classList.remove('hidden');
-        submitBtn.classList.remove('hidden');
+        if (authState.isSignedIn) {
+            submitBtn.classList.remove('hidden');
+        }
         centerAction.classList.remove('hidden');
     } else if (panelHidden) {
-        // Game active but panel hidden - show Return, End, Submit
+        // Game active but panel hidden - show Return, End, Submit (only if signed in)
         returnBtn.classList.remove('hidden');
         endBtn.classList.remove('hidden');
-        if (hasScore) submitBtn.classList.remove('hidden');
+        if (hasScore && authState.isSignedIn) submitBtn.classList.remove('hidden');
         centerAction.classList.remove('hidden');
     } else {
         // Game active and panel visible - hide all
@@ -943,6 +945,10 @@ function endGameFromCenter() {
     // End the current game
     gameState.currentChallenge = null;
     document.getElementById('challenge-panel').classList.add('hidden');
+    if (!authState.isSignedIn) {
+        showLoading('Sign in to submit scores!');
+        setTimeout(hideLoading, 2000);
+    }
     updateCenterButtons();
 }
 
