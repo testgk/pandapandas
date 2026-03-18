@@ -640,6 +640,18 @@ body {
     box-shadow: 0 0 10px rgba(96, 165, 250, 0.2);
 }
 
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
+}
+
 .btn-full {
     width: 100%;
 }

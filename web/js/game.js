@@ -1029,10 +1029,47 @@ function updateAuthUI() {
 }
 
 /**
+ * Cookie helper functions
+ */
+function setCookie(name, value, days) {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+    document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Strict`;
+}
+
+function getCookie(name) {
+    const nameEQ = name + '=';
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.indexOf(nameEQ) === 0) {
+            return decodeURIComponent(cookie.substring(nameEQ.length));
+        }
+    }
+    return null;
+}
+
+function deleteCookie(name) {
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+}
+
+/**
  * Show sign in modal
  */
 function showSignInModal() {
     hideMenu();
+    
+    // Pre-fill form if Remember me was checked
+    const savedEmail = getCookie('geochallenge_email');
+    const savedPassword = getCookie('geochallenge_password');
+    const rememberMe = getCookie('geochallenge_remember') === 'true';
+    
+    if (rememberMe && savedEmail && savedPassword) {
+        document.getElementById('signin-email').value = savedEmail;
+        document.getElementById('signin-password').value = savedPassword;
+        document.getElementById('remember-me').checked = true;
+    }
+    
     document.getElementById('signin-modal').classList.remove('hidden');
 }
 
@@ -1068,6 +1105,7 @@ async function handleSignIn(e) {
     
     const email = document.getElementById('signin-email').value;
     const password = document.getElementById('signin-password').value;
+    const rememberMe = document.getElementById('remember-me').checked;
     
     // TODO: Replace with actual API call
     // For now, simulate sign in
@@ -1079,6 +1117,17 @@ async function handleSignIn(e) {
         };
         authState.isSignedIn = true;
         localStorage.setItem('geochallenge_user', JSON.stringify(authState.user));
+        
+        // Save credentials to cookies if Remember me is checked
+        if (rememberMe) {
+            setCookie('geochallenge_email', email, 30);
+            setCookie('geochallenge_password', password, 30);
+            setCookie('geochallenge_remember', 'true', 30);
+        } else {
+            deleteCookie('geochallenge_email');
+            deleteCookie('geochallenge_password');
+            deleteCookie('geochallenge_remember');
+        }
         
         hideSignInModal();
         updateAuthUI();
