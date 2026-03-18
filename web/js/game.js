@@ -23,7 +23,8 @@ const gameState = {
         totalAccuracy: 0,
         guessCount: 0,
         bestStreak: 0
-    }
+    },
+    justEnded: false
 };
 
 // Loading overlay helpers
@@ -101,6 +102,12 @@ function setupEventListeners() {
     document.getElementById('center-return-btn').addEventListener('click', returnToGame);
     document.getElementById('center-end-btn').addEventListener('click', endGameFromCenter);
     document.getElementById('center-submit-btn').addEventListener('click', submitScoreFromCenter);
+    document.getElementById('center-no-thanks-btn').addEventListener('click', () => {
+        gameState.justEnded = false;
+        updateCenterButtons();
+        // Show menu (simulate click)
+        document.getElementById('menu-btn').click();
+    });
     
     // Panel close button
     document.getElementById('panel-close-btn').addEventListener('click', hidePanel);
@@ -886,35 +893,33 @@ function updateCenterButtons() {
     const returnBtn = document.getElementById('center-return-btn');
     const endBtn = document.getElementById('center-end-btn');
     const submitBtn = document.getElementById('center-submit-btn');
+    const noThanksBtn = document.getElementById('center-no-thanks-btn');
     const centerAction = document.getElementById('center-action');
-    
     const panel = document.getElementById('challenge-panel');
     const gameActive = gameState.currentChallenge !== null;
     const hasScore = gameState.score > 0;
     const panelHidden = panel.classList.contains('hidden');
-    
     // Hide all by default
     startBtn.classList.add('hidden');
     returnBtn.classList.add('hidden');
     endBtn.classList.add('hidden');
     submitBtn.classList.add('hidden');
-    
+    noThanksBtn.classList.add('hidden');
     if (!gameActive && !hasScore) {
         // No game active, no score - show Start Game only
         startBtn.classList.remove('hidden');
         centerAction.classList.remove('hidden');
-    } else if (!gameActive && hasScore) {
-        // Game ended with score - show Start Game and Submit Score (only if signed in)
-        startBtn.classList.remove('hidden');
+    } else if (!gameActive && hasScore && gameState.justEnded) {
+        // Game just ended - show Submit Score and No Thanks (only if signed in)
         if (authState.isSignedIn) {
             submitBtn.classList.remove('hidden');
         }
+        noThanksBtn.classList.remove('hidden');
         centerAction.classList.remove('hidden');
     } else if (panelHidden) {
-        // Game active but panel hidden - show Return, End, Submit (only if signed in)
+        // Game active but panel hidden - show Return and End only
         returnBtn.classList.remove('hidden');
         endBtn.classList.remove('hidden');
-        if (hasScore && authState.isSignedIn) submitBtn.classList.remove('hidden');
         centerAction.classList.remove('hidden');
     } else {
         // Game active and panel visible - hide all
@@ -942,6 +947,7 @@ function showPanel() {
  * Start game from center button
  */
 function startGameFromCenter() {
+    gameState.justEnded = false;
     showPanel();
     startGame();
 }
@@ -954,6 +960,7 @@ function endGameFromCenter() {
     // End the current game
     gameState.currentChallenge = null;
     document.getElementById('challenge-panel').classList.add('hidden');
+    gameState.justEnded = true;
     if (!authState.isSignedIn) {
         showLoading('Sign in to submit scores!');
         setTimeout(hideLoading, 2000);
