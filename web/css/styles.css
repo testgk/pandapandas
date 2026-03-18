@@ -455,6 +455,23 @@ body {
     border-bottom: none;
 }
 
+/* About Modal */
+.about-info {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.about-info p {
+    margin: 10px 0;
+    color: #cbd5e1;
+}
+
+.about-copyright {
+    margin-top: 20px !important;
+    color: #64748b !important;
+    font-size: 0.9em;
+}
+
 /* Auth Modal Forms */
 .modal-sm {
     max-width: 360px;

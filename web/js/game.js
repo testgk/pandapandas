@@ -95,9 +95,11 @@ function setupEventListeners() {
     document.getElementById('menu-signout-btn').addEventListener('click', signOut);
     document.getElementById('menu-stats-btn').addEventListener('click', () => { hideMenu(); showStatsModal(); });
     document.getElementById('menu-leaderboard-btn').addEventListener('click', showLeaderboard);
+    document.getElementById('menu-about-btn').addEventListener('click', showAboutModal);
     
     // Modal close buttons
     document.getElementById('help-close-btn').addEventListener('click', hideHelpModal);
+    document.getElementById('about-close-btn').addEventListener('click', hideAboutModal);
     document.getElementById('signin-close-btn').addEventListener('click', hideSignInModal);
     document.getElementById('signup-close-btn').addEventListener('click', hideSignUpModal);
     
@@ -799,6 +801,21 @@ function showHelpModal() {
  */
 function hideHelpModal() {
     document.getElementById('help-modal').classList.add('hidden');
+}
+
+/**
+ * Show about modal
+ */
+function showAboutModal() {
+    hideMenu();
+    document.getElementById('about-modal').classList.remove('hidden');
+}
+
+/**
+ * Hide about modal
+ */
+function hideAboutModal() {
+    document.getElementById('about-modal').classList.add('hidden');
 }
 
 // ============================================

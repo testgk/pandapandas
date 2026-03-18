@@ -48,6 +48,8 @@
                 <hr class="dropdown-divider">
                 <button id="menu-stats-btn" class="dropdown-item">My Stats</button>
                 <button id="menu-leaderboard-btn" class="dropdown-item">Leaderboard</button>
+                <hr class="dropdown-divider">
+                <button id="menu-about-btn" class="dropdown-item">About</button>
             </div>
 
             <!-- Challenge Panel -->
@@ -175,6 +177,19 @@
                 </div>
             </div>
 
+            <!-- About Modal -->
+            <div id="about-modal" class="modal hidden">
+                <div class="modal-content modal-sm">
+                    <span class="close-btn" id="about-close-btn">&times;</span>
+                    <h2>🌍 GeoChallenge</h2>
+                    <div class="about-info">
+                        <p><strong>Version:</strong> <span id="app-version">v1.00</span></p>
+                        <p><strong>Build:</strong> <span id="app-commit">722d1ef</span></p>
+                        <p class="about-copyright">© 2026 GeoChallenge</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Sign In Modal -->
             <div id="signin-modal" class="modal hidden">
                 <div class="modal-content modal-sm">
@@ -228,6 +243,7 @@
     </div>
 
     <script src="js/challenges.js"></script>
+    <script src="js/version.js"></script>
     <script src="js/game.js"></script>
 </body>
 </html>
