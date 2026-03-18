@@ -32,6 +32,10 @@ class GameAppDelegate:
         """Show text hint (-10% score penalty)."""
         self.__gameController.showHint()
 
+    def showCountry( self ) -> None:
+        """Show country (-20% score penalty)."""
+        self.__gameController.showCountry()
+
     def onHelpMe( self ) -> None:
         """Camera closeup hint (-50% score penalty)."""
         self.__gameController.onHelpMe()

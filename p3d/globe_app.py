@@ -150,6 +150,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
                 onStartGame = lambda: self.__gameDelegate.startGame(),
                 onNextChallenge = lambda: self.__gameDelegate.nextChallenge(),
                 onGameStats = lambda: self.__gameDelegate.showGameStats(),
+                onShowCountry = lambda: self.__gameDelegate.showCountry(),
                 onShowHint = lambda: self.__gameDelegate.showHint(),
                 onHelpMe = lambda: self.__gameDelegate.onHelpMe(),
                 taskManager = self.taskMgr,

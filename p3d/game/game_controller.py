@@ -77,6 +77,7 @@ class GameController:
             self.__hintCount = 0
             self.__hintPenalty = 0.0
             self.__usedHelpMe = False
+            self.__usedShowCountry = False
 
             self.__clearMarkers()
             self.__gui.clearChallengeText()
@@ -87,7 +88,6 @@ class GameController:
                 f"GEOCHALLENGE ACTIVE!\n"
                 f"\nFIND: {self.__currentChallenge.location_name}\n"
                 f"Difficulty: {self.__currentChallenge.difficulty.value}\n"
-                f"Country: {self.__currentChallenge.country}\n"
                 f"Continent: {self.__currentChallenge.continent}\n"
                 f"\nCLICK ON THE GLOBE TO GUESS!"
             )
@@ -112,6 +112,7 @@ class GameController:
             self.__hintCount = 0
             self.__hintPenalty = 0.0
             self.__usedHelpMe = False
+            self.__usedShowCountry = False
 
             self.__clearMarkers()
             self.__gui.clearChallengeText()
@@ -122,7 +123,6 @@ class GameController:
                 f"NEW CHALLENGE!\n"
                 f"Find: {self.__currentChallenge.location_name}\n"
                 f"Difficulty: {self.__currentChallenge.difficulty.value}\n"
-                f"Country: {self.__currentChallenge.country}\n"
                 f"Continent: {self.__currentChallenge.continent}\n"
                 f"\nClick on the globe to make your guess!"
             )
@@ -232,6 +232,11 @@ class GameController:
             self.__placeAnswerMarker()
             self.__focusOnCity( self.__currentChallenge.actual_coordinates )
 
+            # Check if click was outside threshold
+            thresholdKm = self.__geoGame.getThresholdKm( self.__currentChallenge )
+            isOutsideCountry = attempt.distance_km > thresholdKm
+            marginKm = attempt.distance_km - thresholdKm if isOutsideCountry else 0
+
             # Apply hint penalty to score
             baseScore = attempt.accuracy_score
             penaltyAmount = int( baseScore * self.__hintPenalty )
@@ -245,6 +250,13 @@ class GameController:
                 f"Distance: {attempt.distance_km:.1f} km\n"
                 f"Time: {attempt.response_time_seconds:.1f}s\n"
             )
+
+            # Add Outside Country info if applicable
+            if isOutsideCountry:
+                resultText += (
+                    f"OUTSIDE COUNTRY! (+{marginKm:.1f} km over limit)\n"
+                    f"Threshold: {thresholdKm:.0f} km (-80% penalty)\n"
+                )
 
             if self.__hintPenalty > 0:
                 resultText += (
@@ -261,7 +273,7 @@ class GameController:
                 trend = "Improving" if finalScore > avgScore else "Below average"
                 resultText += f"[STATS] {trend} (Avg: {avgScore:.0f}%)\n"
 
-            resultText += self.__scoreFeedback( finalScore )
+            resultText += self.__scoreFeedback( finalScore, isOutsideCountry )
 
             self.__gui.setChallengeText( self.__stripEmoji( resultText ) )
             self.__gui.showNextChallengeButton()
@@ -338,6 +350,24 @@ class GameController:
             DEFAULT_CAMERA_DIST * 0.75,
             taskName = "focusHintTask",
         )
+
+    def showCountry( self ) -> None:
+        """Show the country for the current challenge. Reduces score by 20%."""
+        if not self.__currentChallenge:
+            return
+
+        if not self.__usedShowCountry:
+            self.__usedShowCountry = True
+            self.__hintPenalty = min( 1.0, self.__hintPenalty + 0.20 )
+            penaltyPercent = int( self.__hintPenalty * 100 )
+            countryMessage = (
+                f"COUNTRY REVEALED:\n"
+                f"{self.__currentChallenge.country}\n"
+                f"\n(Score penalty: -{penaltyPercent}%)"
+            )
+            self.__log( countryMessage )
+        else:
+            self.__log( f"Country: {self.__currentChallenge.country}" )
 
     # Legacy compatibility
     def onHint( self ) -> None:
@@ -464,7 +494,9 @@ class GameController:
                 marker.removeNode()
         self.__markers = []
 
-    def __scoreFeedback( self, score: int ) -> str:
+    def __scoreFeedback( self, score: int, isOutsideCountry: bool = False ) -> str:
+        if isOutsideCountry:
+            return "🚫 OUTSIDE COUNTRY! You clicked outside the target area."
         if score >= 90:
             return "🏆 EXCELLENT! You're a geography expert!"
         if score >= 70:

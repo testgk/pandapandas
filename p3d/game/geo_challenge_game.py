@@ -426,7 +426,23 @@ class GeoChallengeGame:
         threshold_km = self.getThresholdKm( self.current_challenge )
 
         if distance_km > threshold_km:
-            final_score = 0
+            # Outside threshold - calculate what score would have been, then apply 80% penalty
+            max_distance = threshold_km * 2  # Use double threshold for outside scoring
+            base_score = max(0, 1000 * (1 - distance_km / max_distance))
+            time_bonus = max(0, 100 * (1 - response_time / 60))
+
+            difficulty_multipliers = {
+                DifficultyLevel.EASY:   1.0,
+                DifficultyLevel.MEDIUM: 1.2,
+                DifficultyLevel.HARD:   1.5,
+                DifficultyLevel.EXPERT: 2.0,
+            }
+            multiplier = difficulty_multipliers[ self.current_challenge.difficulty ]
+            max_achievable = int( 1000 * multiplier + 100 )
+            raw_score = max( 0, min( max_achievable, int( ( base_score + time_bonus ) * multiplier ) ) )
+            calculated_score = int( ( raw_score / max_achievable ) * 100 ) if max_achievable > 0 else 0
+            # Apply 80% penalty for being outside threshold
+            final_score = max( 0, int( calculated_score * 0.20 ) )
         else:
             max_distance = threshold_km
             base_score = max(0, 1000 * (1 - distance_km / max_distance))

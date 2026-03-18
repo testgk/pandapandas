@@ -18,6 +18,7 @@ class GameGuiController:
         onStartGame: Callable,
         onNextChallenge: Callable,
         onGameStats: Callable,
+        onShowCountry: Callable,
         onShowHint: Callable,
         onHelpMe: Callable,
         taskManager,
@@ -37,6 +38,7 @@ class GameGuiController:
         self.__gameStatsBtn: Optional[ DirectButton ] = None
         self.__dbStatsBtn: Optional[ DirectButton ] = None
         self.__updateScoresBtn: Optional[ DirectButton ] = None
+        self.__showCountryBtn: Optional[ DirectButton ] = None
         self.__hintBtn: Optional[ DirectButton ] = None
         self.__helpMeBtn: Optional[ DirectButton ] = None
         self.__menuBtn: Optional[ DirectButton ] = None
@@ -61,7 +63,7 @@ class GameGuiController:
         self.__onSignOut = onSignOut
         self.__onSignUp = onSignUp
 
-        self.__buildButtons( onStartGame, onNextChallenge, onGameStats, onShowHint, onHelpMe, onDbStats, onUpdateScores )
+        self.__buildButtons( onStartGame, onNextChallenge, onGameStats, onShowCountry, onShowHint, onHelpMe, onDbStats, onUpdateScores )
         self.__buildMenu()
         self.__buildChallengeDisplay()
 
@@ -72,6 +74,7 @@ class GameGuiController:
         onStartGame: Callable,
         onNextChallenge: Callable,
         onGameStats: Callable,
+        onShowCountry: Callable,
         onShowHint: Callable,
         onHelpMe: Callable,
         onDbStats: Callable = None,
@@ -141,6 +144,18 @@ class GameGuiController:
             pressEffect = 1, relief = 2
         )
         self.__hintBtn.hide()
+
+        # Show Country button (reveals country, -20% score penalty)
+        self.__showCountryBtn = DirectButton(
+            text = self.__settings.getTextContent( "show_country" ),
+            pos = self.__settings.getButtonPosition( "game", "show_country_position" ),
+            scale = self.__settings.getButtonScale( "game" ),
+            command = lambda: ( self.__applyButtonEffect( self.__showCountryBtn ), onShowCountry() ),
+            frameColor = self.__settings.getButtonColor( "control", "background" ),
+            text_fg = self.__settings.getButtonColor( "control", "text" ),
+            pressEffect = 1, relief = 2
+        )
+        self.__showCountryBtn.hide()
 
         # Help Me button (camera closeup, -50% score penalty)
         self.__helpMeBtn = DirectButton(
@@ -354,14 +369,18 @@ class GameGuiController:
             self.__nextChallengeBtn.hide()
 
     def showHintButtons( self ) -> None:
-        """Show both Hint and Help Me buttons during an active challenge."""
+        """Show Country, Hint and Zoom In buttons during an active challenge."""
+        if self.__showCountryBtn:
+            self.__showCountryBtn.show()
         if self.__hintBtn:
             self.__hintBtn.show()
         if self.__helpMeBtn:
             self.__helpMeBtn.show()
 
     def hideHintButtons( self ) -> None:
-        """Hide both Hint and Help Me buttons."""
+        """Hide Country, Hint and Zoom In buttons."""
+        if self.__showCountryBtn:
+            self.__showCountryBtn.hide()
         if self.__hintBtn:
             self.__hintBtn.hide()
         if self.__helpMeBtn:
