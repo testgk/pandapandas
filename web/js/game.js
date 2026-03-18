@@ -249,13 +249,37 @@ async function handleGlobeClick({ lat, lng }) {
         // Add to completed challenges
         gameState.completedChallengeIds.push(gameState.currentChallenge.id);
         
-        // Apply hint penalties to score
-        const baseScore = result.score;
-        const penaltyAmount = Math.floor(baseScore * gameState.hintPenalty);
-        const finalScore = Math.max(0, baseScore - penaltyAmount);
-        result.baseScore = baseScore;
-        result.penaltyAmount = penaltyAmount;
+        // Calculate score with outside country rules
+        let baseScore = result.score;
+        const isOutsideCountry = result.scoring_zone === 'outside';
+        const isWithinScoringMargin = result.distance_km <= 500;  // Scoring margin = 500km (red zone max)
+        
+        // Apply outside country penalty:
+        // - Outside country AND outside margin (>500km) = 0 points
+        // - Outside country BUT within margin (≤500km) = 50% reduction
+        let outsideCountryPenalty = 0;
+        if (isOutsideCountry) {
+            if (!isWithinScoringMargin) {
+                // Outside margin = 0 points
+                outsideCountryPenalty = baseScore;
+                baseScore = 0;
+            } else {
+                // Within margin but outside country = 50% reduction
+                outsideCountryPenalty = Math.floor(baseScore * 0.5);
+                baseScore = baseScore - outsideCountryPenalty;
+            }
+        }
+        
+        // Apply hint penalties to remaining score
+        const hintPenaltyAmount = Math.floor(baseScore * gameState.hintPenalty);
+        const finalScore = Math.max(0, baseScore - hintPenaltyAmount);
+        
+        result.baseScore = result.score;  // Original score from API
+        result.outsideCountryPenalty = outsideCountryPenalty;
+        result.hintPenaltyAmount = hintPenaltyAmount;
+        result.penaltyAmount = outsideCountryPenalty + hintPenaltyAmount;  // Total penalty
         result.finalScore = finalScore;
+        result.isWithinScoringMargin = isWithinScoringMargin;
         
         // Update score with penalty applied
         gameState.score += finalScore;
@@ -478,7 +502,11 @@ function showResult(result) {
     if (result.scoring_zone === 'outside') {
         icon.textContent = '✗';
         icon.style.color = '#ff4444';
-        title.textContent = 'Outside Country!';
+        if (!result.isWithinScoringMargin) {
+            title.textContent = 'Outside Country! (0 pts)';
+        } else {
+            title.textContent = 'Outside Country! (-50%)';
+        }
     } else if (finalScore >= 100) {
         icon.textContent = '🎯';
         icon.style.color = '#00ff00';
@@ -505,8 +533,15 @@ function showResult(result) {
     
     // Show score with penalty info if applicable
     if (result.penaltyAmount > 0) {
+        let penaltyDetails = [];
+        if (result.outsideCountryPenalty > 0) {
+            penaltyDetails.push(`outside: -${result.outsideCountryPenalty}`);
+        }
+        if (result.hintPenaltyAmount > 0) {
+            penaltyDetails.push(`hints: -${result.hintPenaltyAmount}`);
+        }
         document.getElementById('result-points').innerHTML = 
-            `+${result.finalScore} <small style="color:#ff6b6b">(base: ${result.baseScore}, penalty: -${result.penaltyAmount})</small>`;
+            `+${result.finalScore} <small style="color:#ff6b6b">(base: ${result.baseScore}, ${penaltyDetails.join(', ')})</small>`;
     } else {
         document.getElementById('result-points').textContent = `+${result.finalScore}`;
     }
