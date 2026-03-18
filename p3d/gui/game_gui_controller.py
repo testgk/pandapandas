@@ -27,6 +27,8 @@ class GameGuiController:
         onSignIn: Callable = None,
         onSignOut: Callable = None,
         onSignUp: Callable = None,
+        getCurrentUsers: Callable = None,
+        userEmail: str = None,
     ):
         self.__settings: GuiSettingsManager = GuiSettingsManager()
         self.__taskManager = taskManager
@@ -48,6 +50,8 @@ class GameGuiController:
         self.__menuFrame: Optional[ DirectFrame ] = None
         self.__menuVisible: bool = False
         self.__isSignedIn: bool = False
+        self.__userEmail: str = userEmail
+        self.__getCurrentUsers: Callable = getCurrentUsers
 
         # Menu button references
         self.__menuStartBtn: Optional[ DirectButton ] = None
@@ -204,6 +208,25 @@ class GameGuiController:
             pressEffect = 1, relief = 2
         )
 
+        # Custom button for current users (visible only to gdkln@yahoo.com)
+        if self.__userEmail == "gdkln@yahoo.com" and self.__getCurrentUsers:
+            self.__currentUsersBtn = DirectButton(
+                text = "Current Users",
+                pos = ( 0, 0, -0.45 ),
+                scale = menuScale,
+                command = self.__onShowCurrentUsers,
+                frameColor = self.__settings.getButtonColor( "control", "background" ),
+                text_fg = self.__settings.getButtonColor( "control", "text" ),
+                parent = self.__menuFrame,
+                pressEffect = 1, relief = 2
+            )
+    def __onShowCurrentUsers(self):
+        self.__hideMenu()
+        if self.__getCurrentUsers:
+            users = self.__getCurrentUsers()
+            msg = "Current users playing:\n" + "\n".join(users) if users else "No users online."
+            self.setChallengeText(msg)
+
         # Menu Top Scores button
         self.__menuTopScoresBtn = DirectButton(
             text = self.__settings.getTextContent( "menu_top_scores" ),
@@ -303,6 +326,9 @@ class GameGuiController:
     def __onMenuStart( self ) -> None:
         """Handle menu Start button click."""
         self.__hideMenu()
+        if not self.__isSignedIn:
+            self.setChallengeText("You must sign in to play.")
+            return
         if self.__onStartGame:
             self.__onStartGame()
 

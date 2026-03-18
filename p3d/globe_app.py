@@ -146,6 +146,22 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
         # Game GUI + logic — game mode only (desktop)
         self.__gameDelegate: Optional[ GameAppDelegate ] = None
         if isGameMode:
+            # Dummy sign-in state and user list for demonstration
+            self.__signedIn = False
+            self.__userEmail = "gdkln@yahoo.com"  # Replace with actual user email logic
+            self.__currentUsers = ["gdkln@yahoo.com", "alice@example.com", "bob@example.com"]
+
+            def getCurrentUsers():
+                return self.__currentUsers
+
+            def signIn():
+                self.__signedIn = True
+                gameGui.setSignedIn(True)
+
+            def signOut():
+                self.__signedIn = False
+                gameGui.setSignedIn(False)
+
             gameGui = GameGuiController(
                 onStartGame = lambda: self.__gameDelegate.startGame(),
                 onNextChallenge = lambda: self.__gameDelegate.nextChallenge(),
@@ -156,10 +172,13 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
                 taskManager = self.taskMgr,
                 onDbStats = lambda: self.__gameDelegate.showDbStats(),
                 onUpdateScores = lambda: self.__gameDelegate.updateScores(),
-                onSignIn = None,  # TODO: implement auth
-                onSignOut = None,  # TODO: implement auth
-                onSignUp = None,  # TODO: implement auth
+                onSignIn = signIn,
+                onSignOut = signOut,
+                onSignUp = signIn,
+                getCurrentUsers = getCurrentUsers,
+                userEmail = self.__userEmail,
             )
+            gameGui.setSignedIn(self.__signedIn)
             gameController = GameController(
                 globeNodePath = self.__globe,
                 cameraNodePath = self.camera,
