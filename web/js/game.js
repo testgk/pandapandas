@@ -26,6 +26,16 @@ const gameState = {
     }
 };
 
+// Loading overlay helpers
+function showLoading(text = 'Loading data...') {
+    document.getElementById('loading-text').textContent = text;
+    document.getElementById('loading-overlay').classList.remove('hidden');
+}
+
+function hideLoading() {
+    document.getElementById('loading-overlay').classList.add('hidden');
+}
+
 // Initialize the game
 document.addEventListener('DOMContentLoaded', async () => {
     initGlobe();
@@ -154,6 +164,7 @@ async function startGame() {
  * Load the next challenge
  */
 async function nextChallenge() {
+    showLoading('Loading challenge...');
     try {
         const difficulty = document.getElementById('difficulty-select').value;
         
@@ -164,6 +175,7 @@ async function nextChallenge() {
         );
         
         if (!gameState.currentChallenge) {
+            hideLoading();
             showMessage('No more challenges available!', 'Congratulations!');
             endGame();
             return;
@@ -206,7 +218,9 @@ async function nextChallenge() {
         // Focus camera on continent
         focusOnContinent(gameState.currentChallenge.continent);
         
+        hideLoading();
     } catch (error) {
+        hideLoading();
         console.error('Error loading challenge:', error);
         showMessage('Error loading challenge. Please try again.', 'Error');
     }
@@ -220,6 +234,7 @@ async function handleGlobeClick({ lat, lng }) {
     if (gameState.guessSubmitted) return; // Prevent multiple submissions
     
     gameState.guessSubmitted = true;
+    showLoading('Checking your guess...');
     
     try {
         // Submit guess to API
@@ -276,7 +291,9 @@ async function handleGlobeClick({ lat, lng }) {
         // Update stats
         updateStats(result);
         
+        hideLoading();
     } catch (error) {
+        hideLoading();
         console.error('Error submitting guess:', error);
     }
 }
