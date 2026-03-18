@@ -96,6 +96,10 @@ function setupEventListeners() {
     document.getElementById('menu-stats-btn').addEventListener('click', () => { hideMenu(); showStatsModal(); });
     document.getElementById('menu-leaderboard-btn').addEventListener('click', showLeaderboard);
     document.getElementById('menu-about-btn').addEventListener('click', showAboutModal);
+    document.getElementById('menu-return-btn').addEventListener('click', returnToGame);
+    
+    // Panel close button
+    document.getElementById('panel-close-btn').addEventListener('click', hidePanel);
     
     // Modal close buttons
     document.getElementById('help-close-btn').addEventListener('click', hideHelpModal);
@@ -810,6 +814,22 @@ function hideStatsModal() {
  */
 function toggleMenu() {
     const menu = document.getElementById('menu-dropdown');
+    const returnBtn = document.getElementById('menu-return-btn');
+    const returnDivider = document.getElementById('menu-return-divider');
+    
+    // Show "Return to Game" if game is active and panel is hidden
+    const panel = document.getElementById('challenge-panel');
+    const gameActive = gameState.currentChallenge !== null;
+    const panelHidden = panel.classList.contains('hidden');
+    
+    if (gameActive && panelHidden) {
+        returnBtn.classList.remove('hidden');
+        returnDivider.classList.remove('hidden');
+    } else {
+        returnBtn.classList.add('hidden');
+        returnDivider.classList.add('hidden');
+    }
+    
     menu.classList.toggle('hidden');
 }
 
@@ -818,6 +838,28 @@ function toggleMenu() {
  */
 function hideMenu() {
     document.getElementById('menu-dropdown').classList.add('hidden');
+}
+
+/**
+ * Hide the challenge panel (minimize)
+ */
+function hidePanel() {
+    document.getElementById('challenge-panel').classList.add('hidden');
+}
+
+/**
+ * Show the challenge panel
+ */
+function showPanel() {
+    document.getElementById('challenge-panel').classList.remove('hidden');
+}
+
+/**
+ * Return to active game (show panel and hide menu)
+ */
+function returnToGame() {
+    hideMenu();
+    showPanel();
 }
 
 // ============================================
