@@ -78,8 +78,20 @@
         "next_position": [-1.05, 0, -0.82],
         "stats_position": [1.05, 0, 0.90],
         "db_stats_position": [1.05, 0, 0.82],
+        "update_scores_position": [1.05, 0, 0.74],
         "hint_position": [-1.05, 0, -0.72],
+        "help_me_position": [-1.05, 0, -0.62],
+        "menu_position": [1.20, 0, 0.95],
         "scale": 0.033
+      },
+      "menu": {
+        "frame_position": [1.0, 0, 0.6],
+        "button_start_position": [1.0, 0, 0.75],
+        "button_top_scores_position": [1.0, 0, 0.65],
+        "button_signin_position": [1.0, 0, 0.55],
+        "button_signout_position": [1.0, 0, 0.55],
+        "button_signup_position": [1.0, 0, 0.45],
+        "scale": 0.030
       }
     },
     "text": {
@@ -111,7 +123,15 @@
     "next_challenge": "NEXT QUESTION",
     "game_stats": "STATS",
     "db_stats": "LEADERBOARD",
-    "hint": "HINT"
+    "update_scores": "UPDATE SCORES",
+    "hint": "SHOW HINT",
+    "help_me": "HELP ME!",
+    "menu": "MENU",
+    "menu_start": "START",
+    "menu_top_scores": "TOP SCORES",
+    "menu_signin": "SIGN IN",
+    "menu_signout": "SIGN OUT",
+    "menu_signup": "SIGN UP"
   },
   "code_formatting": {
     "spacing": {

@@ -55,6 +55,8 @@ class GameController:
         self.__currentChallenge = None
         self.__markers: List[ NodePath ] = []
         self.__hintCount: int = 0
+        self.__hintPenalty: float = 0.0  # Accumulated penalty (0.0 to 1.0)
+        self.__usedHelpMe: bool = False
 
         self.__acceptCallback = None   # set by globe app so we can register mouse1
         self.__ignoreCallback = None
@@ -73,6 +75,8 @@ class GameController:
             self.__gameMode = True
             self.__currentChallenge = self.__geoGame.get_challenge_by_difficulty()
             self.__hintCount = 0
+            self.__hintPenalty = 0.0
+            self.__usedHelpMe = False
 
             self.__clearMarkers()
             self.__gui.clearChallengeText()
@@ -85,7 +89,6 @@ class GameController:
                 f"Difficulty: {self.__currentChallenge.difficulty.value}\n"
                 f"Country: {self.__currentChallenge.country}\n"
                 f"Continent: {self.__currentChallenge.continent}\n"
-                f"\nHINT: {self.__currentChallenge.hints[ 0 ] if self.__currentChallenge.hints else 'No hints available'}\n"
                 f"\nCLICK ON THE GLOBE TO GUESS!"
             )
             self.__log( challenge_info )
@@ -94,7 +97,7 @@ class GameController:
             self.__focusOnContinent( self.__currentChallenge.continent )
 
         except Exception as e:
-            self.__log( f"❌ Error starting game: {e}" )
+            self.__log( f"Error starting game: {e}" )
 
     def nextChallenge( self, difficulty: Optional[ str ] = None ) -> None:
         """Load the next challenge, optionally forcing a difficulty level."""
@@ -107,6 +110,8 @@ class GameController:
             self.__currentChallenge = self.__geoGame.get_challenge_by_difficulty( selectedDifficulty )
             self.__gameMode = True
             self.__hintCount = 0
+            self.__hintPenalty = 0.0
+            self.__usedHelpMe = False
 
             self.__clearMarkers()
             self.__gui.clearChallengeText()
@@ -119,7 +124,6 @@ class GameController:
                 f"Difficulty: {self.__currentChallenge.difficulty.value}\n"
                 f"Country: {self.__currentChallenge.country}\n"
                 f"Continent: {self.__currentChallenge.continent}\n"
-                f"Hint: {self.__currentChallenge.hints[ 0 ] if self.__currentChallenge.hints else 'No hints available'}\n"
                 f"\nClick on the globe to make your guess!"
             )
             self.__log( challenge_info )
@@ -128,7 +132,7 @@ class GameController:
             self.__focusOnContinent( self.__currentChallenge.continent )
 
         except Exception as e:
-            self.__log( f"❌ Error starting next challenge: {e}" )
+            self.__log( f"Error starting next challenge: {e}" )
 
     def showStats( self ) -> None:
         """Display performance analytics in the challenge log."""
@@ -228,23 +232,36 @@ class GameController:
             self.__placeAnswerMarker()
             self.__focusOnCity( self.__currentChallenge.actual_coordinates )
 
+            # Apply hint penalty to score
+            baseScore = attempt.accuracy_score
+            penaltyAmount = int( baseScore * self.__hintPenalty )
+            finalScore = max( 0, baseScore - penaltyAmount )
+
             resultText = (
-                f"🎯 CHALLENGE RESULT:\n"
-                f"📍 Target: {self.__currentChallenge.location_name}\n"
-                f"👆 You clicked: {clickedCoords[ 0 ]:.2f}°, {clickedCoords[ 1 ]:.2f}°\n"
-                f"🎯 Actual: {self.__currentChallenge.actual_coordinates[ 0 ]:.2f}°, {self.__currentChallenge.actual_coordinates[ 1 ]:.2f}°\n"
-                f"📏 Distance: {attempt.distance_km:.1f} km\n"
-                f"⚡ Time: {attempt.response_time_seconds:.1f}s\n"
-                f"🏆 Score: {attempt.accuracy_score}%\n"
+                f"CHALLENGE RESULT:\n"
+                f"Target: {self.__currentChallenge.location_name}\n"
+                f"You clicked: {clickedCoords[ 0 ]:.2f}, {clickedCoords[ 1 ]:.2f}\n"
+                f"Actual: {self.__currentChallenge.actual_coordinates[ 0 ]:.2f}, {self.__currentChallenge.actual_coordinates[ 1 ]:.2f}\n"
+                f"Distance: {attempt.distance_km:.1f} km\n"
+                f"Time: {attempt.response_time_seconds:.1f}s\n"
             )
+
+            if self.__hintPenalty > 0:
+                resultText += (
+                    f"Base Score: {baseScore}%\n"
+                    f"Hint Penalty: -{penaltyAmount}%\n"
+                    f"FINAL SCORE: {finalScore}%\n"
+                )
+            else:
+                resultText += f"Score: {baseScore}%\n"
 
             if len( self.__geoGame.player_history ) > 1:
                 analytics = self.__geoGame.get_performance_analytics()
                 avgScore = analytics[ 'overview' ][ 'average_score' ]
-                trend = "Improving" if attempt.accuracy_score > avgScore else "Below average"
+                trend = "Improving" if finalScore > avgScore else "Below average"
                 resultText += f"[STATS] {trend} (Avg: {avgScore:.0f}%)\n"
 
-            resultText += self.__scoreFeedback( attempt.accuracy_score )
+            resultText += self.__scoreFeedback( finalScore )
 
             self.__gui.setChallengeText( self.__stripEmoji( resultText ) )
             self.__gui.showNextChallengeButton()
@@ -255,7 +272,7 @@ class GameController:
             self.__ignoreCallback( "mouse1" )
 
         except Exception as e:
-            self.__log( f"❌ Error scoring attempt: {e}" )
+            self.__log( f"Error scoring attempt: {e}" )
 
     def __focusOnCity( self, coords: Tuple[ float, float ] ) -> None:
         """Move camera above the answer city — slightly zoomed in."""
@@ -268,10 +285,42 @@ class GameController:
             return
         self.__animateGlobeFocus( coords, DEFAULT_CAMERA_DIST * 1.1, taskName = "focusContinentTask" )
 
-    def onHint( self ) -> None:
-        """Focus near the challenge country but with a random offset — doesn't reveal exact location."""
+    def showHint( self ) -> None:
+        """Show a text hint for the current challenge. Each hint reduces score by 10%."""
         if not self.__currentChallenge:
             return
+
+        hints = self.__currentChallenge.hints
+        if not hints:
+            self.__log( "No hints available for this challenge." )
+            return
+
+        # Get the next available hint
+        hintIndex = min( self.__hintCount, len( hints ) - 1 )
+        hint = hints[ hintIndex ]
+        self.__hintCount += 1
+
+        # Add 10% penalty per hint
+        self.__hintPenalty = min( 1.0, self.__hintPenalty + 0.10 )
+        penaltyPercent = int( self.__hintPenalty * 100 )
+
+        hintMessage = (
+            f"HINT #{self.__hintCount}:\n"
+            f"{hint}\n"
+            f"\n(Score penalty: -{penaltyPercent}%)"
+        )
+        self.__log( hintMessage )
+
+    def onHelpMe( self ) -> None:
+        """Focus near the challenge country with closeup. Reduces score by 50%."""
+        if not self.__currentChallenge:
+            return
+
+        if not self.__usedHelpMe:
+            self.__usedHelpMe = True
+            self.__hintPenalty = min( 1.0, self.__hintPenalty + 0.50 )
+            penaltyPercent = int( self.__hintPenalty * 100 )
+            self.__log( f"HELP ME! activated\n(Score penalty: -{penaltyPercent}%)" )
 
         actualLat, actualLon = self.__currentChallenge.actual_coordinates
 
@@ -289,6 +338,11 @@ class GameController:
             DEFAULT_CAMERA_DIST * 0.75,
             taskName = "focusHintTask",
         )
+
+    # Legacy compatibility
+    def onHint( self ) -> None:
+        """Legacy method - redirects to onHelpMe."""
+        self.onHelpMe()
 
     def __animateGlobeFocus(
         self,

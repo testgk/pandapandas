@@ -150,9 +150,14 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
                 onStartGame = lambda: self.__gameDelegate.startGame(),
                 onNextChallenge = lambda: self.__gameDelegate.nextChallenge(),
                 onGameStats = lambda: self.__gameDelegate.showGameStats(),
-                onHint = lambda: self.__gameDelegate.onHint(),
+                onShowHint = lambda: self.__gameDelegate.showHint(),
+                onHelpMe = lambda: self.__gameDelegate.onHelpMe(),
                 taskManager = self.taskMgr,
                 onDbStats = lambda: self.__gameDelegate.showDbStats(),
+                onUpdateScores = lambda: self.__gameDelegate.updateScores(),
+                onSignIn = None,  # TODO: implement auth
+                onSignOut = None,  # TODO: implement auth
+                onSignUp = None,  # TODO: implement auth
             )
             gameController = GameController(
                 globeNodePath = self.__globe,

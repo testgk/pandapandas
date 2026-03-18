@@ -1,6 +1,6 @@
 """
 Game App Delegate - bridges RealGlobeApplication and GameController/GameGuiController.
-Owns the three game entry points that the GUI buttons call into.
+Owns the game entry points that the GUI buttons call into.
 """
 from game.game_controller import GameController
 from gui.game_gui_controller import GameGuiController
@@ -28,6 +28,20 @@ class GameAppDelegate:
     def showDbStats( self ) -> None:
         self.__gameController.showDbStats()
 
+    def showHint( self ) -> None:
+        """Show text hint (-10% score penalty)."""
+        self.__gameController.showHint()
+
+    def onHelpMe( self ) -> None:
+        """Camera closeup hint (-50% score penalty)."""
+        self.__gameController.onHelpMe()
+
+    def updateScores( self ) -> None:
+        """Update scores to database."""
+        # TODO: Implement database score update
+        pass
+
+    # Legacy compatibility
     def onHint( self ) -> None:
-        self.__gameController.onHint()
+        self.onHelpMe()
 
