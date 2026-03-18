@@ -440,6 +440,15 @@ body {
     background: rgba(100, 150, 255, 0.15);
 }
 
+.dropdown-item-primary {
+    color: #4ade80;
+    font-weight: 600;
+}
+
+.dropdown-item-primary:hover {
+    background: rgba(74, 222, 128, 0.15);
+}
+
 .dropdown-divider {
     border: none;
     border-top: 1px solid rgba(255, 255, 255, 0.1);

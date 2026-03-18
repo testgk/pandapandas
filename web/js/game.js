@@ -96,6 +96,7 @@ function setupEventListeners() {
     document.getElementById('menu-stats-btn').addEventListener('click', () => { hideMenu(); showStatsModal(); });
     document.getElementById('menu-leaderboard-btn').addEventListener('click', showLeaderboard);
     document.getElementById('menu-about-btn').addEventListener('click', showAboutModal);
+    document.getElementById('menu-start-btn').addEventListener('click', startGameFromMenu);
     document.getElementById('menu-return-btn').addEventListener('click', returnToGame);
     
     // Panel close button
@@ -814,20 +815,30 @@ function hideStatsModal() {
  */
 function toggleMenu() {
     const menu = document.getElementById('menu-dropdown');
+    const startBtn = document.getElementById('menu-start-btn');
     const returnBtn = document.getElementById('menu-return-btn');
-    const returnDivider = document.getElementById('menu-return-divider');
+    const gameDivider = document.getElementById('menu-game-divider');
     
-    // Show "Return to Game" if game is active and panel is hidden
     const panel = document.getElementById('challenge-panel');
     const gameActive = gameState.currentChallenge !== null;
     const panelHidden = panel.classList.contains('hidden');
     
-    if (gameActive && panelHidden) {
-        returnBtn.classList.remove('hidden');
-        returnDivider.classList.remove('hidden');
-    } else {
+    // Show appropriate game button based on state
+    if (!gameActive) {
+        // No game active - show Start Game
+        startBtn.classList.remove('hidden');
         returnBtn.classList.add('hidden');
-        returnDivider.classList.add('hidden');
+        gameDivider.classList.remove('hidden');
+    } else if (panelHidden) {
+        // Game active but panel hidden - show Return to Game
+        startBtn.classList.add('hidden');
+        returnBtn.classList.remove('hidden');
+        gameDivider.classList.remove('hidden');
+    } else {
+        // Game active and panel visible - hide both
+        startBtn.classList.add('hidden');
+        returnBtn.classList.add('hidden');
+        gameDivider.classList.add('hidden');
     }
     
     menu.classList.toggle('hidden');
@@ -852,6 +863,15 @@ function hidePanel() {
  */
 function showPanel() {
     document.getElementById('challenge-panel').classList.remove('hidden');
+}
+
+/**
+ * Start game from menu
+ */
+function startGameFromMenu() {
+    hideMenu();
+    showPanel();
+    startGame();
 }
 
 /**

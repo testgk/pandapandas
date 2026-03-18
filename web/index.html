@@ -42,8 +42,9 @@
 
             <!-- Menu Dropdown -->
             <div id="menu-dropdown" class="dropdown hidden">
+                <button id="menu-start-btn" class="dropdown-item dropdown-item-primary">▶ Start Game</button>
                 <button id="menu-return-btn" class="dropdown-item hidden">↩ Return to Game</button>
-                <hr id="menu-return-divider" class="dropdown-divider hidden">
+                <hr id="menu-game-divider" class="dropdown-divider">
                 <button id="menu-signin-btn" class="dropdown-item">Sign In</button>
                 <button id="menu-signup-btn" class="dropdown-item">Sign Up</button>
                 <button id="menu-signout-btn" class="dropdown-item hidden">Sign Out</button>
@@ -55,7 +56,7 @@
             </div>
 
             <!-- Challenge Panel -->
-            <div id="challenge-panel" class="panel">
+            <div id="challenge-panel" class="panel hidden">
                 <button id="panel-close-btn" class="panel-close-btn" title="Minimize panel">✕</button>
                 <div id="challenge-header">
                     <span id="difficulty-badge" class="badge easy">Easy</span>
@@ -163,6 +164,15 @@
                         </ul>
                     </div>
                     <div class="help-section">
+                        <h3>Difficulty Scoring</h3>
+                        <ul>
+                            <li><strong>🟢 Easy:</strong> Base scoring (1x multiplier)</li>
+                            <li><strong>🟡 Medium:</strong> 1.5x score multiplier</li>
+                            <li><strong>🟠 Hard:</strong> 2x score multiplier</li>
+                            <li><strong>🔴 Expert:</strong> 3x score multiplier</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
                         <h3>Hint Penalties</h3>
                         <ul>
                             <li><strong>Country (-20%):</strong> Reveals the country name</li>
@@ -188,7 +198,7 @@
                     <h2>🌍 GeoChallenge</h2>
                     <div class="about-info">
                         <p><strong>Version:</strong> <span id="app-version">v1.00</span></p>
-                        <p><strong>Build:</strong> <span id="app-commit">e3f61e1</span></p>
+                        <p><strong>Build:</strong> <span id="app-commit">796260d</span></p>
                         <p class="about-copyright">© 2026 GeoChallenge</p>
                     </div>
                 </div>
