@@ -1143,7 +1143,6 @@ async function handleSignIn(e) {
 async function handleSignUp(e) {
     e.preventDefault();
     
-    const username = document.getElementById('signup-username').value;
     const email = document.getElementById('signup-email').value;
     const password = document.getElementById('signup-password').value;
     
@@ -1152,7 +1151,7 @@ async function handleSignUp(e) {
     try {
         // Simulated auth - in production, call your auth API
         authState.user = {
-            username: username,
+            username: email.split('@')[0],
             email: email
         };
         authState.isSignedIn = true;
