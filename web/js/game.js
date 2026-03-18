@@ -259,9 +259,19 @@ async function handleGlobeClick({ lat, lng }) {
         gameState.completedChallengeIds.push(gameState.currentChallenge.id);
         
         // Calculate score with outside country rules
-        let baseScore = result.score;
         const isOutsideCountry = result.scoring_zone === 'outside';
         const isWithinScoringMargin = result.distance_km <= 500;  // Scoring margin = 500km (red zone max)
+        
+        // If outside country, API returns 0 - we need to calculate what score would have been
+        // based on distance to apply the 50% penalty properly
+        let baseScore = result.score;
+        let calculatedBaseScore = result.score;  // Track the pre-penalty score for display
+        if (isOutsideCountry && isWithinScoringMargin) {
+            // Calculate score based on distance (same formula as API uses for scoring zones)
+            // max 500km for red zone, score decreases linearly
+            calculatedBaseScore = Math.max(0, Math.floor(100 * (1 - result.distance_km / 500)));
+            baseScore = calculatedBaseScore;
+        }
         
         // Apply outside country penalty:
         // - Outside country AND outside margin (>500km) = 0 points
@@ -283,7 +293,7 @@ async function handleGlobeClick({ lat, lng }) {
         const hintPenaltyAmount = Math.floor(baseScore * gameState.hintPenalty);
         const finalScore = Math.max(0, baseScore - hintPenaltyAmount);
         
-        result.baseScore = result.score;  // Original score from API
+        result.baseScore = calculatedBaseScore;  // Score before penalties (may be recalculated for outside country)
         result.outsideCountryPenalty = outsideCountryPenalty;
         result.hintPenaltyAmount = hintPenaltyAmount;
         result.penaltyAmount = outsideCountryPenalty + hintPenaltyAmount;  // Total penalty
