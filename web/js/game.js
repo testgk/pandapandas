@@ -168,11 +168,14 @@ async function startGame() {
     // Show sign-in message during loading if not signed in
     if (!authState.isSignedIn) {
         showLoading('Sign in to submit scores!');
-        setTimeout(() => showLoading('Loading challenge...'), 2000);
+        setTimeout(() => {
+            showLoading('Loading challenge...');
+            nextChallenge();
+        }, 2000);
     } else {
         showLoading('Loading challenge...');
+        await nextChallenge();
     }
-    await nextChallenge();
 }
 
 /**
