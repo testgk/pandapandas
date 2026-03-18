@@ -913,9 +913,14 @@ function updateCenterButtons() {
         // Game just ended - show Submit Score and No Thanks (only if signed in)
         if (authState.isSignedIn) {
             submitBtn.classList.remove('hidden');
+            noThanksBtn.classList.remove('hidden');
+            centerAction.classList.remove('hidden');
+        } else {
+            // If not signed in, return directly to menu
+            gameState.justEnded = false;
+            updateCenterButtons();
+            document.getElementById('menu-btn').click();
         }
-        noThanksBtn.classList.remove('hidden');
-        centerAction.classList.remove('hidden');
     } else if (panelHidden) {
         // Game active but panel hidden - show Return and End only
         returnBtn.classList.remove('hidden');
