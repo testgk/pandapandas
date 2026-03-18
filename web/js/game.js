@@ -771,7 +771,16 @@ function updateStats(result) {
 function loadStats() {
     const saved = localStorage.getItem('geochallenge_stats');
     if (saved) {
-        gameState.stats = JSON.parse(saved);
+        const loadedStats = JSON.parse(saved);
+        // Merge with defaults to ensure all fields exist
+        gameState.stats = {
+            totalGames: loadedStats.totalGames || 0,
+            totalScore: loadedStats.totalScore || 0,
+            bestScore: loadedStats.bestScore || 0,
+            totalAccuracy: loadedStats.totalAccuracy || 0,
+            guessCount: loadedStats.guessCount || 0,
+            bestStreak: loadedStats.bestStreak || 0
+        };
     }
 }
 
@@ -780,6 +789,7 @@ function loadStats() {
  */
 function saveStats() {
     localStorage.setItem('geochallenge_stats', JSON.stringify(gameState.stats));
+    console.log('Stats saved:', gameState.stats);
 }
 
 /**
@@ -1119,7 +1129,7 @@ async function submitScore() {
     gameState.stats.totalGames++;
     saveStats();
     
-    alert(`Score submitted: ${gameState.score} points!\\n(${gameState.challengeNumber} challenges completed)\\n\\nCheck 'My Stats' or 'Leaderboard' to see your scores.`);
+    alert(`Score submitted: ${gameState.score} points!\n(${gameState.challengeNumber} challenges completed)\n\nCheck 'My Stats' or 'Leaderboard' to see your scores.`);
     
     // Reset current game score after submission
     gameState.score = 0;

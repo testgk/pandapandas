@@ -3,7 +3,7 @@
  * Update this file on each release/merge
  */
 const APP_VERSION = 'v1.00';
-const APP_COMMIT = 'dd40720';
+const APP_COMMIT = '9a37f44';
 
 // Update version display on page load
 document.addEventListener('DOMContentLoaded', () => {
