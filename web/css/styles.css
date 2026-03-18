@@ -507,6 +507,65 @@ body {
     font-size: 0.9em;
 }
 
+/* Leaderboard */
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+    padding: 10px 8px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leaderboard-table th {
+    color: #60a5fa;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.leaderboard-table td {
+    color: #e2e8f0;
+}
+
+.leaderboard-table tbody tr:hover {
+    background: rgba(100, 150, 255, 0.1);
+}
+
+/* Submitted Scores in Stats */
+.scores-list {
+    margin: 10px 0 20px;
+}
+
+.score-entry {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    margin-bottom: 6px;
+}
+
+.score-value {
+    font-weight: 600;
+    color: #4ade80;
+}
+
+.score-info {
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.no-scores {
+    color: #64748b;
+    text-align: center;
+    padding: 15px;
+    font-style: italic;
+}
+
 /* Auth Modal Forms */
 .modal-sm {
     max-width: 360px;

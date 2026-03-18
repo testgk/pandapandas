@@ -138,8 +138,36 @@
                             <span id="stat-best-streak">0</span>
                         </div>
                     </div>
+                    <h3>Submitted Scores</h3>
+                    <div id="submitted-scores-list" class="scores-list">
+                        <p class="no-scores">No scores submitted yet</p>
+                    </div>
                     <h3>By Difficulty</h3>
                     <div id="difficulty-stats"></div>
+                </div>
+            </div>
+
+            <!-- Leaderboard Modal -->
+            <div id="leaderboard-modal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="close-btn" id="leaderboard-close-btn">&times;</span>
+                    <h2>🏆 Leaderboard</h2>
+                    <div id="leaderboard-content">
+                        <table class="leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Player</th>
+                                    <th>Score</th>
+                                    <th>Challenges</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-body">
+                                <tr><td colspan="5" class="no-scores">No scores yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -198,7 +226,7 @@
                     <h2>🌍 GeoChallenge</h2>
                     <div class="about-info">
                         <p><strong>Version:</strong> <span id="app-version">v1.00</span></p>
-                        <p><strong>Build:</strong> <span id="app-commit">6a060de</span></p>
+                        <p><strong>Build:</strong> <span id="app-commit">dd40720</span></p>
                         <p class="about-copyright">© 2026 GeoChallenge</p>
                     </div>
                 </div>

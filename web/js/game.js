@@ -105,6 +105,7 @@ function setupEventListeners() {
     // Modal close buttons
     document.getElementById('help-close-btn').addEventListener('click', hideHelpModal);
     document.getElementById('about-close-btn').addEventListener('click', hideAboutModal);
+    document.getElementById('leaderboard-close-btn').addEventListener('click', hideLeaderboard);
     document.getElementById('signin-close-btn').addEventListener('click', hideSignInModal);
     document.getElementById('signup-close-btn').addEventListener('click', hideSignUpModal);
     
@@ -796,6 +797,24 @@ function showStatsModal() {
     document.getElementById('stat-streak').textContent = gameState.streak;
     document.getElementById('stat-best-streak').textContent = gameState.stats.bestStreak;
     
+    // Display submitted scores
+    const scores = getSubmittedScores();
+    const scoresList = document.getElementById('submitted-scores-list');
+    
+    if (scores.length === 0) {
+        scoresList.innerHTML = '<p class="no-scores">No scores submitted yet</p>';
+    } else {
+        // Show last 5 scores, most recent first
+        const recent = [...scores].reverse().slice(0, 5);
+        scoresList.innerHTML = recent.map(entry => {
+            const date = new Date(entry.date).toLocaleDateString();
+            return `<div class="score-entry">
+                <span class="score-value">${entry.score} pts</span>
+                <span class="score-info">${entry.challenges} challenges • ${date}</span>
+            </div>`;
+        }).join('');
+    }
+    
     document.getElementById('stats-modal').classList.remove('hidden');
 }
 
@@ -1056,6 +1075,20 @@ function signOut() {
 // Score Submission
 // ============================================
 
+// Submitted scores storage
+function getSubmittedScores() {
+    const saved = localStorage.getItem('geochallenge_submitted_scores');
+    return saved ? JSON.parse(saved) : [];
+}
+
+function saveSubmittedScore(scoreEntry) {
+    const scores = getSubmittedScores();
+    scores.push(scoreEntry);
+    // Keep only last 50 scores
+    if (scores.length > 50) scores.shift();
+    localStorage.setItem('geochallenge_submitted_scores', JSON.stringify(scores));
+}
+
 /**
  * Submit current score to database
  */
@@ -1065,36 +1098,71 @@ async function submitScore() {
         return;
     }
     
-    if (!authState.isSignedIn) {
-        alert('Please sign in to submit your score to the leaderboard.');
-        showSignInModal();
-        return;
-    }
+    const playerName = authState.isSignedIn ? authState.user.email : 'Guest';
     
-    try {
-        // TODO: Replace with actual API call
-        // await fetch(`${API_BASE}/scores`, {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify({
-        //         user_id: authState.user.id,
-        //         score: gameState.score,
-        //         challenges_completed: gameState.challengeNumber
-        //     })
-        // });
-        
-        alert(`Score submitted: ${gameState.score} points!\n(${gameState.challengeNumber} challenges completed)`);
-    } catch (error) {
-        alert('Failed to submit score. Please try again.');
+    const scoreEntry = {
+        player: playerName,
+        score: gameState.score,
+        challenges: gameState.challengeNumber,
+        date: new Date().toISOString(),
+        isGuest: !authState.isSignedIn
+    };
+    
+    // Save locally
+    saveSubmittedScore(scoreEntry);
+    
+    // Update stats
+    gameState.stats.totalScore += gameState.score;
+    if (gameState.score > gameState.stats.bestScore) {
+        gameState.stats.bestScore = gameState.score;
     }
+    gameState.stats.totalGames++;
+    saveStats();
+    
+    alert(`Score submitted: ${gameState.score} points!\\n(${gameState.challengeNumber} challenges completed)\\n\\nCheck 'My Stats' or 'Leaderboard' to see your scores.`);
+    
+    // Reset current game score after submission
+    gameState.score = 0;
+    gameState.challengeNumber = 0;
+    gameState.currentChallenge = null;
+    gameState.completedChallengeIds = [];
+    updateScoreDisplay();
 }
 
 /**
- * Show leaderboard
+ * Show leaderboard modal
  */
 async function showLeaderboard() {
     hideMenu();
     
-    // TODO: Replace with actual API call to fetch leaderboard
-    alert('Leaderboard coming soon!\nThis will show top scores from all players.');
+    const scores = getSubmittedScores();
+    const tbody = document.getElementById('leaderboard-body');
+    
+    if (scores.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="no-scores">No scores submitted yet. Play a game and submit your score!</td></tr>';
+    } else {
+        // Sort by score descending
+        const sorted = [...scores].sort((a, b) => b.score - a.score);
+        
+        tbody.innerHTML = sorted.slice(0, 20).map((entry, idx) => {
+            const date = new Date(entry.date).toLocaleDateString();
+            const rankEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`;
+            return `<tr>
+                <td>${rankEmoji}</td>
+                <td>${entry.player}${entry.isGuest ? ' (Guest)' : ''}</td>
+                <td>${entry.score}</td>
+                <td>${entry.challenges}</td>
+                <td>${date}</td>
+            </tr>`;
+        }).join('');
+    }
+    
+    document.getElementById('leaderboard-modal').classList.remove('hidden');
+}
+
+/**
+ * Hide leaderboard modal
+ */
+function hideLeaderboard() {
+    document.getElementById('leaderboard-modal').classList.add('hidden');
 }
