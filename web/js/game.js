@@ -226,6 +226,9 @@ async function nextChallenge() {
         // Focus camera on continent
         focusOnContinent(gameState.currentChallenge.continent);
         
+        // Hide center buttons since game is active
+        updateCenterButtons();
+        
         hideLoading();
     } catch (error) {
         hideLoading();
