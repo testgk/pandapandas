@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initGlobe();
     loadStats();
     setupEventListeners();
+    updateCenterButtons();  // Set initial button state
 });
 
 /**
@@ -96,8 +97,10 @@ function setupEventListeners() {
     document.getElementById('menu-stats-btn').addEventListener('click', () => { hideMenu(); showStatsModal(); });
     document.getElementById('menu-leaderboard-btn').addEventListener('click', showLeaderboard);
     document.getElementById('menu-about-btn').addEventListener('click', showAboutModal);
-    document.getElementById('menu-start-btn').addEventListener('click', startGameFromMenu);
-    document.getElementById('menu-return-btn').addEventListener('click', returnToGame);
+    
+    // Center action buttons
+    document.getElementById('center-start-btn').addEventListener('click', startGameFromCenter);
+    document.getElementById('center-return-btn').addEventListener('click', returnToGame);
     
     // Panel close button
     document.getElementById('panel-close-btn').addEventListener('click', hidePanel);
@@ -844,32 +847,6 @@ function hideStatsModal() {
  */
 function toggleMenu() {
     const menu = document.getElementById('menu-dropdown');
-    const startBtn = document.getElementById('menu-start-btn');
-    const returnBtn = document.getElementById('menu-return-btn');
-    const gameDivider = document.getElementById('menu-game-divider');
-    
-    const panel = document.getElementById('challenge-panel');
-    const gameActive = gameState.currentChallenge !== null;
-    const panelHidden = panel.classList.contains('hidden');
-    
-    // Show appropriate game button based on state
-    if (!gameActive) {
-        // No game active - show Start Game
-        startBtn.classList.remove('hidden');
-        returnBtn.classList.add('hidden');
-        gameDivider.classList.remove('hidden');
-    } else if (panelHidden) {
-        // Game active but panel hidden - show Return to Game
-        startBtn.classList.add('hidden');
-        returnBtn.classList.remove('hidden');
-        gameDivider.classList.remove('hidden');
-    } else {
-        // Game active and panel visible - hide both
-        startBtn.classList.add('hidden');
-        returnBtn.classList.add('hidden');
-        gameDivider.classList.add('hidden');
-    }
-    
     menu.classList.toggle('hidden');
 }
 
@@ -881,10 +858,39 @@ function hideMenu() {
 }
 
 /**
+ * Update center action buttons based on game state
+ */
+function updateCenterButtons() {
+    const startBtn = document.getElementById('center-start-btn');
+    const returnBtn = document.getElementById('center-return-btn');
+    const centerAction = document.getElementById('center-action');
+    
+    const panel = document.getElementById('challenge-panel');
+    const gameActive = gameState.currentChallenge !== null;
+    const panelHidden = panel.classList.contains('hidden');
+    
+    if (!gameActive) {
+        // No game active - show Start Game
+        startBtn.classList.remove('hidden');
+        returnBtn.classList.add('hidden');
+        centerAction.classList.remove('hidden');
+    } else if (panelHidden) {
+        // Game active but panel hidden - show Return to Game
+        startBtn.classList.add('hidden');
+        returnBtn.classList.remove('hidden');
+        centerAction.classList.remove('hidden');
+    } else {
+        // Game active and panel visible - hide both
+        centerAction.classList.add('hidden');
+    }
+}
+
+/**
  * Hide the challenge panel (minimize)
  */
 function hidePanel() {
     document.getElementById('challenge-panel').classList.add('hidden');
+    updateCenterButtons();
 }
 
 /**
@@ -892,13 +898,13 @@ function hidePanel() {
  */
 function showPanel() {
     document.getElementById('challenge-panel').classList.remove('hidden');
+    updateCenterButtons();
 }
 
 /**
- * Start game from menu
+ * Start game from center button
  */
-function startGameFromMenu() {
-    hideMenu();
+function startGameFromCenter() {
     showPanel();
     startGame();
 }
@@ -1137,6 +1143,7 @@ async function submitScore() {
     gameState.currentChallenge = null;
     gameState.completedChallengeIds = [];
     updateScoreDisplay();
+    updateCenterButtons();  // Show Start Game button again
 }
 
 /**

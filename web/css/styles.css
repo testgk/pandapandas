@@ -410,6 +410,37 @@ body {
     background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
 }
 
+/* Center Action Button */
+.center-action {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 150;
+    text-align: center;
+}
+
+.btn-lg {
+    padding: 18px 40px;
+    font-size: 1.3rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 8px 30px rgba(74, 222, 128, 0.3);
+    }
+    50% {
+        box-shadow: 0 8px 40px rgba(74, 222, 128, 0.6);
+    }
+}
+
+.btn-lg:hover {
+    transform: scale(1.05);
+}
+
 /* Menu Dropdown */
 #menu-dropdown {
     position: absolute;
