@@ -360,16 +360,31 @@ class GameGuiController:
     # ── Public API ────────────────────────────────────────────────────────────
 
     def setSignedIn( self, signedIn: bool ) -> None:
-        """Update menu to show Sign Out when signed in, Sign In/Up when not."""
+        """Update menu and game UI for sign-in state."""
         self.__isSignedIn = signedIn
         if signedIn:
             self.__menuSignInBtn.hide()
             self.__menuSignUpBtn.hide()
             self.__menuSignOutBtn.show()
+            # Show main game buttons
+            if self.__startGameBtn: self.__startGameBtn.show()
+            if self.__gameStatsBtn: self.__gameStatsBtn.show()
+            if self.__menuBtn: self.__menuBtn.show()
         else:
             self.__menuSignInBtn.show()
             self.__menuSignUpBtn.show()
             self.__menuSignOutBtn.hide()
+            # Hide all game-related buttons and clear challenge text
+            if self.__startGameBtn: self.__startGameBtn.hide()
+            if self.__nextChallengeBtn: self.__nextChallengeBtn.hide()
+            if self.__gameStatsBtn: self.__gameStatsBtn.hide()
+            if self.__dbStatsBtn: self.__dbStatsBtn.hide()
+            if self.__updateScoresBtn: self.__updateScoresBtn.hide()
+            if self.__showCountryBtn: self.__showCountryBtn.hide()
+            if self.__hintBtn: self.__hintBtn.hide()
+            if self.__helpMeBtn: self.__helpMeBtn.hide()
+            if self.__menuBtn: self.__menuBtn.hide()
+            self.clearChallengeText()
 
     def clearChallengeText( self ) -> None:
         """Clear the challenge display."""
