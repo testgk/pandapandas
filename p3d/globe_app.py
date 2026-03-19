@@ -172,6 +172,7 @@ class RealGlobeApplication(ShowBase, IGlobeApplication):
                 taskManager = self.taskMgr,
                 onDbStats = lambda: self.__gameDelegate.showDbStats(),
                 onUpdateScores = lambda: self.__gameDelegate.updateScores(),
+                onEndGame = lambda: self.__gameDelegate.endGame(),
                 onSignIn = signIn,
                 onSignOut = signOut,
                 onSignUp = signIn,

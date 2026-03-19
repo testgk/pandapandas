@@ -18,6 +18,10 @@ class GameAppDelegate:
 
     def startGame( self ) -> None:
         self.__gameController.startGame()
+        self.__gameGui.showEndGameButton()
+
+    def endGame( self ) -> None:
+        self.__gameController.endGame()
 
     def nextChallenge( self ) -> None:
         self.__gameController.nextChallenge()

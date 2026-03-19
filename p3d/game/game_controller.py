@@ -134,6 +134,13 @@ class GameController:
         except Exception as e:
             self.__log( f"Error starting next challenge: {e}" )
 
+    def endGame( self ) -> None:
+        """End the current game session — stop accepting clicks."""
+        self.__gameMode = False
+        self.__currentChallenge = None
+        if self.__ignoreCallback:
+            self.__ignoreCallback( "mouse1" )
+
     def showStats( self ) -> None:
         """Display performance analytics in the challenge log."""
         self.__log( self.__buildStatsReport() )
