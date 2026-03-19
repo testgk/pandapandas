@@ -21,14 +21,14 @@ class GameGuiController:
         onGameStats: Callable,
         onHint: Callable,
         taskManager,
-        onDbStats: Callable = None,
-        onEndGame: Callable = None,
-        onSubmitScores: Callable = None,
-        onSignIn: Callable = None,
-        onSignOut: Callable = None,
-        onSignUp: Callable = None,
-        getCurrentUsers: Callable = None,
-        userEmail: str = None,
+        onDbStats: Optional[Callable] = None,
+        onEndGame: Optional[Callable] = None,
+        onSubmitScores: Optional[Callable] = None,
+        onSignIn: Optional[Callable] = None,
+        onSignOut: Optional[Callable] = None,
+        onSignUp: Optional[Callable] = None,
+        getCurrentUsers: Optional[Callable] = None,
+        userEmail: Optional[str] = None,
     ):
         self.__settings: GuiSettingsManager = GuiSettingsManager()
         self.__taskManager = taskManager
@@ -82,7 +82,7 @@ class GameGuiController:
         onNextChallenge: Callable,
         onGameStats: Callable,
         onHint: Callable,
-        onDbStats: Callable = None,
+        onDbStats: Optional[Callable] = None,
     ) -> None:
         self.__startGameBtn = DirectButton(
             text = self.__settings.getTextContent( "start_game" ),
@@ -374,10 +374,12 @@ class GameGuiController:
     def __toggleMenu( self ) -> None:
         self.__applyButtonEffect( self.__menuBtn )
         if self.__menuVisible:
-            self.__menuFrame.hide()
+            if self.__menuFrame:
+                self.__menuFrame.hide()
             self.__menuVisible = False
         else:
-            self.__menuFrame.show()
+            if self.__menuFrame:
+                self.__menuFrame.show()
             self.__menuVisible = True
 
     def __hideMenu( self ) -> None:
