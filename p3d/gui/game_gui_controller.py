@@ -8,7 +8,7 @@ from direct.gui.DirectGui import DirectButton, DirectFrame
 from panda3d.core import TextNode
 from typing import Callable, Optional
 
-from settings.gui_settings_manager import GuiSettingsManager
+from ..settings.gui_settings_manager import GuiSettingsManager
 
 
 class GameGuiController:

@@ -2,8 +2,8 @@
 Game App Delegate - bridges RealGlobeApplication and GameController/GameGuiController.
 Owns the game entry points that the GUI buttons call into.
 """
-from game.game_controller import GameController
-from gui.game_gui_controller import GameGuiController
+from .game_controller import GameController
+from ..gui.game_gui_controller import GameGuiController
 
 
 class GameAppDelegate:

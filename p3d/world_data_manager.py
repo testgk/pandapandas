@@ -8,7 +8,7 @@ import geopandas as gpd
 from pathlib import Path
 import requests
 import tempfile
-from world_data.continent_country_map import COUNTRY_TO_CONTINENT
+from .world_data.continent_country_map import COUNTRY_TO_CONTINENT
 
 # GLOBAL SSL CERTIFICATE BYPASS - NO VERIFICATION
 import ssl

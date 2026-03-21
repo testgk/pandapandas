@@ -11,8 +11,8 @@ from direct.gui.DirectGui import DirectButton
 from panda3d.core import TextNode, Vec2
 from typing import Optional
 
-from interfaces.i_globe_application import IGlobeApplication
-from settings.gui_settings_manager import GuiSettingsManager
+from ..interfaces.i_globe_application import IGlobeApplication
+from ..settings.gui_settings_manager import GuiSettingsManager
 
 
 # ── Constants ──────────────────────────────────────────────────────────────────

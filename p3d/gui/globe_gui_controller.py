@@ -7,9 +7,9 @@ from direct.gui.DirectGui import DirectButton
 from panda3d.core import TextNode
 from typing import Optional
 
-from interfaces.i_globe_application import IGlobeApplication
-from settings.gui_settings_manager import GuiSettingsManager
-from gui.globe_button_factory import GlobeButtonFactory
+from ..interfaces.i_globe_application import IGlobeApplication
+from ..settings.gui_settings_manager import GuiSettingsManager
+from .globe_button_factory import GlobeButtonFactory
 
 
 class GlobeGuiController:

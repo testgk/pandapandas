@@ -5,7 +5,7 @@ Game buttons live in GameGuiController.
 from direct.gui.DirectButton import DirectButton
 from typing import List, Callable, Optional
 
-from settings.gui_settings_manager import GuiSettingsManager
+from ..settings.gui_settings_manager import GuiSettingsManager
 
 
 

@@ -8,14 +8,14 @@ import math
 from math import sin, cos, pi
 from typing import Dict, Tuple, List, Optional
 
-from world_data_manager import WorldDataManager
-from gui.globe_gui_controller import GlobeGuiController
-from gui.game_gui_controller import GameGuiController
-from gui.android_controller import AndroidController
-from interfaces.i_globe_application import IGlobeApplication
-from game.game_controller import GameController
-from game.game_app_delegate import GameAppDelegate
-from app_mode import AppMode
+from .world_data_manager import WorldDataManager
+from .gui.globe_gui_controller import GlobeGuiController
+from .gui.game_gui_controller import GameGuiController
+from .gui.android_controller import AndroidController
+from .interfaces.i_globe_application import IGlobeApplication
+from .game.game_controller import GameController
+from .game.game_app_delegate import GameAppDelegate
+from .app_mode import AppMode
 
 
 # Constants for magic numbers
