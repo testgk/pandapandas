@@ -1245,10 +1245,8 @@ async function submitScore() {
         return;
     }
     
-    const playerName = authState.isSignedIn ? authState.user.email : 'Guest';
-    
     const scoreEntry = {
-        player: playerName,
+        username: authState.isSignedIn ? (authState.user.username || authState.user.email) : 'Guest',
         score: gameState.score,
         challenges: gameState.challengeNumber,
         date: new Date().toISOString(),
