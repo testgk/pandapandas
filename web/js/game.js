@@ -105,8 +105,6 @@ function setupEventListeners() {
     document.getElementById('center-no-thanks-btn').addEventListener('click', () => {
         gameState.justEnded = false;
         updateCenterButtons();
-        // Show menu (simulate click)
-        document.getElementById('menu-btn').click();
     });
     
     // Panel close button
@@ -905,29 +903,22 @@ function updateCenterButtons() {
     endBtn.classList.add('hidden');
     submitBtn.classList.add('hidden');
     noThanksBtn.classList.add('hidden');
-    if (!gameActive && !hasScore) {
-        // No game active, no score - show Start Game only
+    if (!gameActive && gameState.justEnded && authState.isSignedIn) {
+        // Game just ended for signed-in user - offer to submit score
+        submitBtn.classList.remove('hidden');
+        noThanksBtn.classList.remove('hidden');
+        centerAction.classList.remove('hidden');
+    } else if (!gameActive) {
+        // No active game (initial state, guest after game end, or after dismissing submit)
         startBtn.classList.remove('hidden');
         centerAction.classList.remove('hidden');
-    } else if (!gameActive && hasScore && gameState.justEnded) {
-        // Game just ended - show Submit Score and No Thanks (only if signed in)
-        if (authState.isSignedIn) {
-            submitBtn.classList.remove('hidden');
-            noThanksBtn.classList.remove('hidden');
-            centerAction.classList.remove('hidden');
-        } else {
-            // If not signed in, return directly to menu
-            gameState.justEnded = false;
-            updateCenterButtons();
-            document.getElementById('menu-btn').click();
-        }
     } else if (panelHidden) {
         // Game active but panel hidden - show Return and End only
         returnBtn.classList.remove('hidden');
         endBtn.classList.remove('hidden');
         centerAction.classList.remove('hidden');
     } else {
-        // Game active and panel visible - hide all
+        // Game active and panel visible - hide all center buttons
         centerAction.classList.add('hidden');
     }
 }
