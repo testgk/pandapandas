@@ -959,7 +959,7 @@ function startGameFromPanel() {
 function showStartPanel() {
     document.getElementById('start-panel').classList.remove('hidden');
     document.getElementById('challenge-panel').classList.add('hidden');
-    updateCenterButtons();
+    document.getElementById('center-action').classList.add('hidden');
 }
 
 /**
@@ -1153,8 +1153,7 @@ function showPanel() {
  */
 function startGameFromCenter() {
     gameState.justEnded = false;
-    showPanel();
-    startGame();
+    showStartPanel();  // Show start panel instead of directly starting game
 }
 
 /**
