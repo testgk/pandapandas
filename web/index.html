@@ -88,6 +88,12 @@
                         <div id="time-picker-section" style="display: none; gap: 10px;">
                             <label style="font-size: 0.9rem; color: #94a3b8; display: block; margin-bottom: 8px;">Time Limit</label>
 
+                            <!-- Current Selection Display -->
+                            <div style="background: rgba(100, 150, 255, 0.15); border: 1px solid rgba(100, 150, 255, 0.3); border-radius: 6px; padding: 10px; margin-bottom: 12px; text-align: center;">
+                                <span style="color: #cbd5e1; font-size: 0.85rem;">Currently selected: </span>
+                                <span id="current-time-display" style="color: #60a5fa; font-weight: 700; font-size: 1.1rem; font-family: 'Courier New', monospace;">15s</span>
+                            </div>
+
                             <!-- Quick Preset Buttons -->
                             <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
                                 <button type="button" class="time-preset-btn" data-time="5" style="flex: 1; min-width: 60px; padding: 8px; border-radius: 6px; border: 2px solid rgba(100, 150, 255, 0.3); background: transparent; color: #60a5fa; font-weight: 600; cursor: pointer; transition: all 0.2s;">5s</button>

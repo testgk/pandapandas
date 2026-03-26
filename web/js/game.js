@@ -119,6 +119,9 @@ function setupEventListeners() {
             document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active'));
             // Add active to clicked button
             e.target.classList.add('active');
+            // Update the current time display
+            const timeValue = e.target.getAttribute('data-time');
+            document.getElementById('current-time-display').textContent = timeValue + 's';
             // Do NOT update custom input - user must manually type if they want custom value
         });
     });
@@ -127,6 +130,8 @@ function setupEventListeners() {
     document.getElementById('time-custom-input').addEventListener('focus', (e) => {
         // Remove active state from all preset buttons when user focuses on custom input
         document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active'));
+        // Add focus indicator to custom input
+        e.target.classList.add('has-value');
     });
 
     // Custom time input - validate and keep deselected if custom value entered
@@ -135,9 +140,27 @@ function setupEventListeners() {
         if (customTime >= 1 && customTime <= 300) {
             // Keep buttons deselected since user entered custom value
             document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active'));
+            // Add has-value indicator
+            e.target.classList.add('has-value');
+            // Update the current time display
+            document.getElementById('current-time-display').textContent = customTime + 's';
         } else {
             // Invalid value, reset to 15
             e.target.value = '15';
+            document.getElementById('current-time-display').textContent = '15s';
+            e.target.classList.remove('has-value');
+        }
+    });
+
+    // Also track input event to show has-value while typing
+    document.getElementById('time-custom-input').addEventListener('input', (e) => {
+        const customTime = parseInt(e.target.value);
+        if (e.target.value && customTime >= 1 && customTime <= 300) {
+            e.target.classList.add('has-value');
+            // Update the current time display in real-time while typing
+            document.getElementById('current-time-display').textContent = customTime + 's';
+        } else if (!e.target.value || customTime < 1 || customTime > 300) {
+            e.target.classList.remove('has-value');
         }
     });
 
