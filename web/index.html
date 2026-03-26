@@ -60,6 +60,65 @@
                 <button id="center-no-thanks-btn" class="btn btn-secondary btn-lg hidden">No Thanks</button>
             </div>
 
+            <!-- Start Game Panel -->
+            <div id="start-panel" class="panel hidden">
+                <div id="start-content">
+                    <h2>🌍 Start New Game</h2>
+
+                    <!-- Difficulty Selection -->
+                    <div id="difficulty-selector" style="margin-top: 20px;">
+                        <label style="font-size: 0.95rem; color: #94a3b8; display: block; margin-bottom: 10px;">Difficulty</label>
+                        <select id="difficulty-select-start" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(100, 150, 255, 0.3); background: rgba(15, 23, 42, 0.8); color: #e2e8f0; font-size: 0.95rem; cursor: pointer;">
+                            <option value="random">Random</option>
+                            <option value="Easy" selected>Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                            <option value="Expert">Expert</option>
+                        </select>
+                    </div>
+
+                    <!-- Time Trial Mode -->
+                    <div id="time-trial-section" style="margin-top: 20px; padding: 15px; background: rgba(100, 150, 255, 0.1); border-radius: 8px; border: 1px solid rgba(100, 150, 255, 0.2);">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                            <input type="checkbox" id="time-trial-checkbox" style="width: 18px; height: 18px; cursor: pointer;">
+                            <label for="time-trial-checkbox" style="cursor: pointer; color: #e2e8f0; font-weight: 600;">⏰ Time Trial Mode</label>
+                        </div>
+
+                        <!-- Time Picker -->
+                        <div id="time-picker-section" style="display: none; flex-direction: column; gap: 12px;">
+                            <label style="font-size: 0.9rem; color: #94a3b8; display: block; margin-bottom: 0;">Time Limit</label>
+
+                            <!-- Current Selection Display -->
+                            <div style="background: rgba(100, 150, 255, 0.15); border: 1px solid rgba(100, 150, 255, 0.3); border-radius: 6px; padding: 6px 10px; text-align: center;">
+                                <div style="color: #cbd5e1; font-size: 0.8rem; margin-bottom: 4px;">Currently selected:</div>
+                                <div style="color: #60a5fa; font-weight: 700; font-size: 0.95rem; font-family: 'Courier New', monospace;"><span id="current-time-display">15</span>s</div>
+                            </div>
+
+                            <!-- Quick Preset Buttons -->
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button type="button" class="time-preset-btn" data-time="5" style="flex: 1; min-width: 60px; padding: 8px; border-radius: 6px; border: 2px solid rgba(100, 150, 255, 0.3); background: transparent; color: #60a5fa; font-weight: 600; cursor: pointer; transition: all 0.2s;">5s</button>
+                                <button type="button" class="time-preset-btn" data-time="10" style="flex: 1; min-width: 60px; padding: 8px; border-radius: 6px; border: 2px solid rgba(100, 150, 255, 0.3); background: transparent; color: #60a5fa; font-weight: 600; cursor: pointer; transition: all 0.2s;">10s</button>
+                                <button type="button" class="time-preset-btn" data-time="15" style="flex: 1; min-width: 60px; padding: 8px; border-radius: 6px; border: 2px solid rgba(100, 150, 255, 0.3); background: transparent; color: #60a5fa; font-weight: 600; cursor: pointer; transition: all 0.2s;">15s</button>
+                                <button type="button" class="time-preset-btn" data-time="20" style="flex: 1; min-width: 60px; padding: 8px; border-radius: 6px; border: 2px solid rgba(100, 150, 255, 0.3); background: transparent; color: #60a5fa; font-weight: 600; cursor: pointer; transition: all 0.2s;">20s</button>
+                                <button type="button" class="time-preset-btn" data-time="30" style="flex: 1; min-width: 60px; padding: 8px; border-radius: 6px; border: 2px solid rgba(100, 150, 255, 0.3); background: transparent; color: #60a5fa; font-weight: 600; cursor: pointer; transition: all 0.2s;">30s</button>
+                            </div>
+
+                            <!-- Custom Input -->
+                            <div style="display: flex; flex-direction: column; gap: 6px;">
+                                <label style="font-size: 0.85rem; color: #cbd5e1;">Custom:</label>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <input type="number" id="time-custom-input" min="1" max="300" value="15" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid rgba(100, 150, 255, 0.3); background: rgba(0, 0, 0, 0.3); color: #e2e8f0; font-size: 0.85rem; text-align: center;">
+                                    <span style="color: #94a3b8; font-size: 0.85rem; white-space: nowrap;">second</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Start Button -->
+                    <button id="start-game-btn" class="btn btn-primary btn-full" style="margin-top: 20px; width: 100%; padding: 15px;">▶ Start Game</button>
+                </div>
+            </div>
+
             <!-- Challenge Panel -->
             <div id="challenge-panel" class="panel hidden">
                 <button id="panel-close-btn" class="panel-close-btn" title="Minimize panel">✕</button>
@@ -67,7 +126,7 @@
                     <span id="difficulty-badge" class="badge easy">Easy</span>
                     <span id="challenge-number">Challenge 1</span>
                     <div id="timer-display" class="timer-display">
-                        <span id="timer-text">⏱ 15s</span>
+                        <span id="timer-text">Time: 15s</span>
                     </div>
                 </div>
                 <div id="challenge-content">
