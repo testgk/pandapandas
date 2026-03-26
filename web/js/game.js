@@ -968,7 +968,11 @@ function endGameFromCenter() {
  * Submit score from center button
  */
 function submitScoreFromCenter() {
-    submitScore();
+    // Hide submit and no-thanks buttons
+    document.getElementById('center-submit-btn').classList.add('hidden');
+    document.getElementById('center-no-thanks-btn').classList.add('hidden');
+    // Submit score and open leaderboard
+    submitScore(true);
 }
 
 /**
@@ -1230,7 +1234,7 @@ function saveSubmittedScore(scoreEntry) {
 /**
  * Submit current score to database
  */
-async function submitScore() {
+async function submitScore(openLeaderboard = false) {
     if (gameState.score === 0) {
         alert('Play some challenges first to build up your score!');
         return;
@@ -1255,14 +1259,21 @@ async function submitScore() {
     gameState.stats.totalGames++;
     saveStats();
     
-    alert(`Score submitted: ${gameState.score} points!\n(${gameState.challengeNumber} challenges completed)\n\nCheck 'My Stats' or 'Leaderboard' to see your scores.`);
-    
     // Reset current game score after submission
     gameState.score = 0;
     gameState.challengeNumber = 0;
     gameState.currentChallenge = null;
     gameState.completedChallengeIds = [];
+    gameState.justEnded = false;
     updateScoreDisplay();
+
+    // Open leaderboard if requested
+    if (openLeaderboard) {
+        showLeaderboard();
+    } else {
+        alert(`Score submitted: ${gameState.score} points!\n(${gameState.challengeNumber} challenges completed)\n\nCheck 'My Stats' or 'Leaderboard' to see your scores.`);
+    }
+
     updateCenterButtons();  // Show Start Game button again
 }
 
