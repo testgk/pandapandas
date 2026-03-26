@@ -114,17 +114,31 @@ function setupEventListeners() {
     // Time preset buttons
     document.querySelectorAll('.time-preset-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Remove active from all buttons
             document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active'));
+            // Add active to clicked button
             e.target.classList.add('active');
+            // Update custom input value
             document.getElementById('time-custom-input').value = e.target.getAttribute('data-time');
         });
     });
 
-    // Custom time input
+    // Custom time input - remove button active state when user focuses on input
+    document.getElementById('time-custom-input').addEventListener('focus', (e) => {
+        // Remove active state from all preset buttons when user focuses on custom input
+        document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active'));
+    });
+
+    // Custom time input - validate and keep deselected if custom value entered
     document.getElementById('time-custom-input').addEventListener('change', (e) => {
         const customTime = parseInt(e.target.value);
         if (customTime >= 1 && customTime <= 300) {
+            // Keep buttons deselected since user entered custom value
             document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active'));
+        } else {
+            // Invalid value, reset to 15
+            e.target.value = '15';
         }
     });
 
