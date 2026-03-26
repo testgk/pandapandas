@@ -24,7 +24,15 @@ const gameState = {
         guessCount: 0,
         bestStreak: 0
     },
-    justEnded: false
+    justEnded: false,
+    // Timer state
+    timer: {
+        duration: 15,           // Default time limit in seconds
+        elapsedTime: 0,         // Elapsed time in seconds
+        intervalId: null,       // Timer interval ID
+        isRunning: false,       // Timer status
+        startTime: null         // Timestamp when timer started
+    }
 };
 
 // Loading overlay helpers
@@ -243,6 +251,9 @@ async function nextChallenge() {
         // Hide center buttons since game is active
         updateCenterButtons();
         
+        // Start the timer for the challenge
+        startTimer();
+
         hideLoading();
     } catch (error) {
         hideLoading();
@@ -259,6 +270,7 @@ async function handleGlobeClick({ lat, lng }) {
     if (gameState.guessSubmitted) return; // Prevent multiple submissions
     
     gameState.guessSubmitted = true;
+    stopTimer();  // Stop the timer when guess is submitted
     showLoading('Checking your guess...');
     
     try {
@@ -763,9 +775,97 @@ function showMessage(description, title) {
 }
 
 /**
+ * Start the challenge timer
+ */
+function startTimer() {
+    stopTimer();  // Clear any existing timer
+
+    gameState.timer.isRunning = true;
+    gameState.timer.elapsedTime = 0;
+    gameState.timer.startTime = Date.now();
+
+    updateTimerDisplay();
+
+    // Update timer every 100ms for smooth display
+    gameState.timer.intervalId = setInterval(() => {
+        const elapsed = (Date.now() - gameState.timer.startTime) / 1000;
+        gameState.timer.elapsedTime = Math.min(elapsed, gameState.timer.duration);
+
+        updateTimerDisplay();
+
+        // If time expired, auto-submit guess as timeout
+        if (gameState.timer.elapsedTime >= gameState.timer.duration) {
+            stopTimer();
+            handleTimeExpired();
+        }
+    }, 100);
+}
+
+/**
+ * Stop the challenge timer
+ */
+function stopTimer() {
+    if (gameState.timer.intervalId) {
+        clearInterval(gameState.timer.intervalId);
+        gameState.timer.intervalId = null;
+    }
+    gameState.timer.isRunning = false;
+}
+
+/**
+ * Update the timer display
+ */
+function updateTimerDisplay() {
+    const timerText = document.getElementById('timer-text');
+    const remaining = Math.max(0, gameState.timer.duration - gameState.timer.elapsedTime);
+    const seconds = Math.ceil(remaining);
+
+    // Update text
+    timerText.textContent = `��� ${seconds}s`;
+
+    // Update color based on remaining time
+    timerText.classList.remove('timer-warning', 'timer-critical');
+    if (remaining <= 3) {
+        timerText.classList.add('timer-critical');
+    } else if (remaining <= 7) {
+        timerText.classList.add('timer-warning');
+    }
+}
+
+/**
+ * Handle when time expires
+ */
+function handleTimeExpired() {
+    if (!gameState.currentChallenge || gameState.guessSubmitted) {
+        return;  // Already submitted or no active challenge
+    }
+
+    // Auto-submit a random guess on the globe as a timeout
+    gameState.guessSubmitted = true;
+    showLoading('Time expired! Submitting random guess...');
+
+    // Generate random lat/lng
+    const randomLat = Math.random() * 180 - 90;
+    const randomLng = Math.random() * 360 - 180;
+
+    // Simulate the guess submission after a short delay
+    setTimeout(() => {
+        handleGlobeClick({ lat: randomLat, lng: randomLng });
+    }, 500);
+}
+
+/**
+ * Get elapsed time for current guess
+ */
+function getElapsedTime() {
+    return Math.round(gameState.timer.elapsedTime * 10) / 10;  // Round to 1 decimal place
+}
+
+/**
  * End the game
  */
 function endGame() {
+    stopTimer();  // Stop timer when game ends
     gameState.stats.totalGames++;
     gameState.stats.totalScore += gameState.score;
     if (gameState.score > gameState.stats.bestScore) {

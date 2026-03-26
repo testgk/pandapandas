@@ -166,12 +166,11 @@ body {
 
 #challenge-header {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: 15px;
     margin-bottom: 15px;
     padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(100, 150, 255, 0.2);
 }
 
 #challenge-number {
@@ -1032,4 +1031,52 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(100, 150, 255, 0.5);
+}
+
+/* Challenge Timer */
+#challenge-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(100, 150, 255, 0.2);
+}
+
+.timer-display {
+    background: rgba(100, 150, 255, 0.1);
+    border: 1px solid rgba(100, 150, 255, 0.3);
+    border-radius: 6px;
+    padding: 4px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#timer-text {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #60a5fa;
+    font-family: 'Courier New', monospace;
+    white-space: nowrap;
+}
+
+#timer-text.timer-warning {
+    color: #f59e0b;
+}
+
+#timer-text.timer-critical {
+    color: #ef4444;
+    animation: timer-pulse 0.6s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.05);
+    }
 }
