@@ -111,7 +111,7 @@ function setupEventListeners() {
     document.getElementById('time-trial-checkbox').addEventListener('change', toggleTimeTrial);
     document.getElementById('start-game-btn').addEventListener('click', startGameFromPanel);
 
-    // Time preset buttons
+    // Time preset buttons - only provide visual selection, don't update custom input
     document.querySelectorAll('.time-preset-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -119,8 +119,7 @@ function setupEventListeners() {
             document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active'));
             // Add active to clicked button
             e.target.classList.add('active');
-            // Update custom input value
-            document.getElementById('time-custom-input').value = e.target.getAttribute('data-time');
+            // Do NOT update custom input - user must manually type if they want custom value
         });
     });
 
@@ -954,8 +953,16 @@ function startGameFromPanel() {
 
     // Get time trial settings
     if (gameState.isTimeTrial) {
-        const customTime = parseInt(document.getElementById('time-custom-input').value);
-        gameState.timer.duration = Math.max(1, Math.min(customTime, 300)); // Clamp 1-300
+        // Check if a preset button is selected
+        const activeButton = document.querySelector('.time-preset-btn.active');
+        if (activeButton) {
+            // Use the selected preset button's time
+            gameState.timer.duration = parseInt(activeButton.getAttribute('data-time'));
+        } else {
+            // No preset selected, use custom input value
+            const customTime = parseInt(document.getElementById('time-custom-input').value);
+            gameState.timer.duration = Math.max(1, Math.min(customTime, 300)); // Clamp 1-300
+        }
     } else {
         gameState.timer.duration = 15; // Default
     }
