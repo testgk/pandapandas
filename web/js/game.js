@@ -121,7 +121,7 @@ function setupEventListeners() {
             e.target.classList.add('active');
             // Update the current time display
             const timeValue = e.target.getAttribute('data-time');
-            document.getElementById('current-time-display').textContent = timeValue + 's';
+            document.getElementById('current-time-display').textContent = timeValue;
             // Do NOT update custom input - user must manually type if they want custom value
         });
     });
@@ -143,11 +143,11 @@ function setupEventListeners() {
             // Add has-value indicator
             e.target.classList.add('has-value');
             // Update the current time display
-            document.getElementById('current-time-display').textContent = customTime + 's';
+            document.getElementById('current-time-display').textContent = customTime;
         } else {
             // Invalid value, reset to 15
             e.target.value = '15';
-            document.getElementById('current-time-display').textContent = '15s';
+            document.getElementById('current-time-display').textContent = '15';
             e.target.classList.remove('has-value');
         }
     });
@@ -158,7 +158,7 @@ function setupEventListeners() {
         if (e.target.value && customTime >= 1 && customTime <= 300) {
             e.target.classList.add('has-value');
             // Update the current time display in real-time while typing
-            document.getElementById('current-time-display').textContent = customTime + 's';
+            document.getElementById('current-time-display').textContent = customTime;
         } else if (!e.target.value || customTime < 1 || customTime > 300) {
             e.target.classList.remove('has-value');
         }
@@ -880,7 +880,7 @@ function updateTimerDisplay() {
     const seconds = Math.ceil(remaining);
 
     // Update text
-    timerText.textContent = `��� ${seconds}s`;
+    timerText.textContent = `Time: ${seconds}s`;
 
     // Update color based on remaining time
     timerText.classList.remove('timer-warning', 'timer-critical');
