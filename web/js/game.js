@@ -32,7 +32,9 @@ const gameState = {
         intervalId: null,       // Timer interval ID
         isRunning: false,       // Timer status
         startTime: null         // Timestamp when timer started
-    }
+    },
+    // Time trial mode
+    isTimeTrial: false          // Whether time trial mode is enabled
 };
 
 // Loading overlay helpers
@@ -105,6 +107,27 @@ function setupEventListeners() {
     document.getElementById('menu-leaderboard-btn').addEventListener('click', showLeaderboard);
     document.getElementById('menu-about-btn').addEventListener('click', showAboutModal);
     
+    // Start panel events
+    document.getElementById('time-trial-checkbox').addEventListener('change', toggleTimeTrial);
+    document.getElementById('start-game-btn').addEventListener('click', startGameFromPanel);
+
+    // Time preset buttons
+    document.querySelectorAll('.time-preset-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            document.getElementById('time-custom-input').value = e.target.getAttribute('data-time');
+        });
+    });
+
+    // Custom time input
+    document.getElementById('time-custom-input').addEventListener('change', (e) => {
+        const customTime = parseInt(e.target.value);
+        if (customTime >= 1 && customTime <= 300) {
+            document.querySelectorAll('.time-preset-btn').forEach(b => b.classList.remove('active'));
+        }
+    });
+
     // Center action buttons
     document.getElementById('center-start-btn').addEventListener('click', startGameFromCenter);
     document.getElementById('center-return-btn').addEventListener('click', returnToGame);
@@ -840,18 +863,46 @@ function handleTimeExpired() {
         return;  // Already submitted or no active challenge
     }
 
-    // Auto-submit a random guess on the globe as a timeout
     gameState.guessSubmitted = true;
-    showLoading('Time expired! Submitting random guess...');
+    stopTimer();
 
-    // Generate random lat/lng
-    const randomLat = Math.random() * 180 - 90;
-    const randomLng = Math.random() * 360 - 180;
+    // Show zero points result without submission
+    const timeoutResult = {
+        challenge_id: gameState.currentChallenge.id,
+        is_correct: false,
+        distance_km: 0,
+        actual_lat: gameState.currentChallenge.latitude,
+        actual_lng: gameState.currentChallenge.longitude,
+        scoring_zone: 'timeout',
+        score: 0,
+        baseScore: 0,
+        outsideCountryPenalty: 0,
+        hintPenaltyAmount: 0,
+        penaltyAmount: 0,
+        finalScore: 0,
+        isWithinScoringMargin: false
+    };
 
-    // Simulate the guess submission after a short delay
-    setTimeout(() => {
-        handleGlobeClick({ lat: randomLat, lng: randomLng });
-    }, 500);
+    // Hide hints and show result
+    document.getElementById('hints-area').classList.add('hidden');
+    document.getElementById('challenge-description').classList.add('hidden');
+
+    // Show timeout result
+    const resultArea = document.getElementById('result-area');
+    const icon = document.getElementById('result-icon');
+    const title = document.getElementById('result-title');
+
+    icon.textContent = '⏱';
+    icon.style.color = '#ef4444';
+    title.textContent = 'Time\'s Up!';
+    document.getElementById('result-distance').textContent = 'No guess submitted';
+    document.getElementById('result-points').textContent = '0 points';
+
+    // Show country border in red
+    displayCountryBorder(gameState.currentChallenge.country, false, true).catch(() => {});
+
+    resultArea.classList.remove('hidden');
+    hideLoading();
 }
 
 /**
@@ -859,6 +910,64 @@ function handleTimeExpired() {
  */
 function getElapsedTime() {
     return Math.round(gameState.timer.elapsedTime * 10) / 10;  // Round to 1 decimal place
+}
+
+/**
+ * Toggle time trial mode
+ */
+function toggleTimeTrial() {
+    const checkbox = document.getElementById('time-trial-checkbox');
+    const pickerSection = document.getElementById('time-picker-section');
+
+    gameState.isTimeTrial = checkbox.checked;
+
+    if (gameState.isTimeTrial) {
+        pickerSection.style.display = 'flex';
+    } else {
+        pickerSection.style.display = 'none';
+    }
+}
+
+/**
+ * Start game from start panel with time trial settings
+ */
+function startGameFromPanel() {
+    gameState.justEnded = false;
+
+    // Get difficulty selection
+    const difficulty = document.getElementById('difficulty-select-start').value;
+    document.getElementById('difficulty-select').value = difficulty;
+
+    // Get time trial settings
+    if (gameState.isTimeTrial) {
+        const customTime = parseInt(document.getElementById('time-custom-input').value);
+        gameState.timer.duration = Math.max(1, Math.min(customTime, 300)); // Clamp 1-300
+    } else {
+        gameState.timer.duration = 15; // Default
+    }
+
+    // Hide start panel and show challenge panel
+    document.getElementById('start-panel').classList.add('hidden');
+    document.getElementById('challenge-panel').classList.remove('hidden');
+
+    startGame();
+}
+
+/**
+ * Show start panel
+ */
+function showStartPanel() {
+    document.getElementById('start-panel').classList.remove('hidden');
+    document.getElementById('challenge-panel').classList.add('hidden');
+    updateCenterButtons();
+}
+
+/**
+ * Hide start panel
+ */
+function hideStartPanel() {
+    document.getElementById('start-panel').classList.add('hidden');
+    updateCenterButtons();
 }
 
 /**
