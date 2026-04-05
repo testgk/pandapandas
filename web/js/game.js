@@ -199,6 +199,14 @@ function setupEventListeners() {
     document.getElementById('difficulty-select').addEventListener('change', (e) => {
         document.getElementById('difficulty-select-start').value = e.target.value;
     });
+
+    // Sync mode selects
+    document.getElementById( 'mode-select-start' ).addEventListener( 'change', ( e ) => {
+        document.getElementById( 'mode-select' ).value = e.target.value;
+    } );
+    document.getElementById( 'mode-select' ).addEventListener( 'change', ( e ) => {
+        document.getElementById( 'mode-select-start' ).value = e.target.value;
+    } );
     
     // Close modals when clicking outside
     document.getElementById('stats-modal').addEventListener('click', (e) => {
@@ -256,12 +264,14 @@ async function startGame() {
 async function nextChallenge() {
     showLoading('Loading challenge...');
     try {
-        const difficulty = document.getElementById('difficulty-select').value;
-        
+        const difficulty = document.getElementById( 'difficulty-select' ).value;
+        const challengeType = document.getElementById( 'mode-select' ).value;
+
         // Fetch random challenge from API
         gameState.currentChallenge = await getRandomChallenge(
             difficulty,
-            gameState.completedChallengeIds
+            gameState.completedChallengeIds,
+            challengeType
         );
         
         if (!gameState.currentChallenge) {
@@ -310,8 +320,14 @@ async function nextChallenge() {
         // Hide center buttons since game is active
         updateCenterButtons();
         
-        // Start the timer for the challenge
-        startTimer();
+        // Start the timer for the challenge (time trial mode only)
+        if ( gameState.isTimeTrial ) {
+            document.getElementById( 'timer-text' ).classList.remove( 'hidden' );
+            startTimer();
+        } else {
+            document.getElementById( 'timer-text' ).classList.add( 'hidden' );
+            stopTimer();
+        }
 
         hideLoading();
     } catch (error) {
@@ -320,6 +336,114 @@ async function nextChallenge() {
         showMessage('Error loading challenge. Please try again.', 'Error');
     }
 }
+
+// =============================================================================
+// Challenge type dispatch — JS equivalent of polymorphism.
+// Each handler implements: computeScore, showMarkers, showZones,
+// getResultIcon, getResultTitle, getDistanceText.
+// =============================================================================
+
+const CHALLENGE_HANDLERS = {
+    city: {
+        computeScore( result, hintPenalty ) {
+            const isOutsideCountry      = result.scoring_zone === 'outside';
+            const isWithinScoringMargin = result.distance_km <= 500;
+            let baseScore               = result.score;
+            let calculatedBaseScore     = result.score;
+            let outsideCountryPenalty   = 0;
+
+            if ( isOutsideCountry && isWithinScoringMargin ) {
+                calculatedBaseScore = Math.max( 0, Math.floor( 100 * ( 1 - result.distance_km / 500 ) ) );
+                baseScore           = calculatedBaseScore;
+            }
+
+            if ( isOutsideCountry ) {
+                if ( !isWithinScoringMargin ) {
+                    outsideCountryPenalty = baseScore;
+                    baseScore             = 0;
+                } else {
+                    outsideCountryPenalty = Math.floor( baseScore * 0.5 );
+                    baseScore             = baseScore - outsideCountryPenalty;
+                }
+            }
+
+            const hintPenaltyAmount = Math.floor( baseScore * hintPenalty );
+            const finalScore        = Math.max( 0, baseScore - hintPenaltyAmount );
+
+            return { baseScore: calculatedBaseScore, outsideCountryPenalty, hintPenaltyAmount,
+                     penaltyAmount: outsideCountryPenalty + hintPenaltyAmount, finalScore, isWithinScoringMargin };
+        },
+
+        showMarkers( lat, lng, result ) {
+            showResultMarkers( lat, lng, result.actual_lat, result.actual_lng );
+        },
+
+        showZones( challenge, result, isInsideCountry ) {
+            if ( isInsideCountry ) {
+                drawScoringZones( challenge.id, result.actual_lat, result.actual_lng );
+            }
+        },
+
+        getResultIcon( result ) {
+            const s = result.finalScore;
+            if ( result.scoring_zone === 'outside' ) return { text: '✗', color: '#ff4444' };
+            if ( s >= 100 ) return { text: '🎯', color: '#00ff00' };
+            if ( s >= 80  ) return { text: '✓',  color: '#4ecdc4' };
+            if ( s >= 50  ) return { text: '✓',  color: '#4ecdc4' };
+            if ( s >= 20  ) return { text: '~',  color: '#ffaa00' };
+            return { text: '✗', color: '#ff6b6b' };
+        },
+
+        getResultTitle( result ) {
+            const s = result.finalScore;
+            if ( result.scoring_zone === 'outside' ) {
+                return result.isWithinScoringMargin ? 'Outside Country! (-50%)' : 'Outside Country! (0 pts)';
+            }
+            if ( s >= 100 ) return 'Perfect!';
+            if ( s >= 80  ) return 'Excellent!';
+            if ( s >= 50  ) return 'Good!';
+            if ( s >= 20  ) return 'Not bad!';
+            return 'Try again!';
+        },
+
+        getDistanceText( result ) {
+            return `${result.distance_km.toLocaleString()}km`;
+        },
+    },
+
+    state: {
+        computeScore( result, hintPenalty ) {
+            const isOutsideCountry  = result.scoring_zone === 'outside';
+            const baseScore         = isOutsideCountry ? 0 : 100;
+            const hintPenaltyAmount = Math.floor( baseScore * hintPenalty );
+            const finalScore        = Math.max( 0, baseScore - hintPenaltyAmount );
+            return { baseScore, outsideCountryPenalty: 0, hintPenaltyAmount,
+                     penaltyAmount: hintPenaltyAmount, finalScore, isWithinScoringMargin: false };
+        },
+
+        showMarkers( lat, lng, result ) {
+            showGuessMarker( lat, lng );
+        },
+
+        showZones( challenge, result, isInsideCountry ) {
+            // No scoring rings for country/state challenges
+        },
+
+        getResultIcon( result ) {
+            return result.scoring_zone === 'outside'
+                ? { text: '✗', color: '#ff4444' }
+                : { text: '✓', color: '#00ff00' };
+        },
+
+        getResultTitle( result ) {
+            return result.scoring_zone === 'outside' ? 'Outside Country!' : 'Correct!';
+        },
+
+        getDistanceText( result ) {
+            return result.scoring_zone === 'outside' ? 'Outside' : 'Inside!';
+        },
+    },
+};
 
 /**
  * Handle click on the globe
@@ -343,50 +467,18 @@ async function handleGlobeClick({ lat, lng }) {
         // Add to completed challenges
         gameState.completedChallengeIds.push(gameState.currentChallenge.id);
         
-        // Calculate score with outside country rules
-        const isOutsideCountry = result.scoring_zone === 'outside';
-        const isWithinScoringMargin = result.distance_km <= 500;  // Scoring margin = 500km (red zone max)
-        
-        // If outside country, API returns 0 - we need to calculate what score would have been
-        // based on distance to apply the 50% penalty properly
-        let baseScore = result.score;
-        let calculatedBaseScore = result.score;  // Track the pre-penalty score for display
-        if (isOutsideCountry && isWithinScoringMargin) {
-            // Calculate score based on distance (same formula as API uses for scoring zones)
-            // max 500km for red zone, score decreases linearly
-            calculatedBaseScore = Math.max(0, Math.floor(100 * (1 - result.distance_km / 500)));
-            baseScore = calculatedBaseScore;
-        }
-        
-        // Apply outside country penalty:
-        // - Outside country AND outside margin (>500km) = 0 points
-        // - Outside country BUT within margin (≤500km) = 50% reduction
-        let outsideCountryPenalty = 0;
-        if (isOutsideCountry) {
-            if (!isWithinScoringMargin) {
-                // Outside margin = 0 points
-                outsideCountryPenalty = baseScore;
-                baseScore = 0;
-            } else {
-                // Within margin but outside country = 50% reduction
-                outsideCountryPenalty = Math.floor(baseScore * 0.5);
-                baseScore = baseScore - outsideCountryPenalty;
-            }
-        }
-        
-        // Apply hint penalties to remaining score
-        const hintPenaltyAmount = Math.floor(baseScore * gameState.hintPenalty);
-        const finalScore = Math.max(0, baseScore - hintPenaltyAmount);
-        
-        result.baseScore = calculatedBaseScore;  // Score before penalties (may be recalculated for outside country)
-        result.outsideCountryPenalty = outsideCountryPenalty;
-        result.hintPenaltyAmount = hintPenaltyAmount;
-        result.penaltyAmount = outsideCountryPenalty + hintPenaltyAmount;  // Total penalty
-        result.finalScore = finalScore;
-        result.isWithinScoringMargin = isWithinScoringMargin;
-        
+        const handler = CHALLENGE_HANDLERS[ gameState.currentChallenge.challenge_type ] || CHALLENGE_HANDLERS.city;
+        const scoring = handler.computeScore( result, gameState.hintPenalty );
+
+        result.baseScore             = scoring.baseScore;
+        result.outsideCountryPenalty = scoring.outsideCountryPenalty;
+        result.hintPenaltyAmount     = scoring.hintPenaltyAmount;
+        result.penaltyAmount         = scoring.penaltyAmount;
+        result.finalScore            = scoring.finalScore;
+        result.isWithinScoringMargin = scoring.isWithinScoringMargin;
+
         // Update score with penalty applied
-        gameState.score += finalScore;
+        gameState.score += result.finalScore;
         
         if (result.is_correct) {
             gameState.streak++;
@@ -394,22 +486,28 @@ async function handleGlobeClick({ lat, lng }) {
             gameState.streak = 0;
         }
         
-        // Show markers
-        showResultMarkers(lat, lng, result.actual_lat, result.actual_lng);
-        
+        const isStateChallengeMode = gameState.currentChallenge.challenge_type === 'state';
+
+        // Show markers — for state challenges only show the guess point, no arc to city centre
+        if ( isStateChallengeMode ) {
+            showGuessMarker( lat, lng );
+        } else {
+            showResultMarkers( lat, lng, result.actual_lat, result.actual_lng );
+        }
+
         // Check if guess was inside the country
         const isInsideCountry = result.scoring_zone !== 'outside';
-        
+
         // Show country border with appropriate style (await to finish before showing result)
         await displayCountryBorder(
             gameState.currentChallenge.country,
             result.is_correct,  // green if correct
             isInsideCountry     // glow only if inside
         );
-        
-        // Only draw scoring zone circles if guess was inside the country
-        if (isInsideCountry) {
-            drawScoringZones(gameState.currentChallenge.id, result.actual_lat, result.actual_lng);
+
+        // Only draw scoring zone circles for city challenges inside the country
+        if ( !isStateChallengeMode && isInsideCountry ) {
+            drawScoringZones( gameState.currentChallenge.id, result.actual_lat, result.actual_lng );
         }
         
         // Now update the score display (after map is updated)
@@ -469,6 +567,19 @@ function showResultMarkers(guessLat, guessLng, actualLat, actualLng) {
         .arcDashLength(0.5)
         .arcDashGap(0.1)
         .arcDashAnimateTime(2000);
+}
+
+/**
+ * Show only the player's guess marker (used for state/country challenges)
+ */
+function showGuessMarker( guessLat, guessLng ) {
+    gameState.globe
+        .pointsData( [ { lat: guessLat, lng: guessLng, color: '#ff6b6b', label: 'Your Guess', size: 0.5 } ] )
+        .pointAltitude( 0.01 )
+        .pointColor( 'color' )
+        .pointRadius( 'size' )
+        .pointLabel( 'label' )
+        .arcsData( [] );
 }
 
 /**
@@ -653,7 +764,7 @@ function showResult(result) {
     // Show location info inline under title
     const challenge = gameState.currentChallenge;
     const locationEl = document.getElementById('challenge-location');
-    locationEl.textContent = `${challenge.city}, ${challenge.country}, ${challenge.continent}`;
+    locationEl.textContent = `${challenge.location_name}, ${challenge.country}, ${challenge.continent}`;
     locationEl.classList.remove('hidden');
     
     // Hide hints area and description to make room
@@ -852,8 +963,8 @@ function startTimer() {
 
         updateTimerDisplay();
 
-        // If time expired, auto-submit guess as timeout
-        if (gameState.timer.elapsedTime >= gameState.timer.duration) {
+        // If time expired, auto-submit guess as timeout (only in time trial mode)
+        if ( gameState.isTimeTrial && gameState.timer.elapsedTime >= gameState.timer.duration ) {
             stopTimer();
             handleTimeExpired();
         }
@@ -970,9 +1081,11 @@ function toggleTimeTrial() {
 function startGameFromPanel() {
     gameState.justEnded = false;
 
-    // Get difficulty selection
-    const difficulty = document.getElementById('difficulty-select-start').value;
-    document.getElementById('difficulty-select').value = difficulty;
+    // Get difficulty and mode selection
+    const difficulty = document.getElementById( 'difficulty-select-start' ).value;
+    document.getElementById( 'difficulty-select' ).value = difficulty;
+    const challengeMode = document.getElementById( 'mode-select-start' ).value;
+    document.getElementById( 'mode-select' ).value = challengeMode;
 
     // Get time trial settings
     if (gameState.isTimeTrial) {

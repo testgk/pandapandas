@@ -25,18 +25,21 @@ async function fetchChallenges(difficulty = null) {
 /**
  * Get a random challenge from the backend API.
  */
-async function getRandomChallenge(difficulty = null, excludeIds = []) {
+async function getRandomChallenge( difficulty = null, excludeIds = [], challengeType = null ) {
     let url = `${API_BASE}/challenges/random`;
     const params = new URLSearchParams();
-    
-    if (difficulty && difficulty.toLowerCase() !== 'random') {
-        params.append('difficulty', difficulty.toLowerCase());
+
+    if ( difficulty && difficulty.toLowerCase() !== 'random' ) {
+        params.append( 'difficulty', difficulty.toLowerCase() );
     }
-    if (excludeIds.length > 0) {
-        params.append('exclude', excludeIds.join(','));
+    if ( excludeIds.length > 0 ) {
+        params.append( 'exclude', excludeIds.join( ',' ) );
     }
-    
-    if (params.toString()) {
+    if ( challengeType ) {
+        params.append( 'challenge_type', challengeType );
+    }
+
+    if ( params.toString() ) {
         url += '?' + params.toString();
     }
     

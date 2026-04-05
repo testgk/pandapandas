@@ -15,7 +15,7 @@ class DifficultyLevel(str, Enum):
     EXPERT = "Expert"
 
 
-class ChallengeResponse(BaseModel):
+class ChallengeResponse( BaseModel ):
     """Response when getting a new challenge"""
     challenge_id: str
     location_name: str
@@ -40,7 +40,7 @@ class ChallengeResponse(BaseModel):
         }
 
 
-class GuessRequest(BaseModel):
+class GuessRequest( BaseModel ):
     """Request to submit a guess for a challenge"""
     challenge_id: str
     latitude: float = Field(..., ge=-90, le=90)
@@ -56,7 +56,7 @@ class GuessRequest(BaseModel):
         }
 
 
-class GuessResponse(BaseModel):
+class GuessResponse( BaseModel ):
     """Response after submitting a guess"""
     success: bool
     distance_km: float

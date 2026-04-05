@@ -27,16 +27,40 @@ class DifficultyLevel(Enum):
     HARD = "Hard"
     EXPERT = "Expert"
 
+
+class ChallengeType( Enum ):
+    CITY  = "city"
+    STATE = "state"
+
+
 @dataclass
 class GameChallenge:
-    """Represents a single game challenge"""
+    """Base class for all game challenges."""
     location_name: str
-    actual_coordinates: Tuple[float, float]  # (lat, lon)
+    actual_coordinates: Tuple[ float, float ]  # (lat, lon)
     country: str
     continent: str
     difficulty: DifficultyLevel
-    hints: List[str]
+    hints: List[ str ]
     max_distance_km: float  # Maximum reasonable distance for full points
+    challenge_type: ChallengeType = ChallengeType.CITY
+
+
+@dataclass
+class CityGameChallenge( GameChallenge ):
+    """Challenge to locate a city on the map."""
+
+    def __post_init__( self ):
+        self.challenge_type = ChallengeType.CITY
+
+
+@dataclass
+class StateGameChallenge( GameChallenge ):
+    """Challenge to locate a state/region on the map."""
+    state_code: str = ''
+
+    def __post_init__( self ):
+        self.challenge_type = ChallengeType.STATE
 
 @dataclass
 class PlayerAttempt:
@@ -283,14 +307,14 @@ class GeoChallengeGame:
                     DifficultyLevel.EXPERT: 1000    # 1000km for expert (was 100km)
                 }
                 
-                challenge = GameChallenge(
-                    location_name=name,
-                    actual_coordinates=coords,
-                    country=country,
-                    continent=continent,
-                    difficulty=difficulty,
-                    hints=hints,
-                    max_distance_km=max_distances[difficulty]
+                challenge = CityGameChallenge(
+                    location_name = name,
+                    actual_coordinates = coords,
+                    country = country,
+                    continent = continent,
+                    difficulty = difficulty,
+                    hints = hints,
+                    max_distance_km = max_distances[ difficulty ]
                 )
                 
                 challenges_data.append({
@@ -302,7 +326,9 @@ class GeoChallengeGame:
                     'continent': challenge.continent,
                     'difficulty': challenge.difficulty.value,
                     'hints': challenge.hints,
-                    'max_distance_km': challenge.max_distance_km
+                    'max_distance_km': challenge.max_distance_km,
+                    'challenge_type': challenge.challenge_type.value,
+                    'state_code':     '',
                 })
         
         # Convert to GeoDataFrame for spatial operations
@@ -349,16 +375,24 @@ class GeoChallengeGame:
                 available_challenges = filtered
 
         selected_row = available_challenges.sample(n=1).iloc[0]
-        
-        challenge = GameChallenge(
-            location_name=selected_row['location_name'],
-            actual_coordinates=(selected_row['latitude'], selected_row['longitude']),
-            country=selected_row['country'],
-            continent=selected_row['continent'],
-            difficulty=DifficultyLevel(selected_row['difficulty']),
-            hints=selected_row['hints'],
-            max_distance_km=selected_row['max_distance_km']
+
+        challenge_type_str = selected_row[ 'challenge_type' ] if 'challenge_type' in selected_row.index else 'city'
+        common_kwargs = dict(
+            location_name = selected_row[ 'location_name' ],
+            actual_coordinates = ( selected_row[ 'latitude' ], selected_row[ 'longitude' ] ),
+            country = selected_row[ 'country' ],
+            continent = selected_row[ 'continent' ],
+            difficulty = DifficultyLevel( selected_row[ 'difficulty' ] ),
+            hints = selected_row[ 'hints' ],
+            max_distance_km = selected_row[ 'max_distance_km' ],
         )
+        if challenge_type_str == ChallengeType.STATE.value:
+            challenge = StateGameChallenge(
+                **common_kwargs,
+                state_code = selected_row[ 'state_code' ] if 'state_code' in selected_row.index else '',
+            )
+        else:
+            challenge = CityGameChallenge( **common_kwargs )
         
         self.current_challenge = challenge
         self.challenge_start_time = datetime.now()
