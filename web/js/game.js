@@ -411,7 +411,7 @@ const CHALLENGE_HANDLERS = {
         },
     },
 
-    state: {
+    country: {
         computeScore( result, hintPenalty ) {
             const isOutsideCountry  = result.scoring_zone === 'outside';
             const baseScore         = isOutsideCountry ? 0 : 100;
@@ -486,10 +486,10 @@ async function handleGlobeClick({ lat, lng }) {
             gameState.streak = 0;
         }
         
-        const isStateChallengeMode = gameState.currentChallenge.challenge_type === 'state';
+        const isCountryChallengeMode = gameState.currentChallenge.challenge_type === 'country';
 
         // Show markers — for state challenges only show the guess point, no arc to city centre
-        if ( isStateChallengeMode ) {
+        if ( isCountryChallengeMode ) {
             showGuessMarker( lat, lng );
         } else {
             showResultMarkers( lat, lng, result.actual_lat, result.actual_lng );
@@ -506,7 +506,7 @@ async function handleGlobeClick({ lat, lng }) {
         );
 
         // Only draw scoring zone circles for city challenges inside the country
-        if ( !isStateChallengeMode && isInsideCountry ) {
+        if ( !isCountryChallengeMode && isInsideCountry ) {
             drawScoringZones( gameState.currentChallenge.id, result.actual_lat, result.actual_lng );
         }
         
